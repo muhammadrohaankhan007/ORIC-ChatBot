@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SHU ORIC AI – Research, Innovation & Industry Intelligence Ecosystem | Salim Habib University, Karachi</title>
+  
+  <meta name="description" content="AI-powered full-stack research, innovation and industry intelligence platform for the Office of Research, Innovation & Commercialization (ORIC), Salim Habib University (SHU), Karachi, Pakistan.">
+  <meta name="theme-color" content="#0A2540">
+
+  <!-- Modern Typography: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Core Stylesheets -->
+  <link rel="stylesheet" href="css/custom.css">
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- 1. LEFT SIDEBAR NAVIGATION -->
+    <aside class="app-sidebar" id="appSidebar">
+      <div class="sidebar-brand">
+        <div class="shu-badge">SHU</div>
+        <div>
+          <div class="sidebar-title-main">ORIC AI</div>
+          <div class="sidebar-title-sub">Salim Habib University</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav-scroll">
+        <div class="nav-cat">Core Intelligence</div>
+        
+        <button class="nav-link-btn" data-view="dashboard" onclick="window.OricApp.navigate('dashboard')">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-link-btn active" data-view="chat" onclick="window.OricApp.navigate('chat')">
+          <i class="fa-solid fa-wand-magic-sparkles" style="color: #38BDF8;"></i>
+          <span>AI Expert Chat</span>
+          <span class="nav-badge-pill">Voice</span>
+        </button>
+
+        <button class="nav-link-btn" data-view="explorer" onclick="window.OricApp.navigate('explorer')">
+          <i class="fa-solid fa-book-bookmark"></i>
+          <span>Project Explorer</span>
+          <span class="nav-badge-pill">233</span>
+        </button>
+
+        <div class="nav-cat">Commercialization & Synergies</div>
+
+        <button class="nav-link-btn" data-view="erl" onclick="window.OricApp.navigate('erl')">
+          <i class="fa-solid fa-chart-pie" style="color: #F59E0B;"></i>
+          <span>ERL 8D Assessment</span>
+        </button>
+
+        <button class="nav-link-btn" data-view="graph" onclick="window.OricApp.navigate('graph')">
+          <i class="fa-solid fa-diagram-project" style="color: #10B981;"></i>
+          <span>Knowledge Graph</span>
+        </button>
+
+        <div class="nav-cat">Operations & Meetings</div>
+
+        <button class="nav-link-btn" data-view="discussions" onclick="window.OricApp.navigate('discussions')">
+          <i class="fa-solid fa-microphone-lines" style="color: #EC4899;"></i>
+          <span>Meeting Transcription</span>
+          <span class="nav-badge-pill" style="background: rgba(236, 72, 153, 0.2); color: #F472B6;">Live</span>
+        </button>
+
+        <button class="nav-link-btn" data-view="reports" onclick="window.OricApp.navigate('reports')">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Report Generator</span>
+          <span class="nav-badge-pill">PDF</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer -->
+      <div style="padding: 14px 16px; background-color: var(--shu-navy-dark); border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px;">
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #0284C7; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem;">OR</div>
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 600;">ORIC Director</div>
+          <div style="font-size: 0.68rem; color: #94A3B8;">Institutional Lead</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 2. CENTRAL WORKSPACE AREA -->
+    <main class="app-center">
+      <!-- Topbar Controls -->
+      <header class="center-topbar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: 700; font-size: 0.95rem; color: var(--shu-navy);">
+            <i class="fa-solid fa-graduation-cap" style="color: #0284C7;"></i> SHU ORIC AI Multi-Agent Intelligence
+          </span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <!-- Dual Mode Switcher -->
+          <div class="topbar-mode-switch">
+            <button class="mode-btn active" id="btnModeConv" onclick="window.OricApp.setChatMode('conversational')">
+              <i class="fa-solid fa-comments"></i> Conversational Mode
+            </button>
+            <button class="mode-btn" id="btnModeRes" onclick="window.OricApp.setChatMode('research')">
+              <i class="fa-solid fa-book-open-reader"></i> Research Mode
+            </button>
+          </div>
+
+          <!-- TTS Voice Output Toggle -->
+          <button id="btnToggleTts" class="prompt-chip-btn" onclick="window.OricApp.toggleTts()" title="Toggle Audio Responses">
+            <i class="fa-solid fa-volume-high"></i> Voice Output: ON
+          </button>
+        </div>
+      </header>
+
+      <!-- Dynamic Views Container (Dashboard, Explorer, ERL, Graph, Discussions, Reports) -->
+      <div id="centerViewContent" class="center-view-content" style="display: none;"></div>
+
+      <!-- Chat Stream Container -->
+      <div id="chatViewContainer" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 24px 0 24px;">
+        <div class="chat-stream-box" id="chatStreamBox">
+          <!-- Welcome Bubble -->
+          <div class="msg-row assistant">
+            <div class="msg-avatar"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+            <div class="msg-bubble">
+              <div class="agent-pill-row">
+                <span class="agent-tag"><i class="fa-solid fa-microchip"></i> Central Orchestrator</span>
+                <span class="agent-tag"><i class="fa-solid fa-shield-halved"></i> Verified Institutional Intelligence</span>
+              </div>
+              <h3 style="font-family: 'Outfit'; font-size: 1.15rem; font-weight: 700; color: #0A2540; margin-bottom: 6px;">
+                Assalamu Alaikum & Welcome to SHU ORIC AI
+              </h3>
+              <p style="margin-bottom: 8px;">
+                I am your high-level university intelligence ecosystem for <strong>Salim Habib University (SHU), Karachi</strong>.
+                I correlate all <strong>233 verified ORIC project records</strong> with live research, DRAP statutory filing frameworks, Karachi industrial estates, and commercialization roadmaps.
+              </p>
+              <p style="font-size: 0.82rem; color: #475569;">
+                You can type or speak in <strong>English, Urdu, or mixed Urdu-English</strong>. How may I assist your research or commercial venture today?
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Bar -->
+        <div class="chat-input-container">
+          <!-- Quick Action Prompts Bar -->
+          <div class="prompt-chips-bar">
+            <button class="prompt-chip-btn" onclick="window.OricApp.sendMessage('Identify the top 3 prospective pharmaceutical partners in Korangi Industrial Area for this formulation and explain their commercial synergy.')">
+              🏢 Top Korangi Partners
+            </button>
+            <button class="prompt-chip-btn" onclick="window.OricApp.sendMessage('What are the specific DRAP registration requirements, ICH Zone IVb stability parameters, and clinical trial steps needed for this product?')">
+              📋 DRAP Filing Steps
+            </button>
+            <button class="prompt-chip-btn" onclick="window.OricApp.sendMessage('Perform a comprehensive 8-dimension Entrepreneurship Readiness Level (ERL) assessment on this project.')">
+              📊 Full ERL Assessment
+            </button>
+            <button class="prompt-chip-btn" onclick="window.OricApp.sendMessage('Generate a 5-year multi-scenario financial forecast (Conservative, Expected, Optimistic) with TAM, SAM, and SOM sizing.')">
+              📈 5-Year Financial Forecast
+            </button>
+            <button class="prompt-chip-btn" onclick="window.OricApp.sendMessage('Identify other research projects across SHU faculties that can be combined with this technology for cross-disciplinary innovation.')">
+              🤝 Cross-Faculty Synergies
+            </button>
+          </div>
+
+          <!-- Input Controls -->
+          <div class="input-controls-row">
+            <button id="btnVoiceMic" class="voice-mic-btn" onclick="window.OricApp.toggleMic()" title="Click to speak (English / Urdu)">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+            <input type="text" id="chatTextInput" class="chat-text-input" placeholder="Ask about formulations, DRAP compliance, Korangi partners, or ERL readiness...">
+            <button class="send-msg-btn" onclick="window.OricApp.sendMessage()">
+              <span>Send</span> <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. RIGHT CONTEXT PANEL -->
+    <aside class="app-context-panel" id="appContextPanel">
+      <div class="context-header">
+        <span class="context-id-badge" id="ctxBadge">SHU-FOP-001</span>
+        <h2 class="context-project-title" id="ctxTitle">
+          Novel Effervescent Formulation for Urinary Incontinence
+        </h2>
+      </div>
+
+      <!-- Quick Metadata Card -->
+      <div class="context-card">
+        <div class="context-card-title"><i class="fa-solid fa-circle-info"></i> Project Details</div>
+        <div style="font-size: 0.8rem; color: #334155; line-height: 1.6;">
+          <div><strong>Faculty PI:</strong> <span id="ctxFaculty">Aqsa Khurram 320</span></div>
+          <div><strong>Course:</strong> <span id="ctxCourse">PHR-106 (Biochemistry – II)</span></div>
+          <div><strong>Domain:</strong> <span id="ctxDomain">Novel Drug Delivery Systems</span></div>
+          <div style="margin-top: 4px;"><strong>Stage:</strong> <span id="ctxTrlBadge" style="background:#E0F2FE; color:#0369A1; padding:2px 6px; border-radius:4px; font-weight:700;">TRL 3</span></div>
+        </div>
+      </div>
+
+      <!-- Market Sizing Card -->
+      <div class="context-card">
+        <div class="context-card-title"><i class="fa-solid fa-chart-line"></i> Market & Sizing</div>
+        <div style="font-size: 0.8rem; color: #334155; line-height: 1.5;">
+          <div id="ctxMarket" style="font-weight: 700; color: #0D9488; margin-bottom: 4px;">PKR 10,375M TAM / PKR 315M SOM</div>
+          <div style="font-size: 0.74rem; color: #64748B;">Sourced from Pakistan Bureau of Statistics & DRAP registrations.</div>
+        </div>
+      </div>
+
+      <!-- Matched Karachi Industrial Cluster Card -->
+      <div class="context-card">
+        <div class="context-card-title"><i class="fa-solid fa-city"></i> Matched Karachi Industrial Zone</div>
+        <div style="font-size: 0.82rem; font-weight: 700; color: #0A2540;" id="ctxArea">Korangi Industrial Area</div>
+        <div style="font-size: 0.74rem; color: #64748B; margin-top: 2px;">Targets: The Searle Company, Getz Pharma, Martin Dow</div>
+      </div>
+
+      <!-- Quick Analysis Actions -->
+      <div class="context-card">
+        <div class="context-card-title"><i class="fa-solid fa-bolt"></i> Quick Analysis Actions</div>
+        
+        <button class="action-quick-btn" onclick="window.OricApp.navigate('erl')">
+          <span><i class="fa-solid fa-chart-pie"></i> Evaluate ERL 8 Dimensions</span>
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+
+        <button class="action-quick-btn" onclick="window.OricApp.sendMessage('Generate a 5-year multi-scenario financial forecast for this project with TAM, SAM, SOM.')">
+          <span><i class="fa-solid fa-chart-line"></i> Run 5-Year Forecast</span>
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+
+        <button class="action-quick-btn" onclick="window.OricApp.navigate('graph')">
+          <span><i class="fa-solid fa-diagram-project"></i> View Knowledge Graph</span>
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+
+        <button class="action-quick-btn" onclick="window.OricApp.downloadReport('pdf')">
+          <span><i class="fa-solid fa-file-pdf"></i> Download PDF Dossier</span>
+          <i class="fa-solid fa-download"></i>
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Client Application Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
