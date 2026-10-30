@@ -1,6 +1,26 @@
-api.txt
+# Environment & Secrets
 .env
+*.env
+api.txt
+
+# Databases & Caches
 *.db
+*.sqlite3
 __pycache__/
 *.pyc
+
+# Document & Report Files (Ignored from Git)
+*.docx
+*.doc
+*.pdf
+*.xlsx
+*.xls
+*.pptx
+*.ppt
+*.txt
+backend/generated_reports/
+backend/data/*.json
+
+# Temporary Word / Office Lock Files
 ~$*
+.~lock.*
