@@ -1,38 +1,45 @@
 import type { Metadata } from 'next';
-import { Inter, Outfit } from 'next/font/google';
+import { Space_Grotesk, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import JsonLd from '@/components/seo/JsonLd';
 
-const inter = Inter({
-  variable: '--font-inter',
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
   display: 'swap',
+  weight: ['400', '500', '600', '700'],
 });
 
-const outfit = Outfit({
-  variable: '--font-outfit',
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: '--font-sans',
   subsets: ['latin'],
   display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://oric.shu.edu.pk'),
   title: {
-    default: 'SHU ORIC AI – Research, Innovation & Industry Intelligence Ecosystem',
-    template: '%s | Salim Habib University ORIC AI'
+    default: 'Salim Habib University ORIC | Office of Research, Innovation & Commercialization',
+    template: '%s | Salim Habib University ORIC'
   },
-  description: 'AI-powered full-stack research, innovation and industry intelligence platform for the Office of Research, Innovation & Commercialization (ORIC), Salim Habib University (SHU), Karachi, Pakistan.',
+  description: 'Official research commercialization and industry intelligence portal for the Office of Research, Innovation & Commercialization (ORIC) at Salim Habib University, Karachi. Bridging academic laboratory research with national manufacturing.',
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg'
+  },
   keywords: [
     'Salim Habib University',
     'SHU ORIC',
     'Research Commercialization Pakistan',
-    'Karachi Industrial Clusters',
+    'Karachi Industrial Estates',
     'Korangi Industrial Area R&D',
     'SITE Industrial Area Innovation',
     'ERL Readiness Assessment',
     'Entrepreneurship Readiness Level',
-    'Pharmaceutical Research Sindh',
-    'Biomedical AI Karachi'
+    'Pharmaceutical Drug Formulation Research',
+    'Biomedical Devices Sindh'
   ],
   authors: [{ name: 'Salim Habib University ORIC Team' }],
   creator: 'Salim Habib University (SHU)',
@@ -74,11 +81,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${outfit.variable} h-full antialiased`}>
+    <html lang="en" className={`${spaceGrotesk.variable} ${plusJakarta.variable} font-sans h-full antialiased overflow-x-hidden dark`}>
       <head>
         <JsonLd />
       </head>
-      <body className="min-h-full flex flex-col font-sans bg-slate-900 text-slate-100 selection:bg-amber-500 selection:text-slate-950">
+      <body className="min-h-full flex flex-col font-sans bg-black text-zinc-100 selection:bg-red-600 selection:text-white overflow-x-hidden">
         {children}
       </body>
     </html>

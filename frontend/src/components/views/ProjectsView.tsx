@@ -9,7 +9,8 @@ import {
   FileText, 
   CheckCircle2, 
   X,
-  ExternalLink
+  ExternalLink,
+  ArrowRight
 } from 'lucide-react';
 
 interface ProjectsViewProps {
@@ -52,38 +53,38 @@ export default function ProjectsView({
   };
 
   return (
-    <div className="p-8 space-y-8 max-w-7xl mx-auto">
+    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans bg-black text-zinc-100">
       {/* Top Header & Search */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-black text-white tracking-tight">University Intellectual Property Repository</h2>
-          <p className="text-xs text-slate-400">
+          <h2 className="font-display text-xl font-black text-white tracking-tight">University Intellectual Property Repository</h2>
+          <p className="text-xs text-zinc-400">
             {projects.length} verified projects with full relational schemas and vector embeddings
           </p>
         </div>
 
         {/* Search Input */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search projects, technologies, or lead PIs..."
-            className="w-full bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 pl-10 pr-4 py-2.5 rounded-xl focus:outline-none focus:border-amber-500 transition"
+            className="w-full bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 pl-10 pr-4 py-2.5 rounded-md focus:outline-none focus:border-red-600 transition"
           />
         </div>
       </div>
 
       {/* Dynamic Document Ingestion Dropzone */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-900 to-slate-950 border border-dashed border-amber-500/30 hover:border-amber-500/60 transition flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="p-6 rounded-md bg-zinc-950 border border-dashed border-red-900/60 hover:border-red-600 transition flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+          <div className="w-12 h-12 rounded-md bg-red-950/50 border border-red-800/60 flex items-center justify-center text-red-500 shrink-0">
             <UploadCloud className="w-6 h-6" />
           </div>
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-white">Dynamic Document Ingestion Pipeline</h4>
-            <p className="text-xs text-slate-400">
+            <h4 className="font-display text-sm font-bold text-white">Dynamic Document Ingestion Pipeline</h4>
+            <p className="text-xs text-zinc-400">
               Upload research dissertations, laboratory notes, or patent drafts (.pdf, .docx, .xlsx). The system automatically parses, chunks, and indexes embeddings into PostgreSQL pgvector.
             </p>
           </div>
@@ -91,17 +92,17 @@ export default function ProjectsView({
 
         <div className="shrink-0 flex items-center gap-3">
           {uploadSuccess ? (
-            <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" />
+            <div className="px-4 py-2 rounded-md bg-red-950/60 border border-red-800/80 text-white text-xs font-bold flex items-center gap-2 font-mono">
+              <CheckCircle2 className="w-4 h-4 text-red-500" />
               <span>Document Ingested & Vectorized!</span>
             </div>
           ) : (
             <button
               onClick={handleSimulateUpload}
-              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-md shadow-amber-500/20 transition cursor-pointer"
+              className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-2 shadow-md shadow-red-950/40 transition cursor-pointer"
             >
               <UploadCloud className="w-4 h-4" />
-              <span>Ingest Document</span>
+              <span>Ingest Laboratory Document</span>
             </button>
           )}
         </div>
@@ -113,10 +114,10 @@ export default function ProjectsView({
           <button
             key={f.code}
             onClick={() => setSelectedFaculty(f.code)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-md text-xs font-semibold transition font-mono ${
               selectedFaculty === f.code
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                ? 'bg-red-600 text-white shadow-sm shadow-red-950/40'
+                : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
             }`}
           >
             {f.label}
@@ -129,29 +130,29 @@ export default function ProjectsView({
         {filteredProjects.map((project) => (
           <div
             key={project.id}
-            className="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 space-y-4 hover:border-slate-700 hover:shadow-xl transition flex flex-col justify-between"
+            className="rounded-md bg-zinc-950 border border-zinc-800 p-6 space-y-4 hover:border-red-900/60 transition flex flex-col justify-between"
           >
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-2">
-                <span className="font-mono text-xs px-2.5 py-1 rounded bg-slate-950 text-amber-400 border border-slate-800">
+                <span className="font-mono text-xs px-2.5 py-1 rounded bg-black text-red-400 border border-zinc-800">
                   {project.project_code}
                 </span>
-                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
+                <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
                   {project.development_stage}
                 </span>
               </div>
 
-              <h3 className="text-base font-bold text-white leading-snug">{project.title}</h3>
-              <p className="text-xs text-slate-400 leading-relaxed line-clamp-3">{project.abstract}</p>
+              <h3 className="font-display text-base font-bold text-white leading-snug">{project.title}</h3>
+              <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">{project.abstract}</p>
 
               {/* Technologies */}
               <div className="space-y-1">
-                <div className="text-[11px] font-semibold text-slate-400">Core Technologies:</div>
+                <div className="text-[11px] font-semibold text-zinc-400">Core Technologies:</div>
                 <div className="flex flex-wrap gap-1.5">
                   {project.technology_stack.map((tech, i) => (
                     <span
                       key={i}
-                      className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60"
+                      className="text-[10px] px-2 py-0.5 rounded bg-black text-zinc-300 border border-zinc-800"
                     >
                       {tech}
                     </span>
@@ -160,29 +161,29 @@ export default function ProjectsView({
               </div>
 
               {/* Metrics Strip */}
-              <div className="pt-2 border-t border-slate-800/80 grid grid-cols-3 gap-2 text-center">
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <div className="text-[10px] text-slate-400">TRL Level</div>
-                  <div className="text-sm font-bold text-sky-400">{project.trl_level} / 9</div>
+              <div className="pt-2 border-t border-zinc-850 grid grid-cols-3 gap-2 text-center">
+                <div className="bg-black p-2 rounded border border-zinc-800">
+                  <div className="text-[10px] font-mono text-zinc-400">TRL Level</div>
+                  <div className="font-display text-sm font-bold text-white">{project.trl_level} / 9</div>
                 </div>
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <div className="text-[10px] text-slate-400">ERL Score</div>
-                  <div className="text-sm font-bold text-amber-400">{project.erl_level} / 9</div>
+                <div className="bg-black p-2 rounded border border-zinc-800">
+                  <div className="text-[10px] font-mono text-zinc-400">ERL Score</div>
+                  <div className="font-display text-sm font-bold text-red-500">{project.erl_level} / 9</div>
                 </div>
-                <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/60">
-                  <div className="text-[10px] text-slate-400">IP Status</div>
-                  <div className="text-xs font-bold text-slate-200 truncate">{project.ip_status}</div>
+                <div className="bg-black p-2 rounded border border-zinc-800">
+                  <div className="text-[10px] font-mono text-zinc-400">IP Status</div>
+                  <div className="text-xs font-bold text-zinc-200 truncate">{project.ip_status}</div>
                 </div>
               </div>
             </div>
 
             {/* Card Footer Actions */}
-            <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
-              <span className="text-[11px] text-slate-400 truncate">Lead: {project.lead_investigator}</span>
+            <div className="pt-4 border-t border-zinc-850 flex items-center justify-between gap-3">
+              <span className="text-[11px] text-zinc-400 truncate">Lead: {project.lead_investigator}</span>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setActiveModalProject(project)}
-                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition"
+                  className="px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold border border-zinc-800 transition"
                 >
                   Dossier
                 </button>
@@ -191,10 +192,10 @@ export default function ProjectsView({
                     onSelectProjectForChat(project);
                     onNavigate('chat');
                   }}
-                  className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1 shadow-sm transition"
+                  className="px-3 py-1.5 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-display font-bold flex items-center gap-1 shadow-sm transition"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Chat AI</span>
+                  <span>Analyze</span>
                 </button>
               </div>
             </div>
@@ -202,78 +203,61 @@ export default function ProjectsView({
         ))}
       </div>
 
-      {/* Deep Dossier Modal */}
+      {/* Detailed Modal */}
       {activeModalProject && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 space-y-6 shadow-2xl">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-mono text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    {activeModalProject.project_code}
-                  </span>
-                  <span className="text-xs text-slate-400">{activeModalProject.faculty}</span>
-                </div>
-                <h3 className="text-lg font-black text-white">{activeModalProject.title}</h3>
-                <p className="text-xs text-slate-400">Principal Investigator: {activeModalProject.lead_investigator}</p>
-              </div>
-              <button
-                onClick={() => setActiveModalProject(null)}
-                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-zinc-950 border border-zinc-800 rounded-md max-w-2xl w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveModalProject(null)}
+              className="absolute right-4 top-4 text-zinc-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="font-mono text-xs text-red-500">{activeModalProject.project_code}</span>
+              <h3 className="font-display text-lg font-bold text-white">{activeModalProject.title}</h3>
+              <p className="text-xs text-zinc-400">{activeModalProject.department} • {activeModalProject.faculty}</p>
             </div>
 
-            <div className="space-y-4 text-xs text-slate-300">
-              <div className="space-y-1">
-                <h5 className="font-bold text-white uppercase tracking-wider text-[11px]">Problem Statement</h5>
-                <p className="bg-slate-950 p-3 rounded-xl border border-slate-800 leading-relaxed">
-                  {activeModalProject.problem_statement}
-                </p>
-              </div>
+            <div className="space-y-2 text-xs text-zinc-300">
+              <strong className="text-white block font-display">Problem Statement:</strong>
+              <p className="leading-relaxed bg-black p-3 rounded border border-zinc-850">{activeModalProject.problem_statement}</p>
+            </div>
 
-              <div className="space-y-1">
-                <h5 className="font-bold text-white uppercase tracking-wider text-[11px]">Project Abstract</h5>
-                <p className="bg-slate-950 p-3 rounded-xl border border-slate-800 leading-relaxed">
-                  {activeModalProject.abstract}
-                </p>
-              </div>
+            <div className="space-y-2 text-xs text-zinc-300">
+              <strong className="text-white block font-display">Abstract & Methodology:</strong>
+              <p className="leading-relaxed bg-black p-3 rounded border border-zinc-850">{activeModalProject.abstract}</p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-400">Estimated Capital Needed:</span>
-                  <div className="text-sm font-bold text-amber-400">
-                    PKR {activeModalProject.estimated_funding_pkr.toLocaleString()}
-                  </div>
-                </div>
-                <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-                  <span className="text-[10px] text-slate-400">Target Industries:</span>
-                  <div className="text-xs font-semibold text-slate-200">
-                    {activeModalProject.target_industries.join(', ')}
-                  </div>
-                </div>
+            <div className="grid grid-cols-2 gap-3 text-xs pt-2">
+              <div className="bg-black p-2.5 rounded border border-zinc-850">
+                <span className="text-zinc-400 block font-mono">Estimated Funding (PKR)</span>
+                <span className="font-display font-bold text-white">PKR {(activeModalProject.estimated_funding_pkr / 1_000_000).toFixed(1)} Million</span>
+              </div>
+              <div className="bg-black p-2.5 rounded border border-zinc-850">
+                <span className="text-zinc-400 block font-mono">Target Industries</span>
+                <span className="text-zinc-200">{activeModalProject.target_industries.join(', ')}</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="pt-4 flex items-center justify-end gap-3 border-t border-zinc-800">
               <button
                 onClick={() => setActiveModalProject(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold"
+                className="px-4 py-2 rounded bg-zinc-900 text-zinc-300 hover:text-white text-xs font-semibold"
               >
                 Close
               </button>
               <button
                 onClick={() => {
-                  const p = activeModalProject;
+                  onSelectProjectForChat(activeModalProject);
                   setActiveModalProject(null);
-                  onSelectProjectForChat(p);
                   onNavigate('chat');
                 }}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center gap-1.5"
+                className="px-4 py-2 rounded bg-red-600 hover:bg-red-500 text-white text-xs font-display font-bold flex items-center gap-1.5"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                <span>Launch Project Analysis in Chat</span>
+                <span>Evaluate in Faculty AI Workspace</span>
               </button>
             </div>
           </div>
@@ -282,4 +266,3 @@ export default function ProjectsView({
     </div>
   );
 }
-

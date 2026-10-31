@@ -10,23 +10,28 @@
    ========================================================================== */
 
 :root {
-  --shu-navy: #0A2540;
-  --shu-navy-dark: #061727;
-  --shu-blue-primary: #0284C7;
-  --shu-blue-light: #38BDF8;
-  --shu-teal: #0D9488;
-  --shu-teal-light: #14B8A6;
-  --shu-amber: #F59E0B;
-  --shu-amber-light: #FBBF24;
-  --shu-emerald: #10B981;
-  --shu-card-bg: #FFFFFF;
-  --shu-border: #E2E8F0;
-  --shu-text-primary: #0F172A;
-  --shu-text-secondary: #475569;
-  --shu-text-muted: #94A3B8;
-  --shu-bg-subtle: #F8FAFC;
+  --font-display: var(--font-display, 'Space Grotesk', -apple-system, sans-serif);
+  --font-sans: var(--font-sans, 'Plus Jakarta Sans', -apple-system, sans-serif);
+  --shu-red-primary: #DC2626;
+  --shu-red-dark: #991B1B;
+  --shu-red-deep: #7F1D1D;
+  --shu-black: #000000;
+  --shu-zinc-950: #09090B;
+  --shu-zinc-900: #18181B;
+  --shu-zinc-800: #27272A;
+  --shu-zinc-400: #A1A1AA;
+  --shu-zinc-200: #E4E4E7;
+  --shu-white: #FFFFFF;
   --shu-sidebar-width: 250px;
   --shu-context-width: 380px;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-sans {
+  font-family: var(--font-sans);
 }
 
 /* 3-Panel Grid Layout */

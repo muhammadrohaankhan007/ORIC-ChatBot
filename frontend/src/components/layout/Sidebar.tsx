@@ -3,6 +3,7 @@
 import React from 'react';
 import { ViewMode } from '@/types';
 import {
+  Globe,
   LayoutDashboard,
   Sparkles,
   FolderKanban,
@@ -10,7 +11,8 @@ import {
   PieChart,
   Mic,
   FileSpreadsheet,
-  GraduationCap
+  GraduationCap,
+  ArrowLeft
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,89 +24,108 @@ interface SidebarProps {
 export default function Sidebar({ currentView, onNavigate, projectCount = 4 }: SidebarProps) {
   const navItems = [
     {
-      category: 'Core Intelligence',
+      category: 'Public Portal',
       items: [
         {
-          id: 'dashboard' as ViewMode,
-          label: 'Dashboard',
-          icon: LayoutDashboard,
-          badge: null
-        },
-        {
-          id: 'chat' as ViewMode,
-          label: 'AI Expert Chat',
-          icon: Sparkles,
-          badge: 'Voice',
-          badgeColor: 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
-        },
-        {
-          id: 'explorer' as ViewMode,
-          label: 'Project Explorer',
-          icon: FolderKanban,
-          badge: `${projectCount}`,
-          badgeColor: 'bg-slate-700 text-slate-300'
+          id: 'home' as ViewMode,
+          label: 'Public University Website',
+          icon: Globe,
+          badge: 'Live',
+          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
         }
       ]
     },
     {
-      category: 'Commercialization & Synergies',
+      category: 'Executive Intelligence',
+      items: [
+        {
+          id: 'dashboard' as ViewMode,
+          label: 'Executive Dashboard',
+          icon: LayoutDashboard,
+          badge: null,
+          badgeColor: ''
+        },
+        {
+          id: 'chat' as ViewMode,
+          label: 'Faculty Research Advisors',
+          icon: Sparkles,
+          badge: 'Gemini 3.5',
+          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
+        },
+        {
+          id: 'explorer' as ViewMode,
+          label: 'Intellectual Property Explorer',
+          icon: FolderKanban,
+          badge: `${projectCount}`,
+          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
+        }
+      ]
+    },
+    {
+      category: 'Commercialization & Industry',
       items: [
         {
           id: 'radar' as ViewMode,
           label: 'Karachi Industry Radar',
           icon: Radar,
-          badge: 'Live',
-          badgeColor: 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+          badge: 'Active',
+          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
         },
         {
           id: 'erl' as ViewMode,
-          label: 'ERL 8D Assessment',
+          label: '8D ERL Readiness Scorer',
           icon: PieChart,
-          badge: null
+          badge: null,
+          badgeColor: ''
         }
       ]
     },
     {
-      category: 'Operations & Meetings',
+      category: 'Governance & Dossiers',
       items: [
         {
           id: 'discussions' as ViewMode,
-          label: 'Meeting Transcription',
+          label: 'Meeting Transcriptions',
           icon: Mic,
           badge: 'WebRTC',
-          badgeColor: 'bg-pink-500/20 text-pink-300 border border-pink-500/30'
+          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
         },
         {
           id: 'reports' as ViewMode,
-          label: 'Report Generator',
+          label: 'Commercial Dossier Facility',
           icon: FileSpreadsheet,
-          badge: 'PDF / Word',
-          badgeColor: 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+          badge: 'HEC Aligned',
+          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
         }
       ]
     }
   ];
 
   return (
-    <aside className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col h-screen select-none shrink-0">
-      {/* Brand Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-gradient-to-r from-slate-950 to-slate-900">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-amber-500/10">
-          <GraduationCap className="w-6 h-6 text-slate-950" />
+    <aside className="w-64 bg-black border-r border-zinc-800 flex flex-col h-screen select-none shrink-0 font-sans">
+      {/* Clickable Brand Header (Returns to Public Website) */}
+      <button
+        onClick={() => onNavigate('home')}
+        title="Return to Public University Website"
+        className="p-4 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950 hover:bg-zinc-900 transition text-left w-full group"
+      >
+        <div className="w-9 h-9 rounded-md bg-red-600 flex items-center justify-center font-bold text-white shadow-md shadow-red-950/50">
+          <GraduationCap className="w-5 h-5 text-white" />
         </div>
-        <div>
-          <div className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
-            SHU <span className="text-amber-400">ORIC AI</span>
+        <div className="flex-1 min-w-0">
+          <div className="font-display font-bold text-sm tracking-tight text-white group-hover:text-red-500 transition flex items-center justify-between">
+            <span>SHU <span className="text-red-500">ORIC</span></span>
+            <ArrowLeft className="w-3.5 h-3.5 text-zinc-500 group-hover:text-red-500 group-hover:-translate-x-0.5 transition" />
           </div>
-          <div className="text-xs text-slate-400 tracking-wider font-medium">Salim Habib University</div>
+          <div className="text-[11px] text-zinc-400 truncate">Salim Habib University</div>
         </div>
-      </div>
+      </button>
 
       {/* Nav List */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
+      <div className="flex-1 overflow-y-auto py-3 px-2.5 space-y-5">
         {navItems.map((section, idx) => (
           <div key={idx} className="space-y-1">
-            <div className="px-3 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+            <div className="px-2.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
               {section.category}
             </div>
             {section.items.map((item) => {
@@ -114,20 +135,20 @@ export default function Sidebar({ currentView, onNavigate, projectCount = 4 }: S
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-semibold transition-all ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 font-semibold shadow-md shadow-amber-500/20'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-red-600 text-white shadow-sm shadow-red-950/40'
+                      : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-slate-950' : 'text-slate-400'}`} />
-                    <span>{item.label}</span>
+                  <div className="flex items-center gap-2.5 truncate">
+                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
+                    <span className="truncate">{item.label}</span>
                   </div>
                   {item.badge && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                        isActive ? 'bg-slate-950/20 text-slate-950' : item.badgeColor
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0 ${
+                        isActive ? 'bg-black/30 text-white' : item.badgeColor
                       }`}
                     >
                       {item.badge}
@@ -140,18 +161,17 @@ export default function Sidebar({ currentView, onNavigate, projectCount = 4 }: S
         ))}
       </div>
 
-      {/* User Status Bar */}
-      <div className="p-3 bg-slate-900/80 border-t border-slate-800 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-xs text-white shadow-inner">
+      {/* Institutional Directorate Bar */}
+      <div className="p-3 bg-zinc-950 border-t border-zinc-800 flex items-center gap-2.5">
+        <div className="w-7 h-7 rounded bg-red-950/60 border border-red-800/60 flex items-center justify-center font-mono font-bold text-[10px] text-red-400">
           OD
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-xs font-semibold text-slate-200 truncate">ORIC Director</div>
-          <div className="text-[11px] text-slate-400 truncate">Executive Leadership</div>
+          <div className="font-display text-xs font-semibold text-zinc-200 truncate">ORIC Directorate</div>
+          <div className="text-[10px] text-zinc-400 truncate">Commercialization Office</div>
         </div>
-        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" title="System Online" />
+        <div className="w-2 h-2 rounded-full bg-red-500" title="System Operational" />
       </div>
     </aside>
   );
 }
-

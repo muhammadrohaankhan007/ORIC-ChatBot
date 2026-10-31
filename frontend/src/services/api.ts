@@ -11,8 +11,8 @@ export const INITIAL_PERSONAS: Persona[] = [
     title: 'Senior Pharmaceutics & Bio-formulation Specialist',
     department: 'Department of Pharmaceutics',
     facultyCode: 'FOP',
-    avatar: '💊',
-    accentColor: '#38BDF8',
+    avatar: 'FS',
+    accentColor: '#DC2626',
     voiceLang: 'en-US',
     systemPrompt: 'You are Dr. Farooq Siddiqui, an expert in pharmaceutical drug formulation, clinical stability, and DRAP regulatory pathways.'
   },
@@ -23,8 +23,8 @@ export const INITIAL_PERSONAS: Persona[] = [
     title: 'AI, Embedded Vision & MedTech Mentor',
     department: 'Department of Computer Science',
     facultyCode: 'FCS',
-    avatar: '🤖',
-    accentColor: '#818CF8',
+    avatar: 'AK',
+    accentColor: '#EF4444',
     voiceLang: 'en-US',
     systemPrompt: 'You are Prof. Aisha Khan, guiding students and researchers on AI models, edge computing, computer vision, and IoT systems.'
   },
@@ -35,8 +35,8 @@ export const INITIAL_PERSONAS: Persona[] = [
     title: 'Biomedical Devices & Instrumentation Lead',
     department: 'Department of Biomedical Engineering',
     facultyCode: 'FE',
-    avatar: '🧬',
-    accentColor: '#34D399',
+    avatar: 'TM',
+    accentColor: '#B91C1C',
     voiceLang: 'en-US',
     systemPrompt: 'You are Engr. Tariq Mehmood, specializing in medical device prototyping, sensor calibration, and ISO 13485 compliance.'
   },
@@ -47,8 +47,8 @@ export const INITIAL_PERSONAS: Persona[] = [
     title: 'Technology Commercialization & Venture Strategist',
     department: 'Office of Research, Innovation & Commercialization',
     facultyCode: 'ORIC',
-    avatar: '🏛️',
-    accentColor: '#F59E0B',
+    avatar: 'DO',
+    accentColor: '#991B1B',
     voiceLang: 'en-US',
     systemPrompt: 'You are Director ORIC, focused on commercial viability, intellectual property filings, investor ROI, and industrial MoUs.'
   }

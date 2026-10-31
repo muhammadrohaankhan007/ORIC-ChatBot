@@ -41,14 +41,26 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    const isResearch = mode === 'research';
+    const PERSONA_MAP: Record<string, string> = {
+      'dr-farooq': 'Dr. Farooq Siddiqui',
+      'prof-aisha': 'Prof. Aisha Khan',
+      'director-oric': 'Director ORIC',
+    };
+
+    const isResearch = mode === 'research' || mode === 'analysis';
+    const personaId = persona_slug || 'dr-farooq';
+    const personaName = PERSONA_MAP[personaId] || 'Dr. Farooq Siddiqui';
+
     const response = await AiGateway.streamChat({
       prompt: message,
-      systemInstruction: `You are an expert AI advisor for Salim Habib University ORIC. Mode: ${isResearch ? 'Research' : 'Conversational'}.`
+      mode: isResearch ? 'analysis' : 'mentoring',
+      personaId,
+      personaName,
+      systemInstruction: `You are ${personaName}, an authentic university professor and research advisor for Salim Habib University ORIC. Mode: ${isResearch ? 'Research Analysis' : 'Mentoring'}.`
     });
 
     res.json({
-      agent: persona_slug ? `Dr. Farooq Siddiqui` : 'SHU ORIC Agent',
+      agent: personaName,
       response,
       citations: [
         'Salim Habib University Research Repository (2026)',

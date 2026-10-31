@@ -1,4 +1,5 @@
 export type ViewMode = 
+  | 'home'
   | 'dashboard' 
   | 'chat' 
   | 'explorer' 

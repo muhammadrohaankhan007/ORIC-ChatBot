@@ -2,48 +2,54 @@
 
 import React from 'react';
 import { ViewMode } from '@/types';
-import { ShieldCheck, Cpu, Volume2, VolumeX, ExternalLink } from 'lucide-react';
+import { ShieldCheck, Cpu, Volume2, VolumeX, ExternalLink, Globe } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewMode;
   apiConnected: boolean;
   voiceEnabled: boolean;
   onToggleVoice: () => void;
+  onNavigate?: (view: ViewMode) => void;
 }
 
 export default function Header({
   currentView,
   apiConnected,
   voiceEnabled,
-  onToggleVoice
+  onToggleVoice,
+  onNavigate
 }: HeaderProps) {
   const titles: Record<ViewMode, { title: string; subtitle: string }> = {
+    home: {
+      title: 'Salim Habib University ORIC Innovation Ecosystem',
+      subtitle: 'HEC Tier-1 Commercialization Hub, Multi-Agent Faculty & Industry Radar'
+    },
     dashboard: {
-      title: 'University Executive Intelligence Dashboard',
-      subtitle: 'Portfolio Overview, Commercial Pipeline & Faculty Metrics'
+      title: 'Executive Intelligence & Research Command',
+      subtitle: 'Institutional Portfolio, Grant Pipeline & Faculty Commercialization Metrics'
     },
     chat: {
-      title: 'SHU Multi-Agent Conversational Workspace',
-      subtitle: 'Dual-Mode Text & Speech Intelligence with Dynamic Virtual Teachers'
+      title: 'Faculty Research Advisors Workspace',
+      subtitle: 'Dual-Mode Academic Mentoring & Commercial Feasibility Guidance (Gemini 3.5)'
     },
     explorer: {
-      title: 'Intellectual Property & Project Explorer',
+      title: 'Intellectual Property & Project Repository',
       subtitle: 'Verified Research Database with Vectorized Document Embeddings'
     },
     radar: {
       title: 'Karachi & National Industry Radar',
-      subtitle: 'Live Geographic Commercialization Matching Across Industrial Estates'
+      subtitle: 'Geographic Commercialization Matching Across Korangi, Landhi, S.I.T.E. & Port Qasim'
     },
     erl: {
       title: '8-Dimension Entrepreneurship Readiness Canvas',
       subtitle: 'Configurable Commercialization Maturity Scoring & Milestone Tracking'
     },
     discussions: {
-      title: 'Meeting Recording & Speech-to-Text Transcriber',
-      subtitle: 'WebRTC Live Transcription, Automatic Action Extraction & Summaries'
+      title: 'Meeting Recording & Speech Transcriber',
+      subtitle: 'WebRTC Live Transcription, Automatic Action Extraction & Institutional Summaries'
     },
     reports: {
-      title: 'Intelligent Report Generation Facility',
+      title: 'Commercial Dossier & MoU Generator',
       subtitle: 'One-Click Compilation of Investor Briefs, ERL Reports & Feasibility Dossiers'
     }
   };
@@ -51,56 +57,67 @@ export default function Header({
   const current = titles[currentView] || titles.dashboard;
 
   return (
-    <header className="h-16 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md px-6 flex items-center justify-between shrink-0">
-      <div className="flex items-center gap-4">
-        <div>
-          <h1 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+    <header className="h-14 border-b border-zinc-800 bg-black px-6 flex items-center justify-between shrink-0 font-sans">
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="truncate">
+          <h1 className="font-display text-sm font-bold text-white tracking-tight truncate flex items-center gap-2">
             {current.title}
           </h1>
-          <p className="text-xs text-slate-400">{current.subtitle}</p>
+          <p className="text-[11px] text-zinc-400 truncate">{current.subtitle}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5 shrink-0">
+        {/* Switch to Public Website */}
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('home')}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 transition"
+          >
+            <Globe className="w-3.5 h-3.5 text-red-500" />
+            <span>Public Website</span>
+          </button>
+        )}
+
         {/* Voice Global Toggle */}
         <button
           onClick={onToggleVoice}
-          title={voiceEnabled ? 'Mute AI Voice Responses' : 'Enable AI Voice Responses'}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+          title={voiceEnabled ? 'Mute Voice Audio' : 'Enable Voice Audio'}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold border transition-all ${
             voiceEnabled
-              ? 'bg-amber-500/10 text-amber-300 border-amber-500/30 hover:bg-amber-500/20'
-              : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              ? 'bg-red-950/40 text-red-400 border-red-800/60 hover:bg-red-900/40'
+              : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
           }`}
         >
-          {voiceEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-          <span>{voiceEnabled ? 'Voice Active' : 'Voice Muted'}</span>
+          {voiceEnabled ? <Volume2 className="w-3.5 h-3.5 text-red-500" /> : <VolumeX className="w-3.5 h-3.5" />}
+          <span className="hidden sm:inline font-mono">{voiceEnabled ? 'Voice Active' : 'Voice Muted'}</span>
         </button>
 
         {/* Backend Status Badge */}
         <div
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border ${
+          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border font-mono ${
             apiConnected
-              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-              : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20'
+              ? 'bg-zinc-900 text-white border-zinc-800'
+              : 'bg-zinc-900 text-zinc-400 border-zinc-800'
           }`}
         >
-          <Cpu className="w-3.5 h-3.5" />
-          <span>{apiConnected ? 'FastAPI 3.12 Connected' : 'Greenfield Engine Ready'}</span>
+          <Cpu className="w-3.5 h-3.5 text-red-500" />
+          <span>{apiConnected ? 'Gemini 3.5 Live' : 'Local Fallback'}</span>
         </div>
 
-        {/* Security & Verification Pill */}
-        <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-800/60 border border-slate-700/60 text-slate-300">
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-          <span>SHU Sovereign AI</span>
+        {/* Institutional Accreditation Pill */}
+        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono font-medium bg-zinc-900 border border-zinc-800 text-zinc-300">
+          <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
+          <span>HEC Tier-1 ORIC</span>
         </div>
 
-        {/* Documentation Link */}
+        {/* Sitemap Link */}
         <a
           href="/sitemap.xml"
           target="_blank"
           rel="noopener noreferrer"
           title="View Search Engine Sitemap"
-          className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+          className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-md transition"
         >
           <ExternalLink className="w-4 h-4" />
         </a>
@@ -108,4 +125,3 @@ export default function Header({
     </header>
   );
 }
-
