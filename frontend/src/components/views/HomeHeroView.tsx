@@ -18,19 +18,19 @@ import {
   ExternalLink,
   ChevronRight,
   CheckCircle2,
-  FlaskConical
+  FlaskConical,
+  Check
 } from 'lucide-react';
 
 interface HomeHeroViewProps {
   projects: Project[];
-  personas: Persona[];
+  personas?: Persona[];
   onNavigate: (view: ViewMode) => void;
   onSelectProjectForChat: (project: Project) => void;
 }
 
 export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
   projects,
-  personas,
   onNavigate,
   onSelectProjectForChat,
 }) => {
@@ -40,7 +40,7 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
     setCurrentYear(new Date().getFullYear());
   }, []);
 
-  // Cross-validated dynamic statistics
+  // Institutional statistics computed from active portfolio
   const totalFunding = projects.reduce((acc, p) => acc + (p.estimated_funding_pkr || 0), 0);
   const totalFundingMillions = (totalFunding / 1_000_000).toFixed(1);
   const highReadiness = projects.filter((p) => p.commercial_readiness === 'High');
@@ -50,66 +50,100 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
   const avgErl = (projects.reduce((acc, p) => acc + (p.erl_level || 0), 0) / (projects.length || 1)).toFixed(1);
   const avgTrl = (projects.reduce((acc, p) => acc + (p.trl_level || 0), 0) / (projects.length || 1)).toFixed(1);
 
+  const specializationAreas = [
+    {
+      id: 'pharmacy',
+      code: 'FOP',
+      title: 'Pharmaceutics & Health Sciences',
+      lead: 'Drug Formulation, Clinical Stability & DRAP Compliance',
+      description: 'Nanocarriers, transdermal therapeutics, dissolution kinetics, and regulatory dossiers for Karachi pharmaceutical manufacturers.',
+    },
+    {
+      id: 'computing',
+      code: 'FCS',
+      title: 'Computing & Artificial Intelligence',
+      lead: 'Embedded Vision, Edge Inference & Data Engineering',
+      description: 'Factory-floor computer vision, automated quality assurance, predictive maintenance, and scalable institutional software.',
+    },
+    {
+      id: 'biomedical',
+      code: 'FE',
+      title: 'Biomedical Engineering',
+      lead: 'Instrumentation, Biosensors & Medical Devices',
+      description: 'Wearable diagnostic sensors, non-invasive physiological monitors, and ISO 13485 medical device prototyping.',
+    },
+    {
+      id: 'commercialization',
+      code: 'ORIC',
+      title: 'Technology Commercialization',
+      lead: 'Patent Strategy, ERL Benchmarking & Bilateral MoUs',
+      description: 'Institutional intellectual property filings, industry-academia matching, technology licensing, and venture spinouts.',
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-zinc-100 font-sans selection:bg-red-600 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-white text-zinc-900 font-sans selection:bg-red-600 selection:text-white">
       {/* =========================================================================
-          1. INSTITUTIONAL TOP BAR (BLACK, WHITE, CRIMSON RED)
+          1. INSTITUTIONAL TOP BAR (WHITE CANVAS, CLEAN RED ACCENT)
           ========================================================================= */}
-      <header className="sticky top-0 z-50 bg-black/95 backdrop-blur-md border-b border-zinc-800">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-zinc-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          {/* Official Clickable University Crest & Logo */}
-          <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-md bg-red-600 flex items-center justify-center font-bold text-white shadow-md shadow-red-950/40">
-              <GraduationCap className="w-6 h-6 text-white" />
-            </div>
+          {/* University Official Brand & Crest */}
+          <div className="flex items-center gap-3">
+            <img
+              src="/shu-logo.png"
+              alt="Salim Habib University Official Logo"
+              className="h-10 w-auto object-contain"
+            />
+            <div className="h-7 w-px bg-zinc-200 hidden sm:block" />
             <div>
-              <div className="font-display font-bold text-base tracking-tight text-white group-hover:text-red-500 transition flex items-center gap-2">
-                <span>Salim Habib University</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/60 uppercase font-semibold">
-                  ORIC
+              <div className="font-bold text-xs tracking-tight text-zinc-900 flex items-center gap-1.5">
+                <span>ORIC</span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-red-50 text-red-700 font-semibold border border-red-200">
+                  HEC Tier-1
                 </span>
               </div>
-              <div className="text-[11px] text-zinc-400 font-medium tracking-wide">
+              <div className="text-[11px] text-zinc-500 font-normal hidden sm:block">
                 Office of Research, Innovation & Commercialization
               </div>
             </div>
-          </a>
+          </div>
 
           {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-zinc-300">
-            <a href="#pipeline" className="hover:text-white transition">
+          <nav className="hidden md:flex items-center gap-6 text-xs font-medium text-zinc-600">
+            <a href="#pipeline" className="hover:text-zinc-900 transition">
               Research Pipeline
             </a>
-            <a href="#industry" className="hover:text-white transition">
+            <a href="#industry" className="hover:text-zinc-900 transition">
               Industry Radar
             </a>
-            <a href="#faculties" className="hover:text-white transition">
-              Faculty Mentors
+            <a href="#specializations" className="hover:text-zinc-900 transition">
+              Specialization Areas
             </a>
-            <a href="#framework" className="hover:text-white transition">
+            <a href="#framework" className="hover:text-zinc-900 transition">
               8D ERL Framework
             </a>
-            <a href="#contact" className="hover:text-white transition">
+            <a href="#contact" className="hover:text-zinc-900 transition">
               Contact & MoUs
             </a>
           </nav>
 
-          {/* Direct Functional CTA */}
+          {/* Functional Actions */}
           <div className="flex items-center gap-3">
             <a
               href="mailto:oric@shu.edu.pk"
-              className="hidden lg:flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition"
+              className="hidden lg:flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-900 transition"
               title="Official ORIC Directorate Email"
             >
-              <Mail className="w-3.5 h-3.5 text-red-500" />
+              <Mail className="w-3.5 h-3.5 text-red-600" />
               <span>oric@shu.edu.pk</span>
             </a>
 
             <button
               onClick={() => onNavigate('dashboard')}
-              className="px-4 py-2 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-2 shadow-md shadow-red-900/30 transition transform hover:-translate-y-0.5"
+              className="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 transition shadow-xs"
             >
-              <span>Open Research Dashboard</span>
+              <span>Research Dashboard</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -117,36 +151,36 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       </header>
 
       {/* =========================================================================
-          2. INSTITUTIONAL HERO SECTION (EDITORIAL SPACE GROTESK)
+          2. INSTITUTIONAL HERO SECTION (CLEAN OFF-WHITE CANVAS)
           ========================================================================= */}
-      <section className="relative border-b border-zinc-800 bg-gradient-to-b from-zinc-950 via-zinc-900 to-black py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-          {/* Institutional Accreditation Pill */}
+      <section className="border-b border-zinc-200 bg-zinc-50/70 py-16 lg:py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          {/* Institutional Badge */}
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-red-950/50 border border-red-800/60 text-red-400 text-xs font-bold uppercase tracking-wider font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border border-zinc-200 text-zinc-700 text-xs font-semibold shadow-xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
               HEC Recognized Tier-1 ORIC
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-300 text-xs font-medium">
-              Karachi Industrial Corridor • Sindh, Pakistan
+            <span className="text-xs text-zinc-500">
+              Salim Habib University • Korangi Creek, Karachi
             </span>
           </div>
 
-          {/* Master Institutional Headline */}
-          <div className="max-w-4xl space-y-5">
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
-              Bridging Academic Laboratory Research with National Industrial Manufacturing
+          {/* Master Headline */}
+          <div className="max-w-4xl space-y-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold font-display text-zinc-900 tracking-tight leading-tight">
+              Bridging University Research with National Industrial Manufacturing
             </h1>
-            <p className="text-base sm:text-lg text-zinc-300 leading-relaxed font-normal">
-              The Office of Research, Innovation & Commercialization (ORIC) at Salim Habib University drives technology transfer and enterprise formation. We translate research discoveries in <strong className="text-white font-semibold underline decoration-red-600 underline-offset-4">Pharmaceutics</strong>, <strong className="text-white font-semibold underline decoration-red-600 underline-offset-4">Artificial Intelligence</strong>, and <strong className="text-white font-semibold underline decoration-red-600 underline-offset-4">Biomedical Engineering</strong> into commercial solutions for Karachi&apos;s manufacturing powerhouses across Korangi, Landhi, and S.I.T.E. industrial estates.
+            <p className="text-base sm:text-lg text-zinc-600 leading-relaxed font-normal">
+              The Office of Research, Innovation & Commercialization (ORIC) accelerates technology transfer and enterprise development at Salim Habib University. We translate laboratory discoveries in Pharmaceutics, Artificial Intelligence, and Biomedical Engineering into commercial solutions for Karachi&apos;s industrial estates across Korangi, Landhi, and S.I.T.E.
             </p>
           </div>
 
-          {/* Direct, Concrete Functional CTAs */}
+          {/* Actionable CTAs */}
           <div className="pt-2 flex flex-wrap items-center gap-3">
             <button
               onClick={() => onNavigate('dashboard')}
-              className="px-6 py-3.5 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-sm flex items-center gap-2 shadow-lg shadow-red-900/40 transition transform hover:-translate-y-0.5"
+              className="px-5 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition"
             >
               <TrendingUp className="w-4 h-4" />
               <span>Open Research Dashboard</span>
@@ -155,87 +189,87 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
 
             <button
               onClick={() => onNavigate('chat')}
-              className="px-6 py-3.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-sm border border-zinc-800 hover:border-zinc-700 flex items-center gap-2 transition"
+              className="px-5 py-2.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-800 font-semibold text-xs border border-zinc-300 flex items-center gap-2 shadow-xs transition"
             >
-              <Sparkles className="w-4 h-4 text-red-500" />
-              <span>Consult Faculty Research Mentors</span>
+              <Sparkles className="w-4 h-4 text-red-600" />
+              <span>Consult ORIC Research Assistant</span>
             </button>
 
             <button
               onClick={() => onNavigate('radar')}
-              className="px-5 py-3.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white font-medium text-sm border border-zinc-800 flex items-center gap-2 transition"
+              className="px-4 py-2.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-700 font-medium text-xs border border-zinc-200 flex items-center gap-2 transition"
             >
-              <Building2 className="w-4 h-4 text-red-500" />
-              <span>Explore Korangi & S.I.T.E. Radar</span>
+              <Building2 className="w-4 h-4 text-zinc-500" />
+              <span>Karachi Industry Radar</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          3. VERIFIED METRICS TICKER (STARK CONTRAST)
+          3. VERIFIED METRICS TICKER (CLEAN CARDS)
           ========================================================================= */}
-      <section className="border-b border-zinc-800 bg-black py-8">
+      <section className="border-b border-zinc-200 bg-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {/* Total Projects */}
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-xs font-semibold uppercase tracking-wider font-mono">Research Projects</span>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+                <span>Active Projects</span>
                 <Layers className="w-4 h-4 text-zinc-400" />
               </div>
-              <div className="font-display text-2xl lg:text-3xl font-black text-white">{projects.length}</div>
-              <div className="text-xs text-red-500 flex items-center gap-1 font-medium">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Vector Indexed Labs</span>
+              <div className="text-2xl lg:text-3xl font-bold text-zinc-900">{projects.length}</div>
+              <div className="text-xs text-zinc-500 flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-red-600" />
+                <span>Verified Laboratory Units</span>
               </div>
             </div>
 
-            {/* Pipeline Valuation */}
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-xs font-semibold uppercase tracking-wider font-mono">Grant Valuation</span>
-                <TrendingUp className="w-4 h-4 text-red-500" />
+            {/* Grant Pipeline */}
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+                <span>Committed R&D Budget</span>
+                <TrendingUp className="w-4 h-4 text-red-600" />
               </div>
-              <div className="font-display text-2xl lg:text-3xl font-black text-red-500">PKR {totalFundingMillions}M</div>
-              <div className="text-xs text-zinc-400">
-                <span>Committed R&D Budgets</span>
+              <div className="text-2xl lg:text-3xl font-bold text-red-600">PKR {totalFundingMillions}M</div>
+              <div className="text-xs text-zinc-500">
+                <span>Internal & External Grants</span>
               </div>
             </div>
 
             {/* High Commercialization Candidates */}
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-xs font-semibold uppercase tracking-wider font-mono">MoU Candidates</span>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+                <span>High-Readiness Candidates</span>
                 <Building2 className="w-4 h-4 text-zinc-400" />
               </div>
-              <div className="font-display text-2xl lg:text-3xl font-black text-white">{highReadiness.length}</div>
-              <div className="text-xs text-zinc-400">
-                <span>{Math.round((highReadiness.length / projects.length) * 100)}% of Active Portfolio</span>
+              <div className="text-2xl lg:text-3xl font-bold text-zinc-900">{highReadiness.length}</div>
+              <div className="text-xs text-zinc-500">
+                <span>{Math.round((highReadiness.length / (projects.length || 1)) * 100)}% of Active Portfolio</span>
               </div>
             </div>
 
             {/* Average Readiness Index */}
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-xs font-semibold uppercase tracking-wider font-mono">Readiness Index</span>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+                <span>Average Maturity</span>
                 <Compass className="w-4 h-4 text-zinc-400" />
               </div>
-              <div className="font-display text-2xl lg:text-3xl font-black text-white">ERL {avgErl}</div>
-              <div className="text-xs text-zinc-400">
+              <div className="text-2xl lg:text-3xl font-bold text-zinc-900">ERL {avgErl}</div>
+              <div className="text-xs text-zinc-500">
                 <span>Average TRL Score: {avgTrl}/9</span>
               </div>
             </div>
 
             {/* IP Filings */}
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1 col-span-2 md:col-span-1">
-              <div className="flex items-center justify-between text-zinc-400">
-                <span className="text-xs font-semibold uppercase tracking-wider font-mono">IP Filings</span>
-                <FileCheck2 className="w-4 h-4 text-red-500" />
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1 col-span-2 md:col-span-1">
+              <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+                <span>Patent & IP Filings</span>
+                <FileCheck2 className="w-4 h-4 text-zinc-400" />
               </div>
-              <div className="font-display text-2xl lg:text-3xl font-black text-white">{patentProjects.length}</div>
-              <div className="text-xs text-red-400">
-                <span>{patentCount} Pending • {disclosureCount} Disclosed</span>
+              <div className="text-2xl lg:text-3xl font-bold text-zinc-900">{patentProjects.length}</div>
+              <div className="text-xs text-zinc-500">
+                <span>{patentCount} Granted/Pending • {disclosureCount} Filed</span>
               </div>
             </div>
           </div>
@@ -245,28 +279,28 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       {/* =========================================================================
           4. ACTIVE RESEARCH PIPELINE (#pipeline)
           ========================================================================= */}
-      <section id="pipeline" className="border-b border-zinc-800 py-16 lg:py-20 bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section id="pipeline" className="border-b border-zinc-200 py-16 lg:py-20 bg-zinc-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider font-mono">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
                 <FlaskConical className="w-3.5 h-3.5" />
-                <span>Institutional R&D Portfolio</span>
+                <span>Institutional Portfolio</span>
               </div>
-              <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
+              <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight">
                 Active Research Projects & Commercial Pipelines
               </h2>
-              <p className="text-sm text-zinc-400 max-w-2xl">
-                Multi-disciplinary research initiatives assessed under Higher Education Commission (HEC) commercialization benchmarks and Entrepreneurship Readiness Levels.
+              <p className="text-sm text-zinc-600 max-w-2xl">
+                Multi-disciplinary research projects evaluated under HEC benchmarks and the 8-Dimension Entrepreneurship Readiness framework.
               </p>
             </div>
 
             <button
               onClick={() => onNavigate('explorer')}
-              className="px-4 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs border border-zinc-800 flex items-center gap-1.5 transition self-start md:self-auto"
+              className="px-3.5 py-2 rounded-lg bg-white hover:bg-zinc-50 text-zinc-800 font-medium text-xs border border-zinc-200 shadow-xs flex items-center gap-1.5 transition self-start md:self-auto"
             >
-              <span>Explore All {projects.length} Projects in Database</span>
-              <ChevronRight className="w-3.5 h-3.5 text-red-500" />
+              <span>View All {projects.length} Projects</span>
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
             </button>
           </div>
 
@@ -274,48 +308,48 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
             {projects.map((project) => (
               <div
                 key={project.id}
-                className="bg-black border border-zinc-800 rounded-md p-6 space-y-4 hover:border-red-900/60 transition flex flex-col justify-between"
+                className="bg-white border border-zinc-200 rounded-lg p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
               >
                 <div className="space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
                       {project.project_code}
                     </span>
-                    <span className="text-xs font-semibold text-red-500 font-mono">
+                    <span className="text-xs font-semibold text-red-600">
                       {project.faculty}
                     </span>
                   </div>
 
-                  <h3 className="font-display text-base font-bold text-white leading-snug">
+                  <h3 className="text-base font-bold text-zinc-900 leading-snug">
                     {project.title}
                   </h3>
 
-                  <p className="text-xs text-zinc-300 leading-relaxed line-clamp-3">
+                  <p className="text-xs text-zinc-600 leading-relaxed line-clamp-3">
                     {project.abstract}
                   </p>
 
-                  {/* Technical Meta Tags */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2">
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-zinc-900 text-white border border-zinc-800 font-medium">
+                  {/* Metadata Chips */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium">
                       TRL {project.trl_level}/9
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-red-950/40 text-red-400 border border-red-900/40 font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 font-medium">
                       ERL {project.erl_level}/9
                     </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800 font-medium">
+                    <span className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200 font-medium">
                       {project.ip_status}
                     </span>
                     {project.estimated_funding_pkr && (
-                      <span className="text-[11px] font-mono text-zinc-400">
+                      <span className="text-xs text-zinc-500 font-medium">
                         Valuation: PKR {(project.estimated_funding_pkr / 1_000_000).toFixed(1)}M
                       </span>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-zinc-800/80 flex items-center justify-between gap-3">
-                  <div className="text-xs text-zinc-400 truncate">
-                    Lead: <span className="text-white font-medium">{project.lead_investigator}</span>
+                <div className="pt-4 border-t border-zinc-100 flex items-center justify-between gap-3">
+                  <div className="text-xs text-zinc-500 truncate">
+                    Lead: <span className="text-zinc-800 font-medium">{project.lead_investigator}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <button
@@ -323,16 +357,16 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
                         onSelectProjectForChat(project);
                         onNavigate('chat');
                       }}
-                      className="px-3 py-1.5 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-1 transition"
+                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1 transition shadow-xs"
                     >
                       <span>Analyze</span>
                       <ArrowRight className="w-3 h-3" />
                     </button>
                     <button
                       onClick={() => onNavigate('erl')}
-                      className="px-3 py-1.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold border border-zinc-800 transition"
+                      className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-medium border border-zinc-200 transition"
                     >
-                      <span>ERL Score</span>
+                      <span>ERL Assessment</span>
                     </button>
                   </div>
                 </div>
@@ -345,142 +379,138 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       {/* =========================================================================
           5. KARACHI INDUSTRIAL RADAR (#industry)
           ========================================================================= */}
-      <section id="industry" className="border-b border-zinc-800 py-16 lg:py-20 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider font-mono">
+      <section id="industry" className="border-b border-zinc-200 py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
               <Building2 className="w-3.5 h-3.5" />
-              <span>Commercialization Nexus</span>
+              <span>Commercialization Hub</span>
             </div>
-            <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-              Karachi Industrial Corridor Matching Radar
+            <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight">
+              Karachi Industrial Corridor Matching
             </h2>
-            <p className="text-sm text-zinc-400 max-w-3xl">
-              Salim Habib University is geographically anchored at Korangi Creek, providing direct physical access to major industrial estates across the Karachi metropolitan region.
+            <p className="text-sm text-zinc-600 max-w-3xl">
+              Salim Habib University is situated in Korangi Creek, providing direct proximity to Karachi&apos;s primary industrial manufacturing corridors.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Korangi */}
-            <div className="p-5 rounded-md bg-zinc-950 border border-zinc-800 space-y-3">
-              <div className="text-xs font-bold text-red-500 uppercase tracking-wider font-mono">Cluster 01</div>
-              <h3 className="font-display text-base font-bold text-white">Korangi Industrial Area</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Primary pharmaceutical manufacturing, textile exports, leather tanning, and specialty chemical processing.
+            <div className="p-5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-2.5">
+              <div className="text-xs font-semibold text-red-600">Cluster 01</div>
+              <h3 className="text-sm font-bold text-zinc-900">Korangi Industrial Area</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Primary pharmaceutical manufacturing, textile exports, leather tanning, and specialty chemicals.
               </p>
-              <div className="pt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
+              <div className="pt-2 text-xs text-zinc-700 font-medium flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-red-600" />
                 <span>Active MoUs: Getz Pharma, Artistic</span>
               </div>
             </div>
 
             {/* Landhi */}
-            <div className="p-5 rounded-md bg-zinc-950 border border-zinc-800 space-y-3">
-              <div className="text-xs font-bold text-red-500 uppercase tracking-wider font-mono">Cluster 02</div>
-              <h3 className="font-display text-base font-bold text-white">Landhi Industrial Estate</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+            <div className="p-5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-2.5">
+              <div className="text-xs font-semibold text-red-600">Cluster 02</div>
+              <h3 className="text-sm font-bold text-zinc-900">Landhi Industrial Estate</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
                 Secondary pharmaceutical formulations, automotive parts assembly, and large-scale FMCG distribution.
               </p>
-              <div className="pt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
+              <div className="pt-2 text-xs text-zinc-700 font-medium flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-red-600" />
                 <span>Target Partners: Ferozsons, Searle</span>
               </div>
             </div>
 
             {/* S.I.T.E. */}
-            <div className="p-5 rounded-md bg-zinc-950 border border-zinc-800 space-y-3">
-              <div className="text-xs font-bold text-red-500 uppercase tracking-wider font-mono">Cluster 03</div>
-              <h3 className="font-display text-base font-bold text-white">S.I.T.E. Industrial Area</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Historic industrial hub specializing in composite textiles, heavy dyeing, and industrial plastic polymers.
+            <div className="p-5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-2.5">
+              <div className="text-xs font-semibold text-red-600">Cluster 03</div>
+              <h3 className="text-sm font-bold text-zinc-900">S.I.T.E. Industrial Area</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Industrial hub specializing in composite textiles, heavy dyeing, and industrial plastic polymers.
               </p>
-              <div className="pt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
+              <div className="pt-2 text-xs text-zinc-700 font-medium flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-red-600" />
                 <span>Target Partners: Gul Ahmed, EBM</span>
               </div>
             </div>
 
             {/* Port Qasim */}
-            <div className="p-5 rounded-md bg-zinc-950 border border-zinc-800 space-y-3">
-              <div className="text-xs font-bold text-red-500 uppercase tracking-wider font-mono">Cluster 04</div>
-              <h3 className="font-display text-base font-bold text-white">Port Qasim Industrial Zone</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
+            <div className="p-5 rounded-lg bg-zinc-50 border border-zinc-200 space-y-2.5">
+              <div className="text-xs font-semibold text-red-600">Cluster 04</div>
+              <h3 className="text-sm font-bold text-zinc-900">Port Qasim Zone</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
                 Export terminal corridor, petro-chemicals, edible oils, thermal power, and maritime logistics.
               </p>
-              <div className="pt-2 text-xs text-red-400 font-semibold flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-red-500" />
+              <div className="pt-2 text-xs text-zinc-700 font-medium flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5 text-red-600" />
                 <span>Target Partners: Engro, National Foods</span>
               </div>
             </div>
           </div>
 
-          <div className="p-6 rounded-md bg-zinc-950 border border-zinc-800 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="p-6 rounded-lg bg-zinc-50 border border-zinc-200 flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h4 className="font-display text-sm font-bold text-white">Corporate Collaboration Opportunities</h4>
-              <p className="text-xs text-zinc-400">Review verified company profiles, technology demands, and corporate contacts in the interactive radar.</p>
+              <h4 className="text-sm font-bold text-zinc-900">Corporate Collaboration Inquiries</h4>
+              <p className="text-xs text-zinc-600">Review verified company profiles, technology demands, and corporate contacts in the interactive radar.</p>
             </div>
             <button
               onClick={() => onNavigate('radar')}
-              className="px-5 py-2.5 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-2 shrink-0 transition"
+              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 shrink-0 transition shadow-xs"
             >
               <Building2 className="w-4 h-4" />
-              <span>Open Industrial Radar Matrix</span>
+              <span>Open Industrial Radar</span>
             </button>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          6. VIRTUAL RESEARCH FACULTY & MENTORS (#faculties)
+          6. RESEARCH SPECIALIZATION AREAS (#specializations)
           ========================================================================= */}
-      <section id="faculties" className="border-b border-zinc-800 py-16 lg:py-20 bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider font-mono">
+      <section id="specializations" className="border-b border-zinc-200 py-16 lg:py-20 bg-zinc-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
               <GraduationCap className="w-3.5 h-3.5" />
-              <span>Academic Advisory Directorate</span>
+              <span>Academic Domains</span>
             </div>
-            <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-              Virtual Teachers & Academic Research Mentors
+            <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight">
+              Research Specialization Areas
             </h2>
-            <p className="text-sm text-zinc-400 max-w-3xl">
-              Salim Habib University faculty mentors provide real-time Socratic guidance and technical evaluation, powered by live Google Gemini intelligence.
+            <p className="text-sm text-zinc-600 max-w-3xl">
+              Salim Habib University faculty researchers collaborate across distinct domain verticals to advance laboratory validation and technology commercialization.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {personas.map((mentor) => (
+            {specializationAreas.map((area) => (
               <div
-                key={mentor.id}
-                className="bg-black border border-zinc-800 rounded-md p-5 space-y-4 hover:border-red-900/60 transition flex flex-col justify-between"
+                key={area.id}
+                className="bg-white border border-zinc-200 rounded-lg p-5 space-y-3 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
               >
-                <div className="space-y-3">
+                <div className="space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="w-8 h-8 rounded-md bg-zinc-900 border border-zinc-800 text-red-500 font-mono font-bold text-xs flex items-center justify-center">
-                      {mentor.avatar}
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
-                      {mentor.facultyCode}
+                    <span className="text-xs font-bold px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-200">
+                      {area.code}
                     </span>
                   </div>
 
                   <div>
-                    <h3 className="font-display text-sm font-bold text-white">{mentor.name}</h3>
-                    <div className="text-[11px] text-red-500 font-medium">{mentor.title}</div>
-                    <div className="text-[11px] text-zinc-400">{mentor.department}</div>
+                    <h3 className="text-sm font-bold text-zinc-900">{area.title}</h3>
+                    <div className="text-xs text-red-600 font-medium pt-0.5">{area.lead}</div>
                   </div>
 
-                  <p className="text-xs text-zinc-300 leading-relaxed">
-                    {mentor.systemPrompt?.replace(/^You are [^,]+,\s*/, '')}
+                  <p className="text-xs text-zinc-600 leading-relaxed">
+                    {area.description}
                   </p>
                 </div>
 
                 <button
                   onClick={() => onNavigate('chat')}
-                  className="w-full mt-2 py-2 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-semibold border border-zinc-800 hover:border-zinc-700 flex items-center justify-center gap-1.5 transition"
+                  className="w-full mt-2 py-2 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-zinc-800 text-xs font-medium border border-zinc-200 flex items-center justify-center gap-1.5 transition"
                 >
-                  <Sparkles className="w-3.5 h-3.5 text-red-500" />
-                  <span>Consult in AI Workspace</span>
+                  <Sparkles className="w-3.5 h-3.5 text-red-600" />
+                  <span>Open in AI Assistant</span>
                 </button>
               </div>
             ))}
@@ -491,77 +521,77 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       {/* =========================================================================
           7. HEC 8-DIMENSION ERL CANVAS (#framework)
           ========================================================================= */}
-      <section id="framework" className="border-b border-zinc-800 py-16 lg:py-20 bg-black">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider font-mono">
+      <section id="framework" className="border-b border-zinc-200 py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
               <Compass className="w-3.5 h-3.5" />
-              <span>Rigorous Commercialization Metric</span>
+              <span>Commercialization Framework</span>
             </div>
-            <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-              The 8-Dimension Entrepreneurship Readiness (ERL) Canvas
+            <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight">
+              8-Dimension Entrepreneurship Readiness (ERL) Framework
             </h2>
-            <p className="text-sm text-zinc-400 max-w-3xl">
-              Commercializing academic research requires more than laboratory validation. Salim Habib University enforces the 8-Dimension ERL Framework to benchmark every candidate project across technical, legal, and market verticals.
+            <p className="text-sm text-zinc-600 max-w-3xl">
+              Academic research projects are assessed across 8 critical dimensions to benchmark technical validity, IP protection, and industrial commercialization readiness.
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 01</div>
-              <h3 className="font-display text-sm font-bold text-white">Problem Validation</h3>
-              <p className="text-xs text-zinc-400">Quantifiable pain points and corporate buyer discovery.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 01</div>
+              <h3 className="text-sm font-bold text-zinc-900">Problem Validation</h3>
+              <p className="text-xs text-zinc-600">Quantifiable pain points and corporate buyer discovery.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 02</div>
-              <h3 className="font-display text-sm font-bold text-white">Market Sizing</h3>
-              <p className="text-xs text-zinc-400">TAM, SAM, SOM analysis for national and GCC export markets.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 02</div>
+              <h3 className="text-sm font-bold text-zinc-900">Market Sizing</h3>
+              <p className="text-xs text-zinc-600">TAM, SAM, SOM analysis for national and regional export corridors.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 03</div>
-              <h3 className="font-display text-sm font-bold text-white">Intellectual Property</h3>
-              <p className="text-xs text-zinc-400">Patentability, freedom-to-operate, and trade secret filings.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 03</div>
+              <h3 className="text-sm font-bold text-zinc-900">Intellectual Property</h3>
+              <p className="text-xs text-zinc-600">Patentability, freedom-to-operate, and provisional filings.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 04</div>
-              <h3 className="font-display text-sm font-bold text-white">Regulatory Clearance</h3>
-              <p className="text-xs text-zinc-400">DRAP compliance, ISO standards, and environmental certifications.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 04</div>
+              <h3 className="text-sm font-bold text-zinc-900">Regulatory Clearance</h3>
+              <p className="text-xs text-zinc-600">DRAP compliance, PSQCA guidelines, and ISO standards.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 05</div>
-              <h3 className="font-display text-sm font-bold text-white">Technical Maturity</h3>
-              <p className="text-xs text-zinc-400">Bench testing, pilot validation, and TRL 1-9 progression.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 05</div>
+              <h3 className="text-sm font-bold text-zinc-900">Technical Maturity</h3>
+              <p className="text-xs text-zinc-600">Bench testing, pilot validation, and TRL 1-9 progression.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 06</div>
-              <h3 className="font-display text-sm font-bold text-white">Operational Team</h3>
-              <p className="text-xs text-zinc-400">Principal investigators, postgraduates, and commercial leads.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 06</div>
+              <h3 className="text-sm font-bold text-zinc-900">Operational Team</h3>
+              <p className="text-xs text-zinc-600">Principal investigators, research associates, and commercial leads.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 07</div>
-              <h3 className="font-display text-sm font-bold text-white">Financial Feasibility</h3>
-              <p className="text-xs text-zinc-400">Unit economics, CAPEX/OPEX modeling, and grant allocations.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 07</div>
+              <h3 className="text-sm font-bold text-zinc-900">Financial Feasibility</h3>
+              <p className="text-xs text-zinc-600">Unit economics, CAPEX/OPEX modeling, and grant allocations.</p>
             </div>
 
-            <div className="p-4 rounded-md bg-zinc-950 border border-zinc-800 space-y-1.5">
-              <div className="text-xs font-mono text-red-500">DIMENSION 08</div>
-              <h3 className="font-display text-sm font-bold text-white">Industrial Scalability</h3>
-              <p className="text-xs text-zinc-400">Mass production workflows and factory-floor integration.</p>
+            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 space-y-1">
+              <div className="text-xs font-semibold text-red-600">DIMENSION 08</div>
+              <h3 className="text-sm font-bold text-zinc-900">Industrial Scalability</h3>
+              <p className="text-xs text-zinc-600">Mass production workflows and factory-floor integration.</p>
             </div>
           </div>
 
           <div className="pt-2 flex justify-start">
             <button
               onClick={() => onNavigate('erl')}
-              className="px-5 py-3 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-2 transition"
+              className="px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-2 transition shadow-xs"
             >
-              <span>Launch 8-Dimension ERL Assessment Tool</span>
+              <span>Launch 8-Dimension Assessment</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -569,64 +599,64 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       </section>
 
       {/* =========================================================================
-          8. INSTITUTIONAL CONTACT & CORPORATE MOUS (#contact)
+          8. INSTITUTIONAL CONTACT & MOUS (#contact)
           ========================================================================= */}
-      <section id="contact" className="border-b border-zinc-800 py-16 lg:py-20 bg-zinc-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section id="contact" className="border-b border-zinc-200 py-16 lg:py-20 bg-zinc-50/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             {/* Contact Details */}
             <div className="space-y-6">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-1.5 text-xs font-bold text-red-500 uppercase tracking-wider font-mono">
+                <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
                   <Mail className="w-3.5 h-3.5" />
                   <span>Institutional Collaboration</span>
                 </div>
-                <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight">
-                  Office of Research, Innovation & Commercialization (ORIC)
+                <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight">
+                  Office of Research, Innovation & Commercialization
                 </h2>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  We welcome industry leaders, investors, alumni, and research sponsors seeking corporate joint ventures, patent licensing, or subsidized laboratory access.
+                <p className="text-sm text-zinc-600 leading-relaxed">
+                  We collaborate with corporate partners, research sponsors, alumni, and investors seeking bilaterally structured joint ventures, technology licensing, or laboratory access.
                 </p>
               </div>
 
-              <div className="space-y-3.5 text-sm text-zinc-300">
+              <div className="space-y-3.5 text-sm text-zinc-700">
                 <div className="flex items-start gap-3">
-                  <MapPin className="w-4 h-4 text-red-500 mt-1 shrink-0" />
+                  <MapPin className="w-4 h-4 text-red-600 mt-1 shrink-0" />
                   <div>
-                    <strong className="text-white">Campus Address:</strong>
-                    <div className="text-zinc-400">Salim Habib University, NC-24, Deh Dih, Korangi Creek, Karachi - 74900, Sindh, Pakistan.</div>
+                    <strong className="text-zinc-900">Campus Address:</strong>
+                    <div className="text-zinc-600">Salim Habib University, NC-24, Deh Dih, Korangi Creek, Karachi - 74900, Sindh, Pakistan.</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-red-500 shrink-0" />
+                  <Mail className="w-4 h-4 text-red-600 shrink-0" />
                   <div>
-                    <strong className="text-white">Official Email: </strong>
-                    <a href="mailto:oric@shu.edu.pk" className="text-red-400 hover:underline">
+                    <strong className="text-zinc-900">Official Email: </strong>
+                    <a href="mailto:oric@shu.edu.pk" className="text-red-600 hover:underline">
                       oric@shu.edu.pk
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-red-500 shrink-0" />
+                  <Phone className="w-4 h-4 text-red-600 shrink-0" />
                   <div>
-                    <strong className="text-white">Telephone Exchange: </strong>
-                    <a href="tel:+9221111248748" className="hover:text-white transition">
+                    <strong className="text-zinc-900">Telephone Exchange: </strong>
+                    <a href="tel:+9221111248748" className="hover:text-zinc-900 transition">
                       +92 (21) 111-248-748
                     </a>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <ExternalLink className="w-4 h-4 text-red-500 shrink-0" />
+                  <ExternalLink className="w-4 h-4 text-red-600 shrink-0" />
                   <div>
-                    <strong className="text-white">University Portal: </strong>
+                    <strong className="text-zinc-900">University Portal: </strong>
                     <a
                       href="https://shu.edu.pk"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-zinc-300 hover:text-white hover:underline transition"
+                      className="text-zinc-700 hover:text-zinc-900 hover:underline transition"
                     >
                       www.shu.edu.pk
                     </a>
@@ -635,27 +665,27 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
               </div>
             </div>
 
-            {/* Corporate MoU Initiation Box */}
-            <div className="p-8 rounded-md bg-black border border-zinc-800 space-y-6">
-              <h3 className="font-display text-lg font-bold text-white">Corporate Collaboration Inquiries</h3>
-              <p className="text-xs text-zinc-400 leading-relaxed">
-                Connect directly with the ORIC Directorate for bilateral non-disclosure agreements (NDAs), technology evaluations, or faculty-sponsored research contracts.
+            {/* Corporate MoU Box */}
+            <div className="p-8 rounded-lg bg-white border border-zinc-200 space-y-5 shadow-xs">
+              <h3 className="text-base font-bold text-zinc-900">Commercial Collaboration Inquiries</h3>
+              <p className="text-xs text-zinc-600 leading-relaxed">
+                Connect directly with the ORIC Directorate for non-disclosure agreements (NDAs), technology evaluations, or faculty-sponsored research contracts.
               </p>
 
               <div className="space-y-3">
                 <button
                   onClick={() => onNavigate('dashboard')}
-                  className="w-full py-3 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-red-950/40 transition"
+                  className="w-full py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center justify-center gap-2 shadow-xs transition"
                 >
                   <TrendingUp className="w-4 h-4" />
-                  <span>Access Research Database & Metrics</span>
+                  <span>Access Research Dashboard</span>
                 </button>
 
                 <a
                   href="mailto:oric@shu.edu.pk?subject=Corporate%20MoU%20%26%20Research%20Collaboration%20Inquiry%20-%20Salim%20Habib%20University"
-                  className="w-full py-3 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-800 font-semibold text-xs flex items-center justify-center gap-2 transition text-center"
+                  className="w-full py-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 text-zinc-800 border border-zinc-200 font-medium text-xs flex items-center justify-center gap-2 transition text-center"
                 >
-                  <Mail className="w-4 h-4 text-red-500" />
+                  <Mail className="w-4 h-4 text-red-600" />
                   <span>Send Direct Commercialization Inquiry</span>
                 </a>
               </div>
@@ -667,79 +697,78 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
       {/* =========================================================================
           9. INSTITUTIONAL WEBSITE FOOTER
           ========================================================================= */}
-      <footer className="bg-black border-t border-zinc-800 py-12 text-zinc-400 text-xs">
+      <footer className="bg-white border-t border-zinc-200 py-12 text-zinc-600 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Col 1: University ORIC Info */}
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-white font-display font-bold text-sm">
-                <div className="w-7 h-7 rounded bg-red-600 flex items-center justify-center text-white font-black">
-                  <GraduationCap className="w-4 h-4" />
-                </div>
-                <span>SHU ORIC</span>
-              </div>
-              <p className="text-zinc-400 leading-relaxed text-[11px]">
+              <img
+                src="/shu-logo.png"
+                alt="Salim Habib University"
+                className="h-10 w-auto object-contain"
+              />
+              <p className="text-zinc-500 leading-relaxed text-xs">
                 Office of Research, Innovation & Commercialization, Salim Habib University. Recognized by the Higher Education Commission (HEC) of Pakistan.
               </p>
-              <div className="text-[11px] text-zinc-400">
+              <div className="text-xs text-zinc-500">
                 NC-24, Deh Dih, Korangi Creek, Karachi, Pakistan.
               </div>
             </div>
 
             {/* Col 2: Institutional Sections */}
             <div className="space-y-2">
-              <div className="text-white font-display font-semibold text-xs uppercase tracking-wider font-mono">Website Navigation</div>
-              <ul className="space-y-1.5 text-[11px]">
-                <li><a href="#pipeline" className="hover:text-white transition">Research Pipeline</a></li>
-                <li><a href="#industry" className="hover:text-white transition">Karachi Industry Radar</a></li>
-                <li><a href="#faculties" className="hover:text-white transition">Faculty Mentors</a></li>
-                <li><a href="#framework" className="hover:text-white transition">8D ERL Framework</a></li>
-                <li><a href="#contact" className="hover:text-white transition">Contact & MoUs</a></li>
+              <div className="text-zinc-900 font-semibold text-xs">Website Navigation</div>
+              <ul className="space-y-1.5 text-xs text-zinc-600">
+                <li><a href="#pipeline" className="hover:text-zinc-900 transition">Research Pipeline</a></li>
+                <li><a href="#industry" className="hover:text-zinc-900 transition">Karachi Industry Radar</a></li>
+                <li><a href="#specializations" className="hover:text-zinc-900 transition">Specialization Areas</a></li>
+                <li><a href="#framework" className="hover:text-zinc-900 transition">8D ERL Framework</a></li>
+                <li><a href="#contact" className="hover:text-zinc-900 transition">Contact & MoUs</a></li>
               </ul>
             </div>
 
             {/* Col 3: Research Workspace Tools */}
             <div className="space-y-2">
-              <div className="text-white font-display font-semibold text-xs uppercase tracking-wider font-mono">Workspace Tools</div>
-              <ul className="space-y-1.5 text-[11px]">
+              <div className="text-zinc-900 font-semibold text-xs">Workspace Tools</div>
+              <ul className="space-y-1.5 text-xs text-zinc-600">
                 <li>
-                  <button onClick={() => onNavigate('dashboard')} className="hover:text-white transition text-left">
-                    Executive Dashboard
+                  <button onClick={() => onNavigate('dashboard')} className="hover:text-zinc-900 transition text-left">
+                    Dashboard
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('chat')} className="hover:text-white transition text-left">
-                    Faculty AI Chat & Voice
+                  <button onClick={() => onNavigate('chat')} className="hover:text-zinc-900 transition text-left">
+                    Research Assistant
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('explorer')} className="hover:text-white transition text-left">
-                    Project Database Explorer
+                  <button onClick={() => onNavigate('explorer')} className="hover:text-zinc-900 transition text-left">
+                    Patents & IP
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('radar')} className="hover:text-white transition text-left">
-                    Karachi Corporate Radar
+                  <button onClick={() => onNavigate('radar')} className="hover:text-zinc-900 transition text-left">
+                    Industry Contacts
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => onNavigate('erl')} className="hover:text-white transition text-left">
-                    ERL Readiness Scorer
+                  <button onClick={() => onNavigate('erl')} className="hover:text-zinc-900 transition text-left">
+                    Readiness Score
                   </button>
                 </li>
               </ul>
             </div>
 
-            {/* Col 4: Accreditation & Legal */}
+            {/* Col 4: Accreditation & Contact */}
             <div className="space-y-2">
-              <div className="text-white font-display font-semibold text-xs uppercase tracking-wider font-mono">Accreditation & Contact</div>
-              <p className="text-[11px] text-zinc-400 leading-relaxed">
+              <div className="text-zinc-900 font-semibold text-xs">Accreditation & Contact</div>
+              <p className="text-xs text-zinc-500 leading-relaxed">
                 Operating strictly in accordance with HEC Policy on Higher Education Research and National Technology Transfer frameworks.
               </p>
               <div className="pt-1">
                 <a
                   href="mailto:oric@shu.edu.pk"
-                  className="inline-flex items-center gap-1.5 text-red-500 hover:underline font-semibold text-[11px]"
+                  className="inline-flex items-center gap-1.5 text-red-600 hover:underline font-medium text-xs"
                 >
                   <Mail className="w-3.5 h-3.5" />
                   <span>oric@shu.edu.pk</span>
@@ -748,16 +777,16 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
             </div>
           </div>
 
-          <div className="pt-8 border-t border-zinc-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-zinc-400">
+          <div className="pt-8 border-t border-zinc-200 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
             <div>
               © {currentYear} Salim Habib University (SHU) Office of Research, Innovation & Commercialization. All rights reserved.
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://shu.edu.pk" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-200 transition">
+              <a href="https://shu.edu.pk" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-800 transition">
                 Salim Habib University Official
               </a>
               <span>•</span>
-              <a href="https://hec.gov.pk" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-200 transition">
+              <a href="https://hec.gov.pk" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-800 transition">
                 HEC Pakistan
               </a>
             </div>

@@ -1,11 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" rx="4" fill="#09090B" />
-  <rect x="1" y="1" width="30" height="30" rx="3" fill="none" stroke="#DC2626" stroke-width="1.5" />
-  <!-- Academic Crest in Crimson Red & Crisp White -->
-  <path d="M16 6L5 12L16 17L27 12L16 6Z" fill="#DC2626" />
-  <path d="M9 14.5V20.5C9 23.5 16 26 16 26C16 26 23 23.5 23 20.5V14.5L16 17.5L9 14.5Z" fill="#991B1B" />
-  <path d="M27 12V19" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
-  <circle cx="27" cy="19.5" r="1.2" fill="#FFFFFF" />
-  <!-- Center SHU Monogram Marker -->
-  <circle cx="16" cy="11.5" r="1.8" fill="#FFFFFF" />
+  <rect width="32" height="32" rx="6" fill="#FFFFFF" />
+  <rect x="0.5" y="0.5" width="31" height="31" rx="5.5" fill="none" stroke="#E2E8F0" stroke-width="1" />
+  <!-- Academic Crest & Rose in Crimson Red (#DC2626) -->
+  <path d="M16 5L4 11L16 17L28 11L16 5Z" fill="#DC2626" />
+  <path d="M8 13.5V19.5C8 22.5 16 25 16 25C16 25 24 22.5 24 19.5V13.5L16 17.5L8 13.5Z" fill="#B91C1C" />
+  <path d="M28 11V18" stroke="#DC2626" stroke-width="1.5" stroke-linecap="round" />
+  <circle cx="28" cy="18.5" r="1.2" fill="#DC2626" />
+  <circle cx="16" cy="11" r="2" fill="#FFFFFF" />
 </svg>

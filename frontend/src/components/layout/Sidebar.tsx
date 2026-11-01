@@ -11,8 +11,7 @@ import {
   PieChart,
   Mic,
   FileSpreadsheet,
-  GraduationCap,
-  ArrowLeft
+  GraduationCap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,155 +21,137 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ currentView, onNavigate, projectCount = 4 }: SidebarProps) {
-  const navItems = [
+  const navSections = [
     {
-      category: 'Public Portal',
-      items: [
-        {
-          id: 'home' as ViewMode,
-          label: 'Public University Website',
-          icon: Globe,
-          badge: 'Live',
-          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
-        }
-      ]
-    },
-    {
-      category: 'Executive Intelligence',
+      group: 'Workspace',
       items: [
         {
           id: 'dashboard' as ViewMode,
-          label: 'Executive Dashboard',
+          label: 'Dashboard',
           icon: LayoutDashboard,
-          badge: null,
-          badgeColor: ''
         },
         {
           id: 'chat' as ViewMode,
-          label: 'Faculty Research Advisors',
+          label: 'Research Assistant',
           icon: Sparkles,
-          badge: 'Gemini 3.5',
-          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
         },
         {
           id: 'explorer' as ViewMode,
-          label: 'Intellectual Property Explorer',
+          label: 'Patents & IP',
           icon: FolderKanban,
-          badge: `${projectCount}`,
-          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
-        }
+          badge: projectCount > 0 ? `${projectCount}` : undefined,
+        },
       ]
     },
     {
-      category: 'Commercialization & Industry',
+      group: 'Commercialization Tools',
       items: [
         {
           id: 'radar' as ViewMode,
-          label: 'Karachi Industry Radar',
+          label: 'Industry Contacts',
           icon: Radar,
-          badge: 'Active',
-          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
         },
         {
           id: 'erl' as ViewMode,
-          label: '8D ERL Readiness Scorer',
+          label: 'Readiness Score',
           icon: PieChart,
-          badge: null,
-          badgeColor: ''
-        }
-      ]
-    },
-    {
-      category: 'Governance & Dossiers',
-      items: [
+        },
         {
           id: 'discussions' as ViewMode,
-          label: 'Meeting Transcriptions',
+          label: 'Meetings',
           icon: Mic,
-          badge: 'WebRTC',
-          badgeColor: 'bg-zinc-900 text-zinc-300 border border-zinc-800'
         },
         {
           id: 'reports' as ViewMode,
-          label: 'Commercial Dossier Facility',
+          label: 'Reports',
           icon: FileSpreadsheet,
-          badge: 'HEC Aligned',
-          badgeColor: 'bg-red-950/60 text-red-400 border border-red-800/60'
-        }
+        },
       ]
     }
   ];
 
   return (
-    <aside className="w-64 bg-black border-r border-zinc-800 flex flex-col h-screen select-none shrink-0 font-sans">
-      {/* Clickable Brand Header (Returns to Public Website) */}
-      <button
-        onClick={() => onNavigate('home')}
-        title="Return to Public University Website"
-        className="p-4 border-b border-zinc-800 flex items-center gap-3 bg-zinc-950 hover:bg-zinc-900 transition text-left w-full group"
-      >
-        <div className="w-9 h-9 rounded-md bg-red-600 flex items-center justify-center font-bold text-white shadow-md shadow-red-950/50">
-          <GraduationCap className="w-5 h-5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-display font-bold text-sm tracking-tight text-white group-hover:text-red-500 transition flex items-center justify-between">
-            <span>SHU <span className="text-red-500">ORIC</span></span>
-            <ArrowLeft className="w-3.5 h-3.5 text-zinc-500 group-hover:text-red-500 group-hover:-translate-x-0.5 transition" />
-          </div>
-          <div className="text-[11px] text-zinc-400 truncate">Salim Habib University</div>
-        </div>
-      </button>
-
-      {/* Nav List */}
-      <div className="flex-1 overflow-y-auto py-3 px-2.5 space-y-5">
-        {navItems.map((section, idx) => (
-          <div key={idx} className="space-y-1">
-            <div className="px-2.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider mb-1.5">
-              {section.category}
+    <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col justify-between shrink-0 font-sans select-none min-h-screen">
+      {/* Brand & Crest */}
+      <div>
+        <div className="h-16 px-4 border-b border-zinc-200 flex items-center justify-between bg-white">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <img
+              src="/shu-logo.png"
+              alt="Salim Habib University"
+              className="h-9 w-auto object-contain shrink-0"
+            />
+            <div className="min-w-0">
+              <div className="font-bold text-xs tracking-tight text-zinc-900 truncate">ORIC Portal</div>
+              <div className="text-[10px] text-zinc-500 truncate">Salim Habib University</div>
             </div>
-            {section.items.map((item) => {
-              const Icon = item.icon;
-              const isActive = currentView === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onNavigate(item.id)}
-                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-md text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-red-600 text-white shadow-sm shadow-red-950/40'
-                      : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5 truncate">
-                    <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
-                    <span className="truncate">{item.label}</span>
-                  </div>
-                  {item.badge && (
-                    <span
-                      className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-semibold shrink-0 ${
-                        isActive ? 'bg-black/30 text-white' : item.badgeColor
+          </div>
+        </div>
+
+        {/* Public Website Shortcut Button */}
+        <div className="p-3">
+          <button
+            onClick={() => onNavigate('home')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition ${
+              currentView === 'home'
+                ? 'bg-red-50 text-red-700 font-semibold'
+                : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 border border-zinc-200'
+            }`}
+          >
+            <div className="flex items-center gap-2.5">
+              <Globe className="w-4 h-4 text-zinc-500" />
+              <span>Public Portal</span>
+            </div>
+          </button>
+        </div>
+
+        {/* Navigation Sections */}
+        <div className="px-3 space-y-5 pt-1">
+          {navSections.map((section) => (
+            <div key={section.group} className="space-y-1">
+              <div className="px-3 text-[11px] font-semibold text-zinc-400">
+                {section.group}
+              </div>
+              <nav className="space-y-0.5">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentView === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => onNavigate(item.id)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition ${
+                        isActive
+                          ? 'bg-red-50 text-red-700 font-semibold'
+                          : 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50'
                       }`}
                     >
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
+                      <div className="flex items-center gap-2.5 truncate">
+                        <Icon
+                          className={`w-4 h-4 shrink-0 ${
+                            isActive ? 'text-red-600' : 'text-zinc-400'
+                          }`}
+                        />
+                        <span className="truncate">{item.label}</span>
+                      </div>
+                      {item.badge && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200">
+                          {item.badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Institutional Directorate Bar */}
-      <div className="p-3 bg-zinc-950 border-t border-zinc-800 flex items-center gap-2.5">
-        <div className="w-7 h-7 rounded bg-red-950/60 border border-red-800/60 flex items-center justify-center font-mono font-bold text-[10px] text-red-400">
-          OD
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-display text-xs font-semibold text-zinc-200 truncate">ORIC Directorate</div>
-          <div className="text-[10px] text-zinc-400 truncate">Commercialization Office</div>
-        </div>
-        <div className="w-2 h-2 rounded-full bg-red-500" title="System Operational" />
+      {/* Institutional Footer */}
+      <div className="p-4 border-t border-zinc-200 bg-zinc-50/50">
+        <div className="text-xs font-medium text-zinc-800">ORIC Directorate</div>
+        <div className="text-[11px] text-zinc-500">Korangi Creek Campus, Karachi</div>
       </div>
     </aside>
   );

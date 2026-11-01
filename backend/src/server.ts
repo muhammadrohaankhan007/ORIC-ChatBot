@@ -9,7 +9,7 @@ import { projectsRouter } from './routes/projects.js';
 import { personasRouter } from './routes/personas.js';
 import { intelligenceRouter } from './routes/intelligence.js';
 import { setupChatWebSocket } from './websocket/chatHandler.js';
-import { AiGateway } from './services/aiGateway.js';
+import { aiGateway, AiGateway } from './services/aiGateway.js';
 
 const app = express();
 
@@ -36,27 +36,34 @@ app.use('/api/v1/intelligence', intelligenceRouter);
 // REST fallback for chat messages (for clients without WebSockets)
 app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
   try {
-    const { message, mode, persona_slug } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    const promptText = req.body.prompt || req.body.message;
+    if (!promptText || typeof promptText !== 'string' || promptText.trim() === '') {
+      return res.status(400).json({ error: 'Message or prompt is required' });
     }
 
     const PERSONA_MAP: Record<string, string> = {
-      'dr-farooq': 'Dr. Farooq Siddiqui',
-      'prof-aisha': 'Prof. Aisha Khan',
-      'director-oric': 'Director ORIC',
+      'oric-assistant': 'ORIC Research Assistant',
+      'pharmacy': 'Pharmaceutics & Health Specialization',
+      'computing': 'Computing & AI Specialization',
+      'biomedical': 'Biomedical Engineering Specialization',
+      'commercialization': 'Commercialization & IP Specialization',
+      'dr-farooq': 'Pharmaceutics & Health Specialization',
+      'prof-aisha': 'Computing & AI Specialization',
+      'engr-tariq': 'Biomedical Engineering Specialization',
+      'director-oric': 'Commercialization & IP Specialization',
     };
 
+    const mode = req.body.mode || 'mentoring';
     const isResearch = mode === 'research' || mode === 'analysis';
-    const personaId = persona_slug || 'dr-farooq';
-    const personaName = PERSONA_MAP[personaId] || 'Dr. Farooq Siddiqui';
+    const personaId = req.body.personaId || req.body.persona_slug || 'oric-assistant';
+    const personaName = req.body.personaName || PERSONA_MAP[personaId] || 'ORIC Research Assistant';
 
-    const response = await AiGateway.streamChat({
-      prompt: message,
+    const response = await aiGateway.generateResponse({
+      prompt: promptText.trim(),
       mode: isResearch ? 'analysis' : 'mentoring',
       personaId,
       personaName,
-      systemInstruction: `You are ${personaName}, an authentic university professor and research advisor for Salim Habib University ORIC. Mode: ${isResearch ? 'Research Analysis' : 'Mentoring'}.`
+      systemPrompt: req.body.systemPrompt || '',
     });
 
     res.json({

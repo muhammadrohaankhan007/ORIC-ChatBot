@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { ViewMode } from '@/types';
-import { ShieldCheck, Cpu, Volume2, VolumeX, ExternalLink, Globe } from 'lucide-react';
+import { Volume2, VolumeX, Globe } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -21,106 +21,100 @@ export default function Header({
 }: HeaderProps) {
   const titles: Record<ViewMode, { title: string; subtitle: string }> = {
     home: {
-      title: 'Salim Habib University ORIC Innovation Ecosystem',
-      subtitle: 'HEC Tier-1 Commercialization Hub, Multi-Agent Faculty & Industry Radar'
+      title: 'Salim Habib University ORIC',
+      subtitle: 'Office of Research, Innovation & Commercialization'
     },
     dashboard: {
-      title: 'Executive Intelligence & Research Command',
-      subtitle: 'Institutional Portfolio, Grant Pipeline & Faculty Commercialization Metrics'
+      title: 'Dashboard',
+      subtitle: 'Portfolio Overview, Grant Pipeline & Commercialization Metrics'
     },
     chat: {
-      title: 'Faculty Research Advisors Workspace',
-      subtitle: 'Dual-Mode Academic Mentoring & Commercial Feasibility Guidance (Gemini 3.5)'
+      title: 'ORIC Research Assistant',
+      subtitle: 'AI Guidance for Proposal Review, Patent Discovery & Commercialization'
     },
     explorer: {
-      title: 'Intellectual Property & Project Repository',
-      subtitle: 'Verified Research Database with Vectorized Document Embeddings'
+      title: 'Patents & IP Repository',
+      subtitle: 'Verified Research Projects and Intellectual Property Records'
     },
     radar: {
-      title: 'Karachi & National Industry Radar',
-      subtitle: 'Geographic Commercialization Matching Across Korangi, Landhi, S.I.T.E. & Port Qasim'
+      title: 'Industry Contacts & Radar',
+      subtitle: 'Commercialization Matching Across Karachi Industrial Estates'
     },
     erl: {
-      title: '8-Dimension Entrepreneurship Readiness Canvas',
-      subtitle: 'Configurable Commercialization Maturity Scoring & Milestone Tracking'
+      title: 'Readiness Assessment Canvas',
+      subtitle: '8-Dimension Commercialization Maturity Benchmarking'
     },
     discussions: {
-      title: 'Meeting Recording & Speech Transcriber',
-      subtitle: 'WebRTC Live Transcription, Automatic Action Extraction & Institutional Summaries'
+      title: 'Meeting Transcriptions',
+      subtitle: 'Meeting Audio Records, Dictation & Action Item Extraction'
     },
     reports: {
-      title: 'Commercial Dossier & MoU Generator',
-      subtitle: 'One-Click Compilation of Investor Briefs, ERL Reports & Feasibility Dossiers'
+      title: 'Commercial Reports & Dossiers',
+      subtitle: 'Investor Briefs, Feasibility Reports & Bilateral MoUs'
     }
   };
 
   const current = titles[currentView] || titles.dashboard;
 
   return (
-    <header className="h-14 border-b border-zinc-800 bg-black px-6 flex items-center justify-between shrink-0 font-sans">
+    <header className="h-14 border-b border-zinc-200 bg-white px-6 flex items-center justify-between shrink-0 font-sans shadow-xs">
+      {/* Title & Context */}
       <div className="flex items-center gap-4 min-w-0">
         <div className="truncate">
-          <h1 className="font-display text-sm font-bold text-white tracking-tight truncate flex items-center gap-2">
+          <h1 className="text-sm font-bold text-zinc-900 tracking-tight truncate">
             {current.title}
           </h1>
-          <p className="text-[11px] text-zinc-400 truncate">{current.subtitle}</p>
+          <p className="text-xs text-zinc-500 truncate">{current.subtitle}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 shrink-0">
-        {/* Switch to Public Website */}
-        {onNavigate && (
+      {/* Clean Right Actions */}
+      <div className="flex items-center gap-3 shrink-0">
+        {/* Public Website Button */}
+        {onNavigate && currentView !== 'home' && (
           <button
             onClick={() => onNavigate('home')}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 transition"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-700 bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 transition"
           >
-            <Globe className="w-3.5 h-3.5 text-red-500" />
-            <span>Public Website</span>
+            <Globe className="w-3.5 h-3.5 text-zinc-500" />
+            <span>Public Portal</span>
           </button>
         )}
 
-        {/* Voice Global Toggle */}
+        {/* Real Single Source of Truth for Voice Mute/Audio */}
         <button
           onClick={onToggleVoice}
-          title={voiceEnabled ? 'Mute Voice Audio' : 'Enable Voice Audio'}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-semibold border transition-all ${
+          title={voiceEnabled ? 'Mute AI Audio' : 'Enable AI Audio'}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
             voiceEnabled
-              ? 'bg-red-950/40 text-red-400 border-red-800/60 hover:bg-red-900/40'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+              ? 'bg-zinc-50 text-zinc-800 border-zinc-300 hover:bg-zinc-100'
+              : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:text-zinc-700'
           }`}
         >
-          {voiceEnabled ? <Volume2 className="w-3.5 h-3.5 text-red-500" /> : <VolumeX className="w-3.5 h-3.5" />}
-          <span className="hidden sm:inline font-mono">{voiceEnabled ? 'Voice Active' : 'Voice Muted'}</span>
+          {voiceEnabled ? (
+            <>
+              <Volume2 className="w-3.5 h-3.5 text-red-600" />
+              <span className="hidden sm:inline">Voice Audio On</span>
+            </>
+          ) : (
+            <>
+              <VolumeX className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="hidden sm:inline">Voice Audio Muted</span>
+            </>
+          )}
         </button>
 
-        {/* Backend Status Badge */}
-        <div
-          className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium border font-mono ${
-            apiConnected
-              ? 'bg-zinc-900 text-white border-zinc-800'
-              : 'bg-zinc-900 text-zinc-400 border-zinc-800'
-          }`}
-        >
-          <Cpu className="w-3.5 h-3.5 text-red-500" />
-          <span>{apiConnected ? 'Gemini 3.5 Live' : 'Local Fallback'}</span>
+        {/* Genuine Backend Connection Status */}
+        <div className="flex items-center gap-1.5 text-xs text-zinc-600 font-medium px-2 py-1">
+          <span
+            className={`w-2 h-2 rounded-full ${
+              apiConnected ? 'bg-emerald-500' : 'bg-amber-500'
+            }`}
+          />
+          <span className="hidden md:inline">
+            {apiConnected ? 'Connected' : 'Offline Mode'}
+          </span>
         </div>
-
-        {/* Institutional Accreditation Pill */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-mono font-medium bg-zinc-900 border border-zinc-800 text-zinc-300">
-          <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
-          <span>HEC Tier-1 ORIC</span>
-        </div>
-
-        {/* Sitemap Link */}
-        <a
-          href="/sitemap.xml"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="View Search Engine Sitemap"
-          className="p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-900 rounded-md transition"
-        >
-          <ExternalLink className="w-4 h-4" />
-        </a>
       </div>
     </header>
   );

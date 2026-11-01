@@ -6,51 +6,51 @@ export const personasRouter = Router();
 const SEED_PERSONAS = [
   {
     id: 'p1',
-    slug: 'pharmacy_mentor',
-    name: 'Dr. Farooq Siddiqui',
-    title: 'Senior Pharmaceutics & Bio-formulation Specialist',
-    department: 'Department of Pharmaceutics',
+    slug: 'pharmacy',
+    name: 'Pharmaceutics & Health',
+    title: 'Drug Formulation, Clinical Stability & DRAP Compliance',
+    department: 'Faculty of Pharmacy (FOP)',
     faculty_code: 'FOP',
-    avatar: '💊',
-    accent_color: '#38BDF8',
+    avatar: 'PH',
+    accent_color: '#DC2626',
     voice_lang: 'en-US',
-    system_prompt: 'You are Dr. Farooq Siddiqui, an expert in pharmaceutical drug formulation, clinical stability, and DRAP regulatory pathways.'
+    system_prompt: 'Guidance on pharmaceutical drug formulations, nano-carriers, stability assays, and DRAP regulatory clearances.'
   },
   {
     id: 'p2',
-    slug: 'ai_mentor',
-    name: 'Prof. Aisha Khan',
-    title: 'AI, Embedded Vision & MedTech Mentor',
-    department: 'Department of Computer Science',
+    slug: 'computing',
+    name: 'Computing & AI',
+    title: 'Computer Vision, Edge Systems & Software Architecture',
+    department: 'Faculty of Computer Science (FCS)',
     faculty_code: 'FCS',
-    avatar: '🤖',
-    accent_color: '#818CF8',
+    avatar: 'CS',
+    accent_color: '#DC2626',
     voice_lang: 'en-US',
-    system_prompt: 'You are Prof. Aisha Khan, guiding students and researchers on AI models, edge computing, computer vision, and IoT systems.'
+    system_prompt: 'Guidance on artificial intelligence architectures, machine learning models, embedded vision, and data pipelines.'
   },
   {
     id: 'p3',
-    slug: 'biomed_mentor',
-    name: 'Engr. Tariq Mehmood',
-    title: 'Biomedical Devices & Instrumentation Lead',
-    department: 'Department of Biomedical Engineering',
+    slug: 'biomedical',
+    name: 'Biomedical Engineering',
+    title: 'Medical Devices, Instrumentation & Sensor Systems',
+    department: 'Faculty of Engineering (FE)',
     faculty_code: 'FE',
-    avatar: '🧬',
-    accent_color: '#34D399',
+    avatar: 'BM',
+    accent_color: '#DC2626',
     voice_lang: 'en-US',
-    system_prompt: 'You are Engr. Tariq Mehmood, specializing in medical device prototyping, sensor calibration, and ISO 13485 compliance.'
+    system_prompt: 'Guidance on biomedical instrumentation, wearable biosensors, hardware prototyping, and ISO 13485 compliance.'
   },
   {
     id: 'p4',
-    slug: 'oric_director',
-    name: 'Director ORIC',
-    title: 'Technology Commercialization & Venture Strategist',
-    department: 'Office of Research, Innovation & Commercialization',
+    slug: 'commercialization',
+    name: 'Commercialization & IP',
+    title: 'Patent Strategy, ERL Assessment & Industry MoUs',
+    department: 'ORIC Directorate',
     faculty_code: 'ORIC',
-    avatar: '🏛️',
-    accent_color: '#F59E0B',
+    avatar: 'IP',
+    accent_color: '#DC2626',
     voice_lang: 'en-US',
-    system_prompt: 'You are Director ORIC, focused on commercial viability, intellectual property filings, investor ROI, and industrial MoUs.'
+    system_prompt: 'Guidance on patentability, IP licensing, Enterprise Readiness Levels (ERL 1-9), and Karachi industrial MoUs.'
   }
 ];
 

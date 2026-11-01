@@ -10,22 +10,24 @@ export function handleChatConnection(ws: WebSocket) {
       const data = JSON.parse(message.toString());
       const {
         prompt,
+        message: altMessage,
         mode = 'mentoring',
-        personaId = 'dr-farooq',
-        personaName = 'Dr. Farooq Siddiqui',
+        personaId = 'oric-assistant',
+        personaName = 'ORIC Research Assistant',
         systemPrompt = '',
       } = data;
 
-      if (!prompt || prompt.trim() === '') {
-        ws.send(JSON.stringify({ type: 'error', message: 'Prompt cannot be empty.' }));
+      const userText = prompt || altMessage;
+      if (!userText || typeof userText !== 'string' || userText.trim() === '') {
+        ws.send(JSON.stringify({ type: 'error', message: 'Prompt or message cannot be empty.' }));
         return;
       }
 
       ws.send(JSON.stringify({ type: 'start', personaName }));
 
       const payload: ChatRequestPayload = {
-        prompt,
-        mode,
+        prompt: userText.trim(),
+        mode: mode === 'analysis' || mode === 'research' ? 'analysis' : 'mentoring',
         personaId,
         personaName,
         systemPrompt,
@@ -33,22 +35,22 @@ export function handleChatConnection(ws: WebSocket) {
 
       const fullResponse = await aiGateway.generateResponse(payload);
 
-      // Clean token streaming loop preserving newlines and markdown formatting
+      // Token streaming loop with both 'token' and 'chunk' event aliases for 100% compatibility
       const chunks = fullResponse.split(/(?<=\s)/);
       for (const chunk of chunks) {
         if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'chunk', token: chunk }));
+          ws.send(JSON.stringify({ type: 'token', token: chunk, chunk }));
         }
         await new Promise((resolve) => setTimeout(resolve, 20));
       }
 
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'end', fullText: fullResponse }));
+        ws.send(JSON.stringify({ type: 'done', fullText: fullResponse, message: fullResponse, token: '', end: true }));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error in WebSocket chat handler:', err);
       if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'error', message: 'Failed to generate response.' }));
+        ws.send(JSON.stringify({ type: 'error', message: err?.message || 'Failed to generate response.' }));
       }
     }
   });
@@ -59,7 +61,7 @@ export function handleChatConnection(ws: WebSocket) {
 export function setupChatWebSocket(wss: WebSocketServer): void {
   wss.on('connection', (ws: WebSocket, req: IncomingMessage) => {
     const url = req.url || '';
-    if (url.startsWith('/api/v1/ws/chat') || url === '/' || !url) {
+    if (url.startsWith('/api/v1/ws/chat') || url.startsWith('/ws') || url.startsWith('/api/ws') || url === '/' || !url) {
       handleChatConnection(ws);
     } else {
       ws.close(1008, 'Invalid WebSocket endpoint path');

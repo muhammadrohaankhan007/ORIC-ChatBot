@@ -51,7 +51,7 @@ export default function Home() {
 
   // 2. Executive Portal & Research Workspace Layout
   return (
-    <div className="flex h-screen bg-black text-zinc-100 overflow-hidden font-sans">
+    <div className="flex h-screen bg-zinc-50 text-zinc-900 overflow-hidden font-sans">
       {/* Modern Left Sidebar with Clickable Logo to return home */}
       <Sidebar
         currentView={currentView}
@@ -60,7 +60,7 @@ export default function Home() {
       />
 
       {/* Main Central Workspace */}
-      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-zinc-50">
         {/* Top Header Bar with Public Website shortcut */}
         <Header
           currentView={currentView}
@@ -71,7 +71,7 @@ export default function Home() {
         />
 
         {/* View Content Area */}
-        <main className="flex-1 overflow-y-auto bg-black">
+        <main className="flex-1 overflow-y-auto bg-zinc-50">
           {currentView === 'dashboard' && (
             <DashboardView
               projects={projects}

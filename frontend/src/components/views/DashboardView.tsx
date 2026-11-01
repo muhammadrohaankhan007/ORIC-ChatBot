@@ -15,7 +15,8 @@ import {
   Globe,
   Coins,
   Gauge,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -29,10 +30,10 @@ export default function DashboardView({
   onNavigate,
   onSelectProjectForChat
 }: DashboardViewProps) {
-  // Cross-validated dynamic aggregations
+  // Institutional aggregations
   const totalProjects = projects.length || 1;
   const highReadiness = projects.filter(p => p.commercial_readiness === 'High');
-  const patentPending = projects.filter(p => p.ip_status === 'Patent Pending' || p.ip_status === 'Disclosure Filed');
+  const patentProjects = projects.filter(p => p.ip_status !== 'None');
   const patentCount = projects.filter(p => p.ip_status === 'Patent Pending' || p.ip_status === 'Patent Granted').length;
   const disclosureCount = projects.filter(p => p.ip_status === 'Disclosure Filed').length;
 
@@ -42,7 +43,7 @@ export default function DashboardView({
   const avgTrl = (projects.reduce((acc, p) => acc + (p.trl_level || 0), 0) / totalProjects).toFixed(1);
   const avgErl = (projects.reduce((acc, p) => acc + (p.erl_level || 0), 0) / totalProjects).toFixed(1);
 
-  // Dynamic Faculty Distribution
+  // Faculty Distribution
   const fopCount = projects.filter(p => p.faculty_code === 'FOP' || p.faculty?.toLowerCase().includes('pharmacy')).length;
   const fcsCount = projects.filter(p => p.faculty_code === 'FCS' || p.faculty?.toLowerCase().includes('information') || p.faculty?.toLowerCase().includes('comput')).length;
   const feCount = projects.filter(p => p.faculty_code === 'FE' || p.faculty?.toLowerCase().includes('engineer')).length;
@@ -54,257 +55,284 @@ export default function DashboardView({
   const fmsPct = Math.round((fmsCount / totalProjects) * 100);
 
   return (
-    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans bg-black text-zinc-100">
+    <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans bg-zinc-50 min-h-screen text-zinc-900">
       {/* Executive Command Banner */}
-      <div className="rounded-md bg-zinc-950 border border-zinc-800 p-6 lg:p-8 space-y-4">
-        <div className="space-y-3 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-red-950/50 border border-red-800/60 text-red-400 text-xs font-bold uppercase tracking-wider font-mono">
-            <ShieldCheck className="w-3.5 h-3.5 text-red-500" />
-            <span>Salim Habib University • HEC Recognized Tier-1 ORIC</span>
+      <div className="rounded-lg bg-white border border-zinc-200 p-6 lg:p-8 space-y-4 shadow-xs">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+          <div className="space-y-3 max-w-3xl">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-100 text-zinc-700 text-xs font-semibold border border-zinc-200">
+              <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
+              <span>Salim Habib University • HEC Recognized Tier-1 ORIC</span>
+            </div>
+            <h2 className="text-2xl lg:text-3xl font-extrabold font-display text-zinc-900 tracking-tight leading-snug">
+              Research Portfolio & Commercialization Pipeline
+            </h2>
+            <p className="text-sm text-zinc-600 leading-relaxed">
+              Institutional dashboard tracking university laboratory discoveries across Pharmaceutics, Computer Science, and Biomedical Engineering to industrial manufacturing partners in Karachi and regional export markets.
+            </p>
+            <div className="pt-2 flex flex-wrap gap-3">
+              <button
+                onClick={() => onNavigate('chat')}
+                className="px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs transition"
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Consult Research Assistant</span>
+              </button>
+              <button
+                onClick={() => onNavigate('explorer')}
+                className="px-4 py-2.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-800 font-medium text-xs border border-zinc-300 shadow-xs flex items-center gap-1.5 transition"
+              >
+                <FileCheck2 className="w-4 h-4 text-zinc-500" />
+                <span>Patents & IP Explorer</span>
+              </button>
+              <button
+                onClick={() => onNavigate('home')}
+                className="px-4 py-2.5 rounded-lg bg-white hover:bg-zinc-50 text-zinc-700 font-medium text-xs border border-zinc-200 flex items-center gap-1.5 transition"
+              >
+                <Globe className="w-4 h-4 text-zinc-500" />
+                <span>Public Portal</span>
+              </button>
+            </div>
           </div>
-          <h2 className="font-display text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-snug">
-            University Innovation & Commercialization Pipeline
-          </h2>
-          <p className="text-sm text-zinc-300 leading-relaxed">
-            Central command dashboard connecting university laboratory research across Pharmaceutics, Computer Science, and Biomedical Engineering to industrial manufacturing clusters across Karachi and regional export markets.
-          </p>
-          <div className="pt-2 flex flex-wrap gap-3">
-            <button
-              onClick={() => onNavigate('home')}
-              className="px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs border border-zinc-800 flex items-center gap-2 transition"
-            >
-              <Globe className="w-4 h-4 text-red-500" />
-              <span>Public University Website</span>
-            </button>
-            <button
-              onClick={() => onNavigate('chat')}
-              className="px-4 py-2.5 rounded-md bg-red-600 hover:bg-red-500 text-white font-display font-bold text-xs flex items-center gap-2 shadow-sm transition"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Faculty AI Advisory Workspace</span>
-            </button>
-            <button
-              onClick={() => onNavigate('radar')}
-              className="px-4 py-2.5 rounded-md bg-zinc-900 hover:bg-zinc-800 text-zinc-200 font-semibold text-xs border border-zinc-800 flex items-center gap-2 transition"
-            >
-              <Building2 className="w-4 h-4 text-red-500" />
-              <span>Karachi Industry Radar</span>
-            </button>
-          </div>
+          <img
+            src="/shu-logo.png"
+            alt="Salim Habib University"
+            className="h-14 w-auto object-contain hidden md:block shrink-0"
+          />
         </div>
       </div>
 
       {/* KPI Cards: Dynamic & Cross-Validated */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Total Projects */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-5 space-y-2 hover:border-zinc-700 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">Total Projects</span>
-            <div className="w-7 h-7 rounded bg-zinc-900 flex items-center justify-center text-zinc-300">
-              <Layers className="w-4 h-4" />
-            </div>
+        <div className="bg-white border border-zinc-200 rounded-lg p-5 space-y-1.5 shadow-xs">
+          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+            <span>Active Projects</span>
+            <Layers className="w-4 h-4 text-zinc-400" />
           </div>
-          <div className="font-display text-3xl font-black text-white">{projects.length}</div>
-          <div className="text-xs text-red-500 flex items-center gap-1 font-medium">
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>100% Vector Indexed</span>
+          <div className="text-2xl font-bold text-zinc-900">{projects.length}</div>
+          <div className="text-xs text-zinc-500 flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-red-600" />
+            <span>Verified Labs</span>
           </div>
         </div>
 
-        {/* Pipeline Valuation */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-5 space-y-2 hover:border-zinc-700 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">Pipeline Valuation</span>
-            <div className="w-7 h-7 rounded bg-red-950/40 flex items-center justify-center text-red-500">
-              <Coins className="w-4 h-4" />
-            </div>
+        {/* Total Committed Valuation */}
+        <div className="bg-white border border-zinc-200 rounded-lg p-5 space-y-1.5 shadow-xs">
+          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+            <span>Committed R&D Budget</span>
+            <TrendingUp className="w-4 h-4 text-red-600" />
           </div>
-          <div className="font-display text-3xl font-black text-red-500">PKR {totalFundingMillions}M</div>
-          <div className="text-xs text-zinc-400">
-            <span>R&D Grant Allocations</span>
+          <div className="text-2xl font-bold text-red-600">PKR {totalFundingMillions}M</div>
+          <div className="text-xs text-zinc-500">
+            <span>Internal & External Grants</span>
           </div>
         </div>
 
-        {/* High Commercial Readiness */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-5 space-y-2 hover:border-zinc-700 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">MoU Readiness</span>
-            <div className="w-7 h-7 rounded bg-zinc-900 flex items-center justify-center text-zinc-300">
-              <TrendingUp className="w-4 h-4" />
-            </div>
+        {/* High Commercialization Readiness */}
+        <div className="bg-white border border-zinc-200 rounded-lg p-5 space-y-1.5 shadow-xs">
+          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+            <span>High Readiness</span>
+            <Award className="w-4 h-4 text-zinc-400" />
           </div>
-          <div className="font-display text-3xl font-black text-white">{highReadiness.length}</div>
-          <div className="text-xs text-zinc-400">
-            <span>{Math.round((highReadiness.length / totalProjects) * 100)}% of Pipeline</span>
+          <div className="text-2xl font-bold text-zinc-900">{highReadiness.length}</div>
+          <div className="text-xs text-zinc-500">
+            <span>{Math.round((highReadiness.length / totalProjects) * 100)}% of Portfolio</span>
           </div>
         </div>
 
-        {/* Patent & IP Pipeline */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-5 space-y-2 hover:border-zinc-700 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">IP Pipeline</span>
-            <div className="w-7 h-7 rounded bg-zinc-900 flex items-center justify-center text-zinc-300">
-              <FileCheck2 className="w-4 h-4" />
-            </div>
+        {/* Average Readiness Index */}
+        <div className="bg-white border border-zinc-200 rounded-lg p-5 space-y-1.5 shadow-xs">
+          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+            <span>Average Maturity</span>
+            <Gauge className="w-4 h-4 text-zinc-400" />
           </div>
-          <div className="font-display text-3xl font-black text-white">{patentPending.length}</div>
-          <div className="text-xs text-zinc-400">
+          <div className="text-2xl font-bold text-zinc-900">ERL {avgErl}</div>
+          <div className="text-xs text-zinc-500">
+            <span>Average TRL Score: {avgTrl}/9</span>
+          </div>
+        </div>
+
+        {/* IP Portfolio */}
+        <div className="bg-white border border-zinc-200 rounded-lg p-5 space-y-1.5 shadow-xs">
+          <div className="flex items-center justify-between text-zinc-500 text-xs font-medium">
+            <span>Patents & IP</span>
+            <FileCheck2 className="w-4 h-4 text-zinc-400" />
+          </div>
+          <div className="text-2xl font-bold text-zinc-900">{patentProjects.length}</div>
+          <div className="text-xs text-zinc-500">
             <span>{patentCount} Pending • {disclosureCount} Disclosed</span>
-          </div>
-        </div>
-
-        {/* Average Readiness Benchmarks */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-5 space-y-2 hover:border-zinc-700 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider font-mono">Average Maturity</span>
-            <div className="w-7 h-7 rounded bg-zinc-900 flex items-center justify-center text-red-500">
-              <Gauge className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="font-display text-2xl font-black text-white">TRL {avgTrl} / ERL {avgErl}</div>
-          <div className="text-xs text-zinc-400">
-            <span>HEC Readiness Benchmarks</span>
           </div>
         </div>
       </div>
 
-      {/* Faculty Distribution & Commercialization Leaders */}
+      {/* Two-Column Analytics Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: High Commercial Potential Projects */}
-        <div className="lg:col-span-2 bg-zinc-950 border border-zinc-800 rounded-md p-6 space-y-4">
+        {/* Active Research Pipeline (2 Columns) */}
+        <div className="lg:col-span-2 bg-white border border-zinc-200 rounded-lg p-6 space-y-4 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-display text-base font-bold text-white flex items-center gap-2">
-                <Award className="w-4 h-4 text-red-500" />
-                <span>Commercialization Opportunities</span>
+              <h3 className="text-base font-bold text-zinc-900">
+                Active Research Pipeline
               </h3>
-              <p className="text-xs text-zinc-400">Evaluated against HEC & ERL commercial readiness metrics</p>
+              <p className="text-xs text-zinc-500">
+                Verified candidate technologies undergoing commercialization review
+              </p>
             </div>
             <button
               onClick={() => onNavigate('explorer')}
-              className="text-xs font-semibold text-red-400 hover:text-red-300 flex items-center gap-1 font-mono"
+              className="text-xs text-red-600 hover:text-red-700 font-medium flex items-center gap-1"
             >
               <span>View All</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="space-y-3">
-            {highReadiness.map((project) => (
-              <div
-                key={project.id}
-                className="p-4 rounded bg-black border border-zinc-850 hover:border-zinc-700 transition flex flex-col md:flex-row md:items-center justify-between gap-4"
-              >
-                <div className="space-y-1.5 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800">
-                      {project.project_code}
-                    </span>
-                    <span className="text-xs font-semibold text-red-500 font-mono">{project.faculty}</span>
-                    {project.estimated_funding_pkr && (
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-red-950/40 text-red-400 border border-red-900/40">
-                        PKR {(project.estimated_funding_pkr / 1_000_000).toFixed(1)}M
+          <div className="divide-y divide-zinc-100">
+            {projects.map((project) => (
+              <div key={project.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
+                        {project.project_code}
                       </span>
-                    )}
+                      <span className="text-xs font-semibold text-red-600">
+                        {project.faculty}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-zinc-900">{project.title}</h4>
                   </div>
-                  <h4 className="font-display text-sm font-bold text-white leading-snug">{project.title}</h4>
-                  <p className="text-xs text-zinc-400 line-clamp-2">{project.abstract}</p>
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-zinc-900 text-zinc-300 border border-zinc-800 font-mono">
-                      TRL {project.trl_level}/9
-                    </span>
-                    <span className="text-[11px] px-2 py-0.5 rounded bg-red-950/40 text-red-400 border border-red-900/40 font-mono">
-                      ERL {project.erl_level}/9
-                    </span>
-                    <span className="text-[11px] text-zinc-400">Lead: {project.lead_investigator}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        onSelectProjectForChat(project);
+                        onNavigate('chat');
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1 transition shadow-xs"
+                    >
+                      <span>Analyze</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => onNavigate('erl')}
+                      className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-medium border border-zinc-200 transition"
+                    >
+                      <span>ERL {project.erl_level}/9</span>
+                    </button>
                   </div>
                 </div>
 
-                <div className="flex md:flex-col items-center justify-end gap-2 shrink-0">
-                  <button
-                    onClick={() => {
-                      onSelectProjectForChat(project);
-                      onNavigate('chat');
-                    }}
-                    className="w-full md:w-auto px-3 py-1.5 rounded bg-red-600 hover:bg-red-500 text-xs font-bold text-white flex items-center justify-center gap-1.5 transition font-display"
-                  >
-                    <span>Analyze</span>
-                    <ArrowUpRight className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => onNavigate('erl')}
-                    className="w-full md:w-auto px-3 py-1.5 rounded bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 flex items-center justify-center transition"
-                  >
-                    <span>ERL Score</span>
-                  </button>
+                <p className="text-xs text-zinc-600 line-clamp-2">{project.abstract}</p>
+
+                <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500 pt-1">
+                  <span>Lead: <strong className="text-zinc-800">{project.lead_investigator}</strong></span>
+                  <span>•</span>
+                  <span>TRL {project.trl_level}/9</span>
+                  <span>•</span>
+                  <span>Status: <strong className="text-zinc-700">{project.ip_status}</strong></span>
+                  {project.estimated_funding_pkr && (
+                    <>
+                      <span>•</span>
+                      <span>Budget: PKR {(project.estimated_funding_pkr / 1_000_000).toFixed(1)}M</span>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right 1 Col: University R&D Distribution (Dynamic) */}
-        <div className="bg-zinc-950 border border-zinc-800 rounded-md p-6 space-y-6">
-          <div>
-            <h3 className="font-display text-base font-bold text-white">Faculty Distribution</h3>
-            <p className="text-xs text-zinc-400">Research projects across Salim Habib University faculties</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-semibold text-zinc-200">Faculty of Pharmacy (FOP)</span>
-                <span className="text-zinc-400 font-mono">{fopPct}% ({fopCount} {fopCount === 1 ? 'Project' : 'Projects'})</span>
-              </div>
-              <div className="w-full h-1.5 rounded bg-zinc-900 overflow-hidden">
-                <div style={{ width: `${fopPct}%` }} className="h-full bg-red-600 rounded transition-all duration-500" />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-semibold text-zinc-200">Faculty of Computing & IT (FCS)</span>
-                <span className="text-zinc-400 font-mono">{fcsPct}% ({fcsCount} {fcsCount === 1 ? 'Project' : 'Projects'})</span>
-              </div>
-              <div className="w-full h-1.5 rounded bg-zinc-900 overflow-hidden">
-                <div style={{ width: `${fcsPct}%` }} className="h-full bg-red-500 rounded transition-all duration-500" />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-semibold text-zinc-200">Faculty of Engineering (FE)</span>
-                <span className="text-zinc-400 font-mono">{fePct}% ({feCount} {feCount === 1 ? 'Project' : 'Projects'})</span>
-              </div>
-              <div className="w-full h-1.5 rounded bg-zinc-900 overflow-hidden">
-                <div style={{ width: `${fePct}%` }} className="h-full bg-red-700 rounded transition-all duration-500" />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span className="font-semibold text-zinc-200">Management Sciences (FMS)</span>
-                <span className="text-zinc-400 font-mono">{fmsPct}% ({fmsCount} {fmsCount === 1 ? 'Project' : 'Projects'})</span>
-              </div>
-              <div className="w-full h-1.5 rounded bg-zinc-900 overflow-hidden">
-                <div style={{ width: `${fmsPct}%` }} className="h-full bg-red-800 rounded transition-all duration-500" />
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Stats Box */}
-          <div className="p-4 rounded bg-black border border-zinc-800 space-y-2">
-            <div className="font-display text-xs font-bold text-white">Karachi Industrial Reach</div>
-            <p className="text-xs text-zinc-400">
-              Active corporate mapping across Korangi, S.I.T.E., Landhi, and Port Qasim industrial clusters.
+        {/* Faculty Distribution & Benchmarks (1 Column) */}
+        <div className="space-y-6">
+          <div className="bg-white border border-zinc-200 rounded-lg p-6 space-y-4 shadow-xs">
+            <h3 className="text-base font-bold text-zinc-900">
+              Faculty R&D Allocation
+            </h3>
+            <p className="text-xs text-zinc-500">
+              Distribution of active research projects by academic faculty
             </p>
-            <button
-              onClick={() => onNavigate('radar')}
-              className="text-xs font-semibold text-red-500 hover:text-red-400 flex items-center gap-1 pt-1 font-mono"
-            >
-              <span>View Industrial Matrix</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+
+            <div className="space-y-3 pt-2">
+              {/* FOP */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-medium text-zinc-800">Faculty of Pharmacy (FOP)</span>
+                  <span className="text-zinc-500">{fopPct}% ({fopCount})</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-600 rounded-full" style={{ width: `${fopPct}%` }} />
+                </div>
+              </div>
+
+              {/* FCS */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-medium text-zinc-800">Computer Science (FCS)</span>
+                  <span className="text-zinc-500">{fcsPct}% ({fcsCount})</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-zinc-700 rounded-full" style={{ width: `${fcsPct}%` }} />
+                </div>
+              </div>
+
+              {/* FE */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-medium text-zinc-800">Engineering & Tech (FE)</span>
+                  <span className="text-zinc-500">{fePct}% ({feCount})</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-zinc-500 rounded-full" style={{ width: `${fePct}%` }} />
+                </div>
+              </div>
+
+              {/* FMS */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span className="font-medium text-zinc-800">Management Sciences (FMS)</span>
+                  <span className="text-zinc-500">{fmsPct}% ({fmsCount})</span>
+                </div>
+                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-zinc-400 rounded-full" style={{ width: `${fmsPct}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Shortcuts */}
+          <div className="bg-white border border-zinc-200 rounded-lg p-6 space-y-3 shadow-xs">
+            <h4 className="text-sm font-bold text-zinc-900">Commercialization Tools</h4>
+            <div className="space-y-2">
+              <button
+                onClick={() => onNavigate('radar')}
+                className="w-full p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-left flex items-center justify-between text-xs font-medium text-zinc-800 transition"
+              >
+                <span>Karachi Industry Radar</span>
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
+              </button>
+              <button
+                onClick={() => onNavigate('erl')}
+                className="w-full p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-left flex items-center justify-between text-xs font-medium text-zinc-800 transition"
+              >
+                <span>8-Dimension ERL Assessment</span>
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
+              </button>
+              <button
+                onClick={() => onNavigate('discussions')}
+                className="w-full p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-left flex items-center justify-between text-xs font-medium text-zinc-800 transition"
+              >
+                <span>Meeting Transcriptions</span>
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
+              </button>
+              <button
+                onClick={() => onNavigate('reports')}
+                className="w-full p-2.5 rounded-lg bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-left flex items-center justify-between text-xs font-medium text-zinc-800 transition"
+              >
+                <span>Commercial Dossier Generator</span>
+                <ChevronRight className="w-4 h-4 text-zinc-400" />
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -4,21 +4,62 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useVoice, stopSpeechImmediately } from '@/hooks/useVoice';
-import { Mic, MicOff, Volume2, VolumeX, Send, Sparkles, BookOpen, Search, UserCheck, ShieldCheck } from 'lucide-react';
+import {
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+  Copy,
+  Check,
+  Send,
+  SlidersHorizontal,
+  Square,
+  Sparkles,
+  ArrowRight,
+  Info
+} from 'lucide-react';
 
 interface Message {
   id: string;
   sender: 'user' | 'ai';
   text: string;
-  personaName?: string;
+  domainName?: string;
   timestamp: string;
 }
 
-const PERSONAS = [
-  { id: 'dr-farooq', name: 'Dr. Farooq Siddiqui', title: 'Senior Research Mentor (Pharmaceutics)' },
-  { id: 'prof-aisha', name: 'Prof. Aisha Khan', title: 'AI & Data Science Lead (Computing)' },
-  { id: 'engr-tariq', name: 'Engr. Tariq Mehmood', title: 'Biomedical Devices & Instrumentation Lead' },
-  { id: 'director-oric', name: 'Director ORIC', title: 'Commercialization & IP Advisor' },
+const RESEARCH_DOMAINS = [
+  {
+    id: 'general',
+    name: 'General ORIC Guidance',
+    description: 'Institutional grant proposals, ERL benchmarking & patent discovery',
+  },
+  {
+    id: 'pharmacy',
+    name: 'Pharmaceutics & Health',
+    description: 'Drug formulations, nano-carriers, stability assays & DRAP compliance',
+  },
+  {
+    id: 'computing',
+    name: 'Computing & AI',
+    description: 'Computer vision, embedded edge models & software systems',
+  },
+  {
+    id: 'biomedical',
+    name: 'Biomedical Engineering',
+    description: 'Medical instrumentation, biosensors & ISO 13485 standards',
+  },
+  {
+    id: 'commercialization',
+    name: 'Commercialization & IP',
+    description: 'Patent drafting, technology licensing & Karachi industrial MoUs',
+  },
+];
+
+const SUGGESTED_PROMPTS = [
+  'Review our mycelium packaging project against DRAP regulations',
+  'What ERL level does a prototype with customer feedback reach?',
+  'Find pharmaceutical manufacturers in Korangi for transdermal patches',
+  'Draft a provisional patent summary for our nano-carrier research',
 ];
 
 export interface ChatViewProps {
@@ -38,35 +79,176 @@ export const ChatView: React.FC<ChatViewProps> = ({
 }) => {
   const [inputPrompt, setInputPrompt] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
-  const [mode, setMode] = useState<'mentoring' | 'analysis'>('mentoring');
-  const [selectedPersona, setSelectedPersona] = useState(PERSONAS[0]);
+  const [selectedDomain, setSelectedDomain] = useState(RESEARCH_DOMAINS[0]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'connecting' | 'disconnected'>('connecting');
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const settingsRef = useRef<HTMLDivElement | null>(null);
+
+  // Auto-resize textarea as user types or dictates
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [inputPrompt]);
+
+  // Click outside to close settings popover
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isSettingsOpen]);
 
   const {
     isListening,
     isMuted,
     currentlySpeakingId,
+    speechSpeed,
     availableVoices,
     selectedVoiceName,
     changePreferredVoice,
+    changeSpeechSpeed,
     startListening,
     stopListening,
     speakText,
     stopSpeaking,
     toggleMute,
   } = useVoice({
-    onTranscriptChange: (transcript) => setInputPrompt(transcript),
+    onTranscriptChange: (transcript) => {
+      setInputPrompt(transcript);
+    },
   });
+
+  const speakTextRef = useRef(speakText);
+  speakTextRef.current = speakText;
+  const selectedDomainRef = useRef(selectedDomain);
+  selectedDomainRef.current = selectedDomain;
+  const stopListeningRef = useRef(stopListening);
+  stopListeningRef.current = stopListening;
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const text = (textToSend ?? inputPrompt).trim();
+    if (!text || isGenerating) return;
+
+    // Cleanly stop dictation
+    stopListeningRef.current();
+    stopSpeechImmediately();
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      sender: 'user',
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputPrompt('');
+    setIsGenerating(true);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      const payload = {
+        type: 'chat',
+        prompt: text,
+        message: text,
+        mode: 'mentoring',
+        personaId: selectedDomain.id,
+        persona_slug: selectedDomain.id,
+        personaName: `ORIC Research Assistant (${selectedDomain.name})`,
+        projectContext: selectedProject
+          ? {
+              title: selectedProject.title,
+              abstract: selectedProject.abstract,
+              technology_stack: selectedProject.technology_stack,
+              trl_level: selectedProject.trl_level,
+              erl_level: selectedProject.erl_level,
+            }
+          : null,
+      };
+      wsRef.current.send(JSON.stringify(payload));
+      return;
+    }
+
+    // Resilient REST fallback
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/chat/message', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: text,
+          message: text,
+          mode: 'mentoring',
+          personaId: selectedDomain.id,
+          persona_slug: selectedDomain.id,
+          personaName: `ORIC Research Assistant (${selectedDomain.name})`,
+          projectContext: selectedProject,
+        }),
+      });
+
+      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+      const data = await res.json();
+
+      const aiResponse = data.response || 'No response returned.';
+      const msgId = Date.now().toString();
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: msgId,
+          sender: 'ai',
+          text: aiResponse,
+          domainName: selectedDomain.name,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+
+      setIsGenerating(false);
+      speakTextRef.current(aiResponse, false, msgId, 'ORIC Research Assistant');
+    } catch (err: any) {
+      console.error('REST fallback error:', err);
+      setIsGenerating(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now().toString(),
+          sender: 'ai',
+          text: `Service notification: Backend response active on fallback. Details: ${err.message}`,
+          domainName: 'System',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        },
+      ]);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   const connectWebSocket = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+    if (
+      wsRef.current &&
+      (wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
@@ -75,12 +257,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
     const wsUrl = `${protocol}//${host}:8000/api/v1/ws/chat`;
 
     try {
-      setConnectionStatus('connecting');
       const ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
-        setConnectionStatus('connected');
-        console.log('Connected to SHU ORIC AI Streaming Engine on port 8000');
+        console.log('Connected to SHU ORIC AI Streaming Engine');
       };
 
       ws.onmessage = (event) => {
@@ -96,74 +276,62 @@ export const ChatView: React.FC<ChatViewProps> = ({
                 id: msgId,
                 sender: 'ai',
                 text: '',
-                personaName: data.personaName,
+                domainName: selectedDomainRef.current.name,
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               },
             ]);
-          } else if (data.type === 'token') {
+          } else if (data.type === 'token' || data.type === 'chunk') {
+            const token = data.token ?? data.chunk ?? '';
             setMessages((prev) => {
               if (prev.length === 0) return prev;
               const next = [...prev];
               const last = { ...next[next.length - 1] };
               if (last.sender === 'ai') {
-                last.text += data.token;
+                last.text += token;
                 next[next.length - 1] = last;
               }
               return next;
             });
-          } else if (data.type === 'done') {
+          } else if (data.type === 'done' || data.type === 'end') {
             setIsGenerating(false);
             setMessages((prev) => {
               if (prev.length === 0) return prev;
-              const last = prev[prev.length - 1];
+              const next = [...prev];
+              const last = { ...next[next.length - 1] };
               if (last.sender === 'ai') {
-                speakText(last.text, false, last.id, last.personaName || selectedPersona.name);
+                if (data.fullText && (!last.text || last.text.length < data.fullText.length)) {
+                  last.text = data.fullText;
+                  next[next.length - 1] = last;
+                }
+                speakTextRef.current(
+                  last.text,
+                  false,
+                  last.id,
+                  'ORIC Research Assistant'
+                );
               }
-              return prev;
+              return next;
             });
-          } else if (data.type === 'error') {
-            setIsGenerating(false);
-            setMessages((prev) => [
-              ...prev,
-              {
-                id: Date.now().toString(),
-                sender: 'ai',
-                text: `Error: ${data.message || 'Encountered connection problem.'}`,
-                personaName: 'System',
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-              },
-            ]);
           }
-        } catch (err) {
-          console.error('WS Parse error:', err);
+        } catch (e) {
+          console.warn('WebSocket message parse error:', e);
         }
       };
 
-      ws.onerror = (err) => {
-        console.warn('WebSocket encountered error, fallback active:', err);
-        setConnectionStatus('disconnected');
-      };
-
-      ws.onclose = () => {
-        setConnectionStatus('disconnected');
-        reconnectTimeoutRef.current = setTimeout(() => {
-          connectWebSocket();
-        }, 3000);
+      ws.onerror = (e) => {
+        console.warn('WebSocket error, fallback to REST ready:', e);
       };
 
       wsRef.current = ws;
     } catch (e) {
-      console.error('Failed to instantiate WebSocket:', e);
-      setConnectionStatus('disconnected');
+      console.warn('Could not establish WebSocket:', e);
     }
-  }, [speakText, selectedPersona.name]);
+  }, []);
 
   useEffect(() => {
     connectWebSocket();
     return () => {
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (wsRef.current) wsRef.current.close();
-      stopSpeechImmediately();
     };
   }, [connectWebSocket]);
 
@@ -171,384 +339,353 @@ export const ChatView: React.FC<ChatViewProps> = ({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGenerating]);
 
-  const handleSendMessage = async () => {
-    const trimmed = inputPrompt.trim();
-    if (!trimmed || isGenerating) return;
-
-    stopSpeechImmediately();
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: trimmed,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputPrompt('');
-    setIsGenerating(true);
-
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      const payload = {
-        type: 'chat',
-        prompt: trimmed,
-        mode,
-        personaId: selectedPersona.id,
-        personaName: selectedPersona.name,
-        projectContext: selectedProject ? {
-          title: selectedProject.title,
-          abstract: selectedProject.abstract,
-          technology_stack: selectedProject.technology_stack,
-          trl_level: selectedProject.trl_level,
-          erl_level: selectedProject.erl_level,
-        } : null,
-      };
-      wsRef.current.send(JSON.stringify(payload));
-      return;
-    }
-
-    // Resilient REST fallback
-    try {
-      const res = await fetch('http://localhost:8000/api/v1/chat/message', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: trimmed,
-          mode,
-          personaId: selectedPersona.id,
-          personaName: selectedPersona.name,
-          projectContext: selectedProject,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-      const data = await res.json();
-
-      const aiResponse = data.response || 'No response returned from model.';
-      const msgId = Date.now().toString();
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: msgId,
-          sender: 'ai',
-          text: aiResponse,
-          personaName: selectedPersona.name,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-
-      speakText(aiResponse, false, msgId, selectedPersona.name);
-    } catch (err: any) {
-      console.error('REST fallback error:', err);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          sender: 'ai',
-          text: `Gateway notice: Backend connection active on fallback. Details: ${err.message}`,
-          personaName: 'System',
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        },
-      ]);
-    } finally {
-      setIsGenerating(false);
-      connectWebSocket();
-    }
+  const handleCopy = (id: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedMsgId(id);
+    setTimeout(() => setCopiedMsgId(null), 2000);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-5rem)] bg-black text-zinc-100 rounded-md overflow-hidden border border-zinc-800 shadow-2xl font-sans m-4">
-      {/* Top Header Bar */}
-      <div className="p-4 bg-zinc-950 border-b border-zinc-800 flex flex-wrap items-center justify-between gap-3">
-        {/* Persona Selector */}
+    <div className="flex flex-col h-full bg-white text-zinc-900 font-sans selection:bg-red-600 selection:text-white relative">
+      {/* =========================================================================
+          1. CHAT HEADER: HONEST AI IDENTITY + SPECIALIZATION SELECTOR + SETTINGS
+          ========================================================================= */}
+      <div className="h-14 px-6 border-b border-zinc-200 bg-white flex items-center justify-between shrink-0 shadow-xs">
+        {/* Honest Assistant Identity */}
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-red-950/50 border border-red-800/60 rounded-md">
-            <Sparkles className="w-5 h-5 text-red-500" />
-          </div>
+          <img
+            src="/shu-logo.png"
+            alt="Salim Habib University"
+            className="h-8 w-auto object-contain"
+          />
+          <div className="h-6 w-px bg-zinc-200 hidden sm:block" />
           <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-sm text-zinc-900 tracking-tight">
+                ORIC Research Assistant
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-semibold border border-red-200">
+                Official AI
+              </span>
+            </div>
+            <div className="text-[11px] text-zinc-500 font-normal">
+              Salim Habib University • Research & Commercialization
+            </div>
+          </div>
+        </div>
+
+        {/* Controls: Domain Selector & Settings Popover */}
+        <div className="flex items-center gap-3">
+          {/* Domain Specialization Selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500 hidden md:inline">Focus Area:</span>
             <select
-              value={selectedPersona.id}
+              value={selectedDomain.id}
               onChange={(e) => {
-                const found = PERSONAS.find((p) => p.id === e.target.value);
-                if (found) setSelectedPersona(found);
+                const found = RESEARCH_DOMAINS.find((d) => d.id === e.target.value);
+                if (found) setSelectedDomain(found);
               }}
-              className="bg-black text-white font-display font-bold text-sm border border-zinc-800 rounded px-2.5 py-1 focus:outline-none focus:border-red-600"
+              className="text-xs font-medium bg-zinc-50 border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-800 hover:border-zinc-300 focus:outline-hidden focus:border-zinc-400 transition"
             >
-              {PERSONAS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
+              {RESEARCH_DOMAINS.map((domain) => (
+                <option key={domain.id} value={domain.id}>
+                  {domain.name}
                 </option>
               ))}
             </select>
-            <p className="text-xs text-zinc-400 mt-0.5">{selectedPersona.title}</p>
-          </div>
-        </div>
-
-        {selectedProject && (
-          <div className="flex items-center gap-2 bg-red-950/40 border border-red-800/60 rounded px-3 py-1 text-xs text-red-300">
-            <span>Context: <strong className="text-white">{selectedProject.title || selectedProject.name}</strong></span>
-            {onClearSelectedProject && (
-              <button onClick={onClearSelectedProject} className="ml-1 text-zinc-400 hover:text-white">✕</button>
-            )}
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          {/* Live Status Pill */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs border border-zinc-800 bg-zinc-900 shadow-sm font-mono">
-            <span
-              className={`w-2 h-2 rounded-full ${
-                connectionStatus === 'connected'
-                  ? 'bg-red-500 animate-pulse'
-                  : connectionStatus === 'connecting'
-                  ? 'bg-zinc-400 animate-ping'
-                  : 'bg-zinc-600'
-              }`}
-            />
-            <span className="text-[11px] font-medium text-zinc-300">
-              {connectionStatus === 'connected'
-                ? 'Gemini 3.5 Live'
-                : connectionStatus === 'connecting'
-                ? 'Connecting...'
-                : 'Offline (REST Active)'}
-            </span>
           </div>
 
-          {/* Natural Voice Selector */}
-          {availableVoices.length > 0 && (
-            <div className="hidden lg:flex items-center gap-1.5 bg-zinc-900 border border-zinc-800 rounded px-2 py-1 text-xs">
-              <span className="text-[10px] text-red-500 font-mono font-semibold tracking-wider uppercase">Voice</span>
-              <select
-                value={selectedVoiceName}
-                onChange={(e) => changePreferredVoice(e.target.value)}
-                className="bg-transparent text-zinc-300 text-xs focus:outline-none max-w-[140px] truncate cursor-pointer"
-                title="Select preferred text-to-speech voice"
-              >
-                <option value="" className="bg-black text-zinc-300">
-                  Auto (Natural Neural)
-                </option>
-                {availableVoices
-                  .filter((v) => v.lang.startsWith('en'))
-                  .map((v) => (
-                    <option key={v.name} value={v.name} className="bg-black text-zinc-300">
-                      {v.name.replace(/(Microsoft|Google|English|United States|United Kingdom|\(|\))/gi, '').trim() || v.name}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          )}
-
-          {/* Mode Switcher */}
-          <div className="flex bg-zinc-900 p-1 rounded border border-zinc-800 text-xs">
+          {/* Settings Popover Button */}
+          <div className="relative" ref={settingsRef}>
             <button
-              onClick={() => setMode('mentoring')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition font-display text-xs ${
-                mode === 'mentoring'
-                  ? 'bg-red-600 text-white font-bold'
-                  : 'text-zinc-400 hover:text-white'
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              title="Voice & Playback Settings"
+              className={`p-2 rounded-lg border transition ${
+                isSettingsOpen
+                  ? 'bg-zinc-100 text-zinc-900 border-zinc-300'
+                  : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900'
               }`}
             >
-              <BookOpen className="w-3.5 h-3.5" /> Mentoring Mode
+              <SlidersHorizontal className="w-4 h-4" />
             </button>
-            <button
-              onClick={() => setMode('analysis')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded transition font-display text-xs ${
-                mode === 'analysis'
-                  ? 'bg-red-600 text-white font-bold'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Search className="w-3.5 h-3.5" /> Research Analysis
-            </button>
-          </div>
 
-          {/* Mute/Unmute Voice Audio Toggle */}
-          <button
-            onClick={toggleMute}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs transition font-mono ${
-              isMuted
-                ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
-                : 'bg-red-950/40 border-red-800/60 text-red-400 hover:bg-red-900/40'
-            }`}
-            title={isMuted ? 'Click to enable voice readout' : 'Click to mute voice readout'}
-          >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-4 h-4 text-zinc-400" />
-                <span className="hidden sm:inline font-medium">Voice Muted</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-4 h-4 text-red-500" />
-                <span className="hidden sm:inline font-medium">Voice Active</span>
-              </>
+            {/* Popover Card */}
+            {isSettingsOpen && (
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-zinc-200 rounded-lg shadow-lg p-4 space-y-4 z-50 text-xs">
+                <div className="font-bold text-zinc-900 border-b border-zinc-100 pb-2">
+                  Assistant Settings
+                </div>
+
+                {/* Voice Selection */}
+                <div className="space-y-1.5">
+                  <label className="font-medium text-zinc-700">Speech Voice</label>
+                  <select
+                    value={selectedVoiceName || ''}
+                    onChange={(e) => changePreferredVoice(e.target.value)}
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-md p-1.5 text-xs text-zinc-800 focus:outline-hidden"
+                  >
+                    {availableVoices.map((v) => (
+                      <option key={v.name} value={v.name}>
+                        {v.name} ({v.lang})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Playback Speed */}
+                <div className="space-y-1.5">
+                  <label className="font-medium text-zinc-700">Playback Speed</label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {[0.9, 1.0, 1.15, 1.25].map((speed) => (
+                      <button
+                        key={speed}
+                        onClick={() => changeSpeechSpeed(speed)}
+                        className={`py-1 rounded text-xs font-medium border transition ${
+                          speechSpeed === speed
+                            ? 'bg-red-50 text-red-700 border-red-300 font-bold'
+                            : 'bg-zinc-50 text-zinc-700 border-zinc-200 hover:bg-zinc-100'
+                        }`}
+                      >
+                        {speed}x
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Voice Mute Toggle */}
+                <div className="pt-2 border-t border-zinc-100 flex items-center justify-between">
+                  <span className="font-medium text-zinc-700">Audio Readout</span>
+                  <button
+                    onClick={toggleMute}
+                    className={`px-2.5 py-1 rounded text-xs font-medium border transition ${
+                      !isMuted
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+                    }`}
+                  >
+                    {!isMuted ? 'Active' : 'Muted'}
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
         </div>
       </div>
 
-      {/* Messages Feed */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-black">
+      {/* Selected Project Notice (if user clicked Analyze from Project list) */}
+      {selectedProject && (
+        <div className="bg-zinc-50 border-b border-zinc-200 px-6 py-2 flex items-center justify-between text-xs text-zinc-600">
+          <div className="flex items-center gap-2 truncate">
+            <Info className="w-3.5 h-3.5 text-red-600 shrink-0" />
+            <span>Analyzing Project:</span>
+            <strong className="text-zinc-900 truncate">{selectedProject.title}</strong>
+            <span className="px-1.5 py-0.2 rounded bg-zinc-200 text-zinc-700 text-[10px] font-medium">
+              TRL {selectedProject.trl_level}/9
+            </span>
+          </div>
+          {onClearSelectedProject && (
+            <button
+              onClick={onClearSelectedProject}
+              className="text-zinc-500 hover:text-zinc-900 underline ml-2 shrink-0"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* =========================================================================
+          2. MESSAGE FEED (FLATTENED DESIGN, CLEAN READABLE LINE LENGTH)
+          ========================================================================= */}
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-6 max-w-4xl mx-auto w-full">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center max-w-md mx-auto text-zinc-500 space-y-3">
-            <UserCheck className="w-12 h-12 text-zinc-700 animate-pulse" />
-            <p className="text-sm font-sans text-zinc-400">
-              Ask your Virtual Teacher a research query, commercialization milestone question, or press the mic to begin speaking.
-            </p>
-            <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-950/40 border border-red-800/50 px-3 py-1 rounded font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-red-500" /> Live Gemini 3.5 Intelligence Engine
+          /* Proper Honest Empty State */
+          <div className="my-auto py-12 max-w-2xl mx-auto text-center space-y-5">
+            <img
+              src="/shu-logo.png"
+              alt="Salim Habib University"
+              className="h-14 w-auto object-contain mx-auto"
+            />
+
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold font-display text-zinc-900">
+                ORIC Research Assistant
+              </h2>
+              <p className="text-sm text-zinc-600 leading-relaxed max-w-lg mx-auto">
+                Review grant proposals, check patent eligibility, assess commercial readiness (ERL/TRL), or identify Karachi industrial manufacturing partners.
+              </p>
+            </div>
+
+            {/* 4 Actionable Prompt Chips */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-left">
+              {SUGGESTED_PROMPTS.map((promptText, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setInputPrompt(promptText);
+                    handleSendMessage(promptText);
+                  }}
+                  className="p-3 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs text-zinc-700 font-medium transition flex items-center justify-between group shadow-xs"
+                >
+                  <span className="line-clamp-2">{promptText}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-600 transition shrink-0 ml-2" />
+                </button>
+              ))}
             </div>
           </div>
         ) : (
+          /* Flattened Messages */
           messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}
-            >
-              <div
-                className={`group relative max-w-[85%] rounded-md px-5 py-3 text-sm leading-relaxed ${
-                  msg.sender === 'user'
-                    ? 'bg-red-600 text-white font-medium rounded-tr-none shadow-md shadow-red-950/40'
-                    : 'bg-zinc-900 text-zinc-100 border border-zinc-800 rounded-tl-none'
-                }`}
-              >
-                {msg.sender === 'ai' && msg.personaName && (
-                  <div className="flex items-center justify-between gap-3 mb-1.5 border-b border-zinc-800 pb-1">
-                    <span className="block text-[10px] font-mono font-bold tracking-wider uppercase text-red-500">
-                      {msg.personaName}
+            <div key={msg.id} className="group">
+              {msg.sender === 'user' ? (
+                /* User Message: Clean Right Bubble */
+                <div className="flex flex-col items-end">
+                  <div className="bg-zinc-100 border border-zinc-200 text-zinc-900 rounded-lg px-4 py-2.5 max-w-2xl text-sm leading-relaxed shadow-xs">
+                    {msg.text}
+                  </div>
+                  <span className="text-[10px] text-zinc-400 mt-1 mr-1">{msg.timestamp}</span>
+                </div>
+              ) : (
+                /* Assistant Message: Plain text on Canvas with Hover Actions */
+                <div className="flex flex-col items-start max-w-3xl">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xs font-semibold text-zinc-900">
+                      ORIC Assistant
                     </span>
+                    {msg.domainName && (
+                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-zinc-100 text-zinc-600 border border-zinc-200 font-medium">
+                        {msg.domainName}
+                      </span>
+                    )}
+                    <span className="text-[10px] text-zinc-400">{msg.timestamp}</span>
+                  </div>
+
+                  <div className="text-sm leading-relaxed text-zinc-800 prose prose-zinc max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {msg.text}
+                    </ReactMarkdown>
+                  </div>
+
+                  {/* Hover Actions: Copy & Listen */}
+                  <div className="opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity flex items-center gap-2 mt-2 pt-1 border-t border-zinc-100 w-full">
+                    <button
+                      onClick={() => handleCopy(msg.id, msg.text)}
+                      className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-900 transition"
+                      title="Copy text to clipboard"
+                    >
+                      {copiedMsgId === msg.id ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-600" />
+                          <span className="text-emerald-600">Copied</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </button>
+
                     <button
                       onClick={() => {
                         if (currentlySpeakingId === msg.id) {
                           stopSpeaking();
                         } else {
-                          speakText(msg.text, true, msg.id, msg.personaName || selectedPersona.name);
+                          speakText(msg.text, true, msg.id, 'ORIC Research Assistant');
                         }
                       }}
-                      className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] transition font-mono ${
-                        currentlySpeakingId === msg.id
-                          ? 'bg-red-950/60 text-red-400 font-semibold animate-pulse'
-                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                      }`}
-                      title={currentlySpeakingId === msg.id ? 'Stop reading' : 'Read answer aloud with Natural Voice'}
+                      className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-900 transition ml-2"
+                      title={currentlySpeakingId === msg.id ? 'Stop audio' : 'Listen to response'}
                     >
                       {currentlySpeakingId === msg.id ? (
                         <>
-                          <VolumeX className="w-3.5 h-3.5 text-red-500" />
-                          <span>Stop</span>
+                          <Square className="w-3 h-3 text-red-600 fill-current" />
+                          <span className="text-red-600 font-medium">Stop</span>
                         </>
                       ) : (
                         <>
-                          <Volume2 className="w-3.5 h-3.5 text-zinc-400" />
-                          <span className="hidden group-hover:inline">Listen</span>
+                          <Volume2 className="w-3 h-3" />
+                          <span>Listen</span>
                         </>
                       )}
                     </button>
                   </div>
-                )}
-                {msg.sender === 'user' ? (
-                  <p className="whitespace-pre-wrap text-white font-medium">{msg.text}</p>
-                ) : (
-                  <div className="text-zinc-100 text-sm leading-relaxed prose prose-invert max-w-none">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        h1: ({ children }) => (
-                          <h1 className="font-display text-base font-bold text-white mt-3 mb-1.5 border-b border-zinc-800 pb-1">
-                            {children}
-                          </h1>
-                        ),
-                        h2: ({ children }) => (
-                          <h2 className="font-display text-sm font-bold text-white mt-2.5 mb-1 flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 inline-block" />
-                            {children}
-                          </h2>
-                        ),
-                        h3: ({ children }) => (
-                          <h3 className="font-display text-xs font-bold text-zinc-300 mt-2 mb-1 uppercase tracking-wide">
-                            {children}
-                          </h3>
-                        ),
-                        p: ({ children }) => (
-                          <p className="my-1.5 leading-relaxed text-zinc-200">{children}</p>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-semibold text-white">{children}</strong>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="list-disc list-outside pl-4 space-y-1 my-1.5 text-zinc-300">{children}</ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="list-decimal list-outside pl-4 space-y-1 my-1.5 text-zinc-300">{children}</ol>
-                        ),
-                        li: ({ children }) => (
-                          <li className="leading-relaxed pl-1">{children}</li>
-                        ),
-                        code: ({ className, children, ...props }: any) => {
-                          const isBlock = String(children).includes('\n') || (className && className.includes('language-'));
-                          return isBlock ? (
-                            <pre className="my-2 rounded border border-zinc-800 bg-zinc-950 p-2.5 font-mono text-xs text-red-400 overflow-x-auto">
-                              <code {...props}>{children}</code>
-                            </pre>
-                          ) : (
-                            <code className="bg-zinc-950 text-red-400 px-1.5 py-0.5 rounded text-xs font-mono border border-zinc-800" {...props}>
-                              {children}
-                            </code>
-                          );
-                        },
-                        blockquote: ({ children }) => (
-                          <blockquote className="border-l-2 border-red-600 pl-3 my-2 text-zinc-300 italic bg-red-950/20 py-1 rounded-r">
-                            {children}
-                          </blockquote>
-                        ),
-                      }}
-                    >
-                      {msg.text || (isGenerating ? 'Analyzing with Google Gemini 3.5...' : '')}
-                    </ReactMarkdown>
-                  </div>
-                )}
-              </div>
-              <span className="text-[10px] text-zinc-500 mt-1 px-1 font-mono">{msg.timestamp}</span>
+                </div>
+              )}
             </div>
           ))
         )}
+
+        {/* Loading generation state */}
+        {isGenerating && (
+          <div className="flex items-center gap-2 text-xs text-zinc-500 pt-2">
+            <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            <span>Analyzing research query...</span>
+          </div>
+        )}
+
         <div ref={chatEndRef} />
       </div>
 
-      {/* Input Bar */}
-      <div className="p-4 bg-zinc-950 border-t border-zinc-800">
-        <div className="flex items-center gap-2 bg-black border border-zinc-800 rounded p-2 focus-within:border-red-600 transition">
-          <button
-            onClick={isListening ? stopListening : startListening}
-            className={`p-2.5 rounded transition ${
-              isListening
-                ? 'bg-red-600 text-white animate-pulse'
-                : 'bg-zinc-900 text-zinc-400 hover:text-white'
-            }`}
-            title={isListening ? 'Stop Voice Recording' : 'Start Voice Input (STT)'}
-          >
-            {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </button>
+      {/* =========================================================================
+          3. CHAT COMPOSER (STREAMLINED ENTER KEY & SEAMLESS MIC DICTATION)
+          ========================================================================= */}
+      <div className="border-t border-zinc-200 bg-white p-4 shrink-0 shadow-xs">
+        <div className="max-w-4xl mx-auto space-y-2">
+          <div className="relative flex items-center bg-white border border-zinc-200 rounded-lg focus-within:border-zinc-400 focus-within:ring-1 focus-within:ring-zinc-400 shadow-xs transition">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={inputPrompt}
+              onChange={(e) => setInputPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask about research projects, DRAP/PSQCA regulations, TRL/ERL scoring, or industry partners..."
+              className="flex-1 resize-none bg-transparent px-3.5 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-hidden max-h-40 leading-relaxed"
+            />
 
-          <input
-            type="text"
-            value={inputPrompt}
-            onChange={(e) => setInputPrompt(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder={
-              isListening ? 'Listening to speech...' : `Consult ${selectedPersona.name}...`
-            }
-            className="flex-1 bg-transparent border-none text-sm text-white placeholder-zinc-500 focus:outline-none px-2"
-          />
+            <div className="flex items-center gap-1.5 pr-2.5">
+              {/* Inline Speech-to-Text Microphone */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (isListening) {
+                    stopListening();
+                  } else {
+                    startListening();
+                  }
+                }}
+                title={isListening ? 'Stop dictation' : 'Dictate with microphone'}
+                className={`p-1.5 rounded-md transition ${
+                  isListening
+                    ? 'bg-red-50 text-red-600 animate-pulse'
+                    : 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100'
+                }`}
+              >
+                {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              </button>
 
-          <button
-            onClick={handleSendMessage}
-            disabled={!inputPrompt.trim() || isGenerating}
-            className="p-2.5 bg-red-600 text-white rounded hover:bg-red-500 disabled:opacity-40 disabled:cursor-not-allowed transition font-display font-semibold"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+              {/* Send Button */}
+              <button
+                type="button"
+                onClick={() => handleSendMessage()}
+                disabled={!inputPrompt.trim() || isGenerating}
+                className="p-1.5 rounded-md bg-red-600 text-white hover:bg-red-700 disabled:bg-zinc-100 disabled:text-zinc-400 disabled:cursor-not-allowed transition shadow-xs"
+                title="Send query (Enter)"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-zinc-400 px-1">
+            <span>Press Enter to send, Shift + Enter for new line</span>
+            {isListening && (
+              <span className="text-red-600 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-ping" />
+                Listening to speech...
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

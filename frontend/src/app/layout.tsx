@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
-import { Space_Grotesk, Plus_Jakarta_Sans } from 'next/font/google';
+import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import JsonLd from '@/components/seo/JsonLd';
 
-const spaceGrotesk = Space_Grotesk({
+const outfit = Outfit({
   variable: '--font-display',
   subsets: ['latin'],
   display: 'swap',
-  weight: ['400', '500', '600', '700'],
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -81,11 +81,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.variable} ${plusJakarta.variable} font-sans h-full antialiased overflow-x-hidden dark`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${outfit.variable} ${plusJakarta.variable} font-sans h-full antialiased overflow-x-hidden`}
+    >
       <head>
         <JsonLd />
       </head>
-      <body className="min-h-full flex flex-col font-sans bg-black text-zinc-100 selection:bg-red-600 selection:text-white overflow-x-hidden">
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col font-sans bg-white text-zinc-900 selection:bg-red-600 selection:text-white overflow-x-hidden"
+      >
         {children}
       </body>
     </html>
