@@ -96,7 +96,7 @@ export class VectorStore {
         querySql += ` ORDER BY embedding <=> $1 LIMIT ${limit}`;
 
         const result = await pool.query(querySql, params);
-        return result.rows.map(r => ({
+        return result.rows.map((r: any) => ({
           id: r.id,
           projectId: r.project_id,
           projectCode: r.project_code,
