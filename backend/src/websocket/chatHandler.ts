@@ -3,11 +3,24 @@ import { IncomingMessage } from 'http';
 import { aiGateway, ChatRequestPayload } from '../services/aiGateway.js';
 
 export function handleChatConnection(ws: WebSocket) {
-  console.log('Client connected to AI Chat WebSocket Stream');
+  // Generate a unique connection-scoped session ID
+  const connectionSessionId = `conn_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  console.log(`[WebSocket] Client connected (Session ID: ${connectionSessionId})`);
 
   ws.on('message', async (message: string) => {
     try {
       const data = JSON.parse(message.toString());
+
+      // Allow client to explicitly clear chat memory
+      if (data.type === 'clear' || data.type === 'reset') {
+        const targetSessionId = data.sessionId || connectionSessionId;
+        aiGateway.clearSession(targetSessionId);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'cleared', message: 'Chat memory reset successfully.' }));
+        }
+        return;
+      }
+
       const {
         prompt,
         message: altMessage,
@@ -15,6 +28,9 @@ export function handleChatConnection(ws: WebSocket) {
         personaId = 'oric-assistant',
         personaName = 'ORIC Research Assistant',
         systemPrompt = '',
+        history = [],
+        projectContext = null,
+        sessionId,
       } = data;
 
       const userText = prompt || altMessage;
@@ -31,6 +47,9 @@ export function handleChatConnection(ws: WebSocket) {
         personaId,
         personaName,
         systemPrompt,
+        history: Array.isArray(history) ? history : [],
+        projectContext,
+        sessionId: sessionId || connectionSessionId,
       };
 
       const fullResponse = await aiGateway.generateResponse(payload);
@@ -41,7 +60,7 @@ export function handleChatConnection(ws: WebSocket) {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'token', token: chunk, chunk }));
         }
-        await new Promise((resolve) => setTimeout(resolve, 20));
+        await new Promise((resolve) => setTimeout(resolve, 15));
       }
 
       if (ws.readyState === WebSocket.OPEN) {
@@ -55,7 +74,9 @@ export function handleChatConnection(ws: WebSocket) {
     }
   });
 
-  ws.on('close', () => console.log('Client disconnected from AI Chat WebSocket Stream'));
+  ws.on('close', () => {
+    console.log(`[WebSocket] Client disconnected (Session ID: ${connectionSessionId})`);
+  });
 }
 
 export function setupChatWebSocket(wss: WebSocketServer): void {

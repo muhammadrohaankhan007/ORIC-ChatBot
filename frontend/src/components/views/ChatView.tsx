@@ -17,7 +17,8 @@ import {
   Square,
   Sparkles,
   ArrowRight,
-  Info
+  Info,
+  RotateCcw
 } from 'lucide-react';
 
 interface Message {
@@ -85,10 +86,46 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
+  const sessionIdRef = useRef<string>('');
   const wsRef = useRef<WebSocket | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const settingsRef = useRef<HTMLDivElement | null>(null);
+
+  // Initialize session ID and restore persistent chat memory
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let savedSessionId = sessionStorage.getItem('shu_oric_chat_session_id');
+      if (!savedSessionId) {
+        savedSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        sessionStorage.setItem('shu_oric_chat_session_id', savedSessionId);
+      }
+      sessionIdRef.current = savedSessionId;
+
+      try {
+        const cached = localStorage.getItem('shu_oric_chat_history');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to load chat history from cache', e);
+      }
+    }
+  }, []);
+
+  // Save chat messages to cache on update
+  useEffect(() => {
+    if (typeof window !== 'undefined' && messages.length > 0) {
+      try {
+        localStorage.setItem('shu_oric_chat_history', JSON.stringify(messages));
+      } catch (e) {
+        console.warn('Failed to persist chat history', e);
+      }
+    }
+  }, [messages]);
 
   // Auto-resize textarea as user types or dictates
   useEffect(() => {
@@ -138,6 +175,32 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const stopListeningRef = useRef(stopListening);
   stopListeningRef.current = stopListening;
 
+  const handleClearChat = async () => {
+    stopSpeaking();
+    setMessages([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('shu_oric_chat_history');
+      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      sessionStorage.setItem('shu_oric_chat_session_id', newSessionId);
+      sessionIdRef.current = newSessionId;
+    }
+
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: 'clear', sessionId: sessionIdRef.current }));
+    }
+
+    try {
+      const apiBase = getApiBaseUrl();
+      await fetch(`${apiBase}/chat/clear`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: sessionIdRef.current }),
+      });
+    } catch (e) {
+      // Ignore network errors on clear
+    }
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const text = (textToSend ?? inputPrompt).trim();
     if (!text || isGenerating) return;
@@ -153,6 +216,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
+    // Extract previous conversation turns for full context memory
+    const conversationHistory = messages
+      .filter((m) => m.text && m.text.trim())
+      .map((m) => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        text: m.text,
+      }));
+
     setMessages((prev) => [...prev, userMessage]);
     setInputPrompt('');
     setIsGenerating(true);
@@ -161,24 +232,38 @@ export const ChatView: React.FC<ChatViewProps> = ({
       textareaRef.current.style.height = 'auto';
     }
 
+    const projectContextPayload = selectedProject
+      ? {
+          title: selectedProject.title,
+          project_code: selectedProject.project_code,
+          faculty: selectedProject.faculty,
+          department: selectedProject.department,
+          lead_investigator: selectedProject.lead_investigator,
+          abstract: selectedProject.abstract,
+          problem_statement: selectedProject.problem_statement,
+          technology_stack: selectedProject.technology_stack,
+          development_stage: selectedProject.development_stage,
+          trl_level: selectedProject.trl_level,
+          erl_level: selectedProject.erl_level,
+          ip_status: selectedProject.ip_status,
+          target_industries: selectedProject.target_industries,
+          commercial_readiness: selectedProject.commercial_readiness,
+          estimated_funding_pkr: selectedProject.estimated_funding_pkr,
+        }
+      : null;
+
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       const payload = {
         type: 'chat',
         prompt: text,
         message: text,
+        history: conversationHistory,
+        sessionId: sessionIdRef.current || 'default_session',
         mode: 'mentoring',
         personaId: selectedDomain.id,
         persona_slug: selectedDomain.id,
         personaName: `ORIC Research Assistant (${selectedDomain.name})`,
-        projectContext: selectedProject
-          ? {
-              title: selectedProject.title,
-              abstract: selectedProject.abstract,
-              technology_stack: selectedProject.technology_stack,
-              trl_level: selectedProject.trl_level,
-              erl_level: selectedProject.erl_level,
-            }
-          : null,
+        projectContext: projectContextPayload,
       };
       wsRef.current.send(JSON.stringify(payload));
       return;
@@ -193,11 +278,13 @@ export const ChatView: React.FC<ChatViewProps> = ({
         body: JSON.stringify({
           prompt: text,
           message: text,
+          history: conversationHistory,
+          sessionId: sessionIdRef.current || 'default_session',
           mode: 'mentoring',
           personaId: selectedDomain.id,
           persona_slug: selectedDomain.id,
           personaName: `ORIC Research Assistant (${selectedDomain.name})`,
-          projectContext: selectedProject,
+          projectContext: projectContextPayload,
         }),
       });
 
@@ -379,10 +466,22 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         </div>
 
-        {/* Controls: Domain Selector & Settings Popover */}
-        <div className="flex items-center gap-3">
+        {/* Controls: New Chat, Domain Selector & Settings Popover */}
+        <div className="flex items-center gap-2.5">
+          {/* Reset / New Chat Button */}
+          {messages.length > 0 && (
+            <button
+              onClick={handleClearChat}
+              title="Start a new conversation and clear memory"
+              className="px-2.5 py-1.5 rounded-lg border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 hover:text-red-600 hover:border-red-200 transition text-xs font-medium flex items-center gap-1.5 shadow-xs"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">New Chat</span>
+            </button>
+          )}
+
           {/* Domain Specialization Selector */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span className="text-xs text-zinc-500 hidden md:inline">Focus Area:</span>
             <select
               value={selectedDomain.id}

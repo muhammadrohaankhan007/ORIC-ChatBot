@@ -57,6 +57,9 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
     const isResearch = mode === 'research' || mode === 'analysis';
     const personaId = req.body.personaId || req.body.persona_slug || 'oric-assistant';
     const personaName = req.body.personaName || PERSONA_MAP[personaId] || 'ORIC Research Assistant';
+    const history = req.body.history || [];
+    const projectContext = req.body.projectContext || null;
+    const sessionId = req.body.sessionId || 'default_session';
 
     const response = await aiGateway.generateResponse({
       prompt: promptText.trim(),
@@ -64,6 +67,9 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
       personaId,
       personaName,
       systemPrompt: req.body.systemPrompt || '',
+      history: Array.isArray(history) ? history : [],
+      projectContext,
+      sessionId,
     });
 
     res.json({
@@ -82,6 +88,13 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
   } catch (err: any) {
     res.status(500).json({ error: 'Failed to process chat message: ' + err.message });
   }
+});
+
+// Reset chat memory endpoint
+app.post('/api/v1/chat/clear', (req: Request, res: Response) => {
+  const sessionId = req.body.sessionId || 'default_session';
+  aiGateway.clearSession(sessionId);
+  res.json({ status: 'ok', message: 'Chat memory reset successfully.' });
 });
 
 // Create HTTP Server
@@ -124,4 +137,3 @@ if (!process.env.VERCEL) {
     console.warn('Vercel serverless DB initialization notice:', err);
   });
 }
-
