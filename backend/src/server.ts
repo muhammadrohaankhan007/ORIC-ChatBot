@@ -109,8 +109,19 @@ async function startServer() {
   });
 }
 
-startServer().catch((err) => {
-  console.error('Fatal error starting server:', err);
-  process.exit(1);
-});
+// Export app for Vercel Express integration
+export default app;
+
+// Start standalone HTTP listener if not running in a Vercel serverless context
+if (!process.env.VERCEL) {
+  startServer().catch((err) => {
+    console.error('Fatal error starting server:', err);
+    process.exit(1);
+  });
+} else {
+  // In Vercel serverless environment, attempt DB initialization without blocking startup
+  initDb().catch((err) => {
+    console.warn('Vercel serverless DB initialization notice:', err);
+  });
+}
 

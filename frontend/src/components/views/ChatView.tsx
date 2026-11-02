@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useVoice, stopSpeechImmediately } from '@/hooks/useVoice';
+import { getApiBaseUrl } from '@/services/api';
 import {
   Mic,
   MicOff,
@@ -185,7 +186,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
     // Resilient REST fallback
     try {
-      const res = await fetch('http://localhost:8000/api/v1/chat/message', {
+      const apiBase = getApiBaseUrl();
+      const res = await fetch(`${apiBase}/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +256,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname || 'localhost';
-    const wsUrl = `${protocol}//${host}:8000/api/v1/ws/chat`;
+    const defaultWsUrl = window.location.port === '3000' && host === 'localhost'
+      ? `${protocol}//${host}:8000/api/v1/ws/chat`
+      : `${protocol}//${window.location.host}/api/v1/ws/chat`;
+    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || defaultWsUrl;
 
     try {
       const ws = new WebSocket(wsUrl);

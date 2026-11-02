@@ -1,6 +1,38 @@
 import { Project, Persona, IndustryCompany, ErlAssessment, MeetingTranscript } from '@/types';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+/**
+ * Resolves the API base URL dynamically based on execution context:
+ * 1. Server-side in Next.js (SSR / Server Functions): Uses the internal Vercel Service Binding `process.env.BACKEND_URL`
+ * 2. Client-side in browser on Vercel: Uses relative path `/api/v1` routed via top-level rewrites to the backend service
+ * 3. Local standalone development: Falls back to NEXT_PUBLIC_API_URL or http://localhost:8000/api/v1
+ */
+export function getApiBaseUrl(): string {
+  // Server-side in Next.js runtime functions
+  if (typeof window === 'undefined') {
+    if (process.env.BACKEND_URL) {
+      return `${process.env.BACKEND_URL.replace(/\/$/, '')}/api/v1`;
+    }
+    if (process.env.NEXT_PUBLIC_API_URL) {
+      return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+    }
+    return 'http://localhost:8000/api/v1';
+  }
+
+  // Client-side in browser
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, '');
+  }
+
+  // Direct standalone local development without Vercel reverse proxy
+  if (window.location.hostname === 'localhost' && window.location.port === '3000') {
+    return 'http://localhost:8000/api/v1';
+  }
+
+  // Vercel deployment / vercel dev (same-origin relative URL)
+  return '/api/v1';
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Active Virtual Teachers & Advisors
 export const INITIAL_PERSONAS: Persona[] = [
@@ -196,7 +228,8 @@ export const INITIAL_COMPANIES: IndustryCompany[] = [
 
 export async function fetchHealth(): Promise<{ status: string; version: string }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/health`, { next: { revalidate: 60 } });
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/health`, { next: { revalidate: 60 } });
     if (!res.ok) throw new Error('API offline');
     return await res.json();
   } catch {
@@ -206,7 +239,8 @@ export async function fetchHealth(): Promise<{ status: string; version: string }
 
 export async function fetchProjects(): Promise<Project[]> {
   try {
-    const res = await fetch(`${API_BASE_URL}/projects`, { cache: 'no-store' });
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/projects`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch projects');
     return await res.json();
   } catch {
@@ -221,7 +255,8 @@ export async function sendChatMessage(payload: {
   project_context_id?: string;
 }): Promise<{ response: string; agent: string; citations?: string[]; suggested_actions?: string[] }> {
   try {
-    const res = await fetch(`${API_BASE_URL}/chat/message`, {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/chat/message`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
