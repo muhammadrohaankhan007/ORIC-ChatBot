@@ -647,6 +647,32 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </p>
             </div>
 
+            {/* Live Voice Agent Callout Card in Empty State */}
+            {onOpenVoiceAgent && (
+              <div className="pt-1">
+                <button
+                  onClick={onOpenVoiceAgent}
+                  className="w-full max-w-lg mx-auto p-4 rounded-xl border border-red-200 bg-gradient-to-r from-red-50/70 via-white to-rose-50/70 hover:border-red-300 text-left transition flex items-center justify-between shadow-xs group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-md shadow-red-600/30 group-hover:scale-105 transition shrink-0">
+                      <Radio className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-zinc-900 flex items-center gap-2">
+                        <span>Talk with Live Voice Agent</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 font-semibold">Gemini Voice</span>
+                      </div>
+                      <div className="text-xs text-zinc-500 line-clamp-1">
+                        Hands-free spoken voice conversation with instant audio answers.
+                      </div>
+                    </div>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-red-600 group-hover:translate-x-1 transition shrink-0 ml-3" />
+                </button>
+              </div>
+            )}
+
             {/* 4 Actionable Prompt Chips */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-left">
               {SUGGESTED_PROMPTS.map((promptText, i) => (
@@ -775,6 +801,19 @@ export const ChatView: React.FC<ChatViewProps> = ({
             />
 
             <div className="flex items-center gap-1.5 pr-2.5">
+              {/* Direct Live Voice Agent Call Button in Composer */}
+              {onOpenVoiceAgent && (
+                <button
+                  type="button"
+                  onClick={onOpenVoiceAgent}
+                  title="Talk directly with the Live Voice Agent"
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md bg-gradient-to-r from-red-600 to-rose-600 text-white hover:from-red-700 hover:to-rose-700 font-semibold text-xs transition shadow-xs"
+                >
+                  <Radio className="w-3.5 h-3.5 text-white animate-pulse" />
+                  <span className="hidden sm:inline">Voice Agent</span>
+                </button>
+              )}
+
               {/* Inline Speech-to-Text Microphone */}
               <button
                 type="button"

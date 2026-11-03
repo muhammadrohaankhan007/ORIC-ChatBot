@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Project } from '@/types';
-import { getApiBaseUrl } from '@/services/api';
+import { getApiBaseUrl, INITIAL_PROJECTS } from '@/services/api';
 import { cleanTextForSpeech, selectBestVoice } from './useVoice';
 
-export type VoiceAgentStatus = 'idle' | 'listening' | 'thinking' | 'speaking' | 'paused';
+export type VoiceAgentStatus = 'idle' | 'welcome' | 'listening' | 'thinking' | 'speaking' | 'paused';
 
 export interface SpokenTurn {
   id: string;
@@ -20,7 +20,7 @@ export interface UseVoiceAgentOptions {
   lang?: string;
 }
 
-export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgentOptions = {}) {
+export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US' }: UseVoiceAgentOptions = {}) {
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<VoiceAgentStatus>('idle');
   const [transcript, setTranscript] = useState('');
@@ -28,11 +28,13 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
   const [lastAgentText, setLastAgentText] = useState('');
   const [turns, setTurns] = useState<SpokenTurn[]>([]);
   const [isMicMuted, setIsMicMuted] = useState(false);
-  const [audioVolume, setAudioVolume] = useState(0); // 0.0 to 1.0 for visualizer orb
+  const [audioVolume, setAudioVolume] = useState(0); // 0.0 to 1.0 for visualizer
+  const [speechSupported, setSpeechSupported] = useState(true);
 
-  // Internal references
+  // References
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
+  const isRecognitionRunningRef = useRef(false);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -42,10 +44,12 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
   const isMutedRef = useRef(false);
   const projectRef = useRef(selectedProject);
   projectRef.current = selectedProject;
+  const onProjectChangeRef = useRef(onProjectChange);
+  onProjectChangeRef.current = onProjectChange;
   const turnsRef = useRef<SpokenTurn[]>([]);
   turnsRef.current = turns;
 
-  // Keep volume animation loop running for visualizer
+  // Real-time microphone audio volume calculation for the pulsing visualizer orb
   const updateAudioVolume = useCallback(() => {
     if (analyserRef.current && !isMutedRef.current && !isSpeakingRef.current) {
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
@@ -57,13 +61,13 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
       }
       const average = sum / dataArray.length;
       // Normalized between 0 and 1
-      const normalized = Math.min(1, Math.max(0, average / 64));
+      const normalized = Math.min(1, Math.max(0, average / 48));
       setAudioVolume(normalized);
     } else if (isSpeakingRef.current) {
-      // Simulate dynamic pulse while agent is speaking
-      const time = Date.now() / 200;
-      const wave = (Math.sin(time) + Math.cos(time * 1.5) + 2) / 4;
-      setAudioVolume(0.4 + wave * 0.4);
+      // Dynamic pulsing wave when AI speaks
+      const time = Date.now() / 150;
+      const wave = (Math.sin(time) + Math.cos(time * 1.3) + 2) / 4;
+      setAudioVolume(0.45 + wave * 0.45);
     } else {
       setAudioVolume(0);
     }
@@ -71,7 +75,7 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     animFrameRef.current = requestAnimationFrame(updateAudioVolume);
   }, []);
 
-  // Stop any active AI speech
+  // Stop active speech synthesis
   const stopAgentSpeech = useCallback(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
@@ -83,183 +87,39 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     isSpeakingRef.current = false;
   }, []);
 
-  // Speak a text string via Web Speech API with the best available voice
-  const speakSpokenResponse = useCallback((text: string, onDone?: () => void) => {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
-      onDone?.();
-      return;
-    }
-
-    stopAgentSpeech();
-    const clean = cleanTextForSpeech(text);
-    if (!clean) {
-      onDone?.();
-      return;
-    }
-
-    isSpeakingRef.current = true;
-    setStatus('speaking');
-
-    const utterance = new SpeechSynthesisUtterance(clean);
-    const voices = window.speechSynthesis.getVoices();
-    const bestVoice = selectBestVoice('ORIC Research Assistant', voices);
-    if (bestVoice) {
-      utterance.voice = bestVoice;
-      utterance.lang = bestVoice.lang;
-    }
-
-    utterance.rate = 1.05; // Slightly faster for natural conversational pacing
-    utterance.pitch = 1.0;
-
-    utterance.onend = () => {
-      isSpeakingRef.current = false;
-      setStatus('listening');
-      onDone?.();
-    };
-
-    utterance.onerror = (e) => {
-      if (e.error !== 'interrupted' && e.error !== 'canceled') {
-        console.warn('Speech synthesis error:', e);
-      }
-      isSpeakingRef.current = false;
-      setStatus('listening');
-      onDone?.();
-    };
-
-    window.speechSynthesis.speak(utterance);
-  }, [stopAgentSpeech]);
-
-  // Send the user's spoken prompt to the backend with project context & history
-  const sendSpokenPrompt = useCallback(async (promptText: string) => {
-    if (!promptText || promptText.trim().length === 0) return;
-
-    const trimmed = promptText.trim();
-    setStatus('thinking');
-    setLastUserText(trimmed);
-    setTranscript('');
-
-    const userTurn: SpokenTurn = {
-      id: Date.now().toString(),
-      sender: 'user',
-      text: trimmed,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    };
-
-    setTurns((prev) => [...prev, userTurn]);
-
-    // Build history for backend memory
-    const historyPayload = turnsRef.current
-      .slice(-8)
-      .map((t) => ({
-        role: (t.sender === 'user' ? 'user' : 'model') as 'user' | 'model',
-        text: t.text,
-      }));
-
-    try {
-      const apiBase = getApiBaseUrl();
-      const currentProj = projectRef.current;
-
-      const res = await fetch(`${apiBase}/chat/message`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: trimmed,
-          message: trimmed,
-          mode: 'voice',
-          personaId: 'oric-assistant',
-          personaName: 'ORIC Voice Advisor',
-          history: historyPayload,
-          projectContext: currentProj
-            ? {
-                title: currentProj.title,
-                project_code: currentProj.project_code,
-                lead_investigator: currentProj.lead_investigator,
-                faculty: currentProj.faculty,
-                department: currentProj.department,
-                abstract: currentProj.abstract,
-                problem_statement: currentProj.problem_statement,
-                technology_stack: currentProj.technology_stack,
-                trl_level: currentProj.trl_level,
-                erl_level: currentProj.erl_level,
-                target_industries: currentProj.target_industries,
-                ip_status: currentProj.ip_status,
-                development_stage: currentProj.development_stage,
-              }
-            : null,
-          sessionId: 'voice_session_active',
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-      const data = await res.json();
-      const answer = data.response || 'I am listening. Could you please repeat that?';
-
-      setLastAgentText(answer);
-
-      const agentTurn: SpokenTurn = {
-        id: (Date.now() + 1).toString(),
-        sender: 'agent',
-        text: answer,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-
-      setTurns((prev) => [...prev, agentTurn]);
-
-      // Speak aloud immediately
-      speakSpokenResponse(answer);
-    } catch (err: any) {
-      console.error('Voice agent fetch error:', err);
-      const fallbackMsg = "I couldn't reach the ORIC server. Please try saying that again.";
-      setLastAgentText(fallbackMsg);
-      speakSpokenResponse(fallbackMsg);
-    }
-  }, [speakSpokenResponse]);
-
-  // Start the voice agent session
-  const startVoiceAgent = useCallback(async () => {
+  // Safe starter for speech recognition
+  const startListeningForUser = useCallback(() => {
     if (typeof window === 'undefined') return;
+    if (isMutedRef.current) return;
 
-    setIsActive(true);
-    setStatus('listening');
-    setTranscript('');
-
-    // 1. Initialize microphone & Web Audio API analyzer for visualizer
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      micStreamRef.current = stream;
-
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      const audioCtx = new AudioCtx();
-      audioContextRef.current = audioCtx;
-
-      const source = audioCtx.createMediaStreamSource(stream);
-      const analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 64;
-      analyser.smoothingTimeConstant = 0.8;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
-      animFrameRef.current = requestAnimationFrame(updateAudioVolume);
-    } catch (err) {
-      console.warn('Microphone permission or Web Audio API not accessible:', err);
-    }
-
-    // 2. Setup Speech Recognition
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (SpeechRecognition) {
+    if (!SpeechRecognition) {
+      setSpeechSupported(false);
+      return;
+    }
+
+    // If already running, do nothing
+    if (isRecognitionRunningRef.current && recognitionRef.current) {
+      setStatus('listening');
+      return;
+    }
+
+    try {
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = lang;
 
+      recognition.onstart = () => {
+        isRecognitionRunningRef.current = true;
+        setStatus('listening');
+      };
+
       recognition.onresult = (event: any) => {
-        // Barge-in: If the AI is currently talking and user speaks, interrupt AI immediately!
-        if (isSpeakingRef.current) {
-          stopAgentSpeech();
-          setStatus('listening');
-        }
+        // Prevent acoustic loop: do not process if the AI is currently speaking
+        if (isSpeakingRef.current) return;
 
         let interim = '';
         let finalPhrase = '';
@@ -277,12 +137,37 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
         if (currentSpoken) {
           setTranscript(currentSpoken);
 
+          // Automatic Project Matching: If user mentions a project by name, switch context automatically!
+          const lowerSpoken = currentSpoken.toLowerCase();
+          for (const proj of INITIAL_PROJECTS) {
+            const matchesTextile =
+              (lowerSpoken.includes('textile') || lowerSpoken.includes('vision') || lowerSpoken.includes('fabric')) &&
+              proj.id === 'proj-002';
+            const matchesDrug =
+              (lowerSpoken.includes('drug') || lowerSpoken.includes('nano') || lowerSpoken.includes('cancer') || lowerSpoken.includes('oncology')) &&
+              proj.id === 'proj-001';
+            const matchesGlucose =
+              (lowerSpoken.includes('glucose') || lowerSpoken.includes('blood') || lowerSpoken.includes('biosensor')) &&
+              proj.id === 'proj-003';
+            const matchesCarbon =
+              (lowerSpoken.includes('carbon') || lowerSpoken.includes('esg') || lowerSpoken.includes('supply chain')) &&
+              proj.id === 'proj-004';
+
+            if (matchesTextile || matchesDrug || matchesGlucose || matchesCarbon) {
+              if (projectRef.current?.id !== proj.id && onProjectChangeRef.current) {
+                onProjectChangeRef.current(proj);
+                projectRef.current = proj;
+              }
+              break;
+            }
+          }
+
           // Clear previous silence timer
           if (silenceTimerRef.current) {
             clearTimeout(silenceTimerRef.current);
           }
 
-          // Silence Detection: 1.1s of silence after speech automatically sends the turn!
+          // Silence Detection: 1.1 seconds of silence after speaking automatically commits the turn
           silenceTimerRef.current = setTimeout(() => {
             if (currentSpoken.length >= 2) {
               sendSpokenPrompt(currentSpoken);
@@ -292,39 +177,245 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
       };
 
       recognition.onerror = (e: any) => {
-        if (e.error !== 'no-speech') {
-          console.warn('SpeechRecognition error:', e.error);
+        if (e.error === 'not-allowed') {
+          console.warn('Microphone access not allowed for SpeechRecognition');
+          setStatus('paused');
         }
       };
 
       recognition.onend = () => {
-        // Automatically restart listening if still in active voice call
-        if (recognitionRef.current && !isMutedRef.current) {
-          try {
-            recognition.start();
-          } catch {
-            // Ignore start error on restart
-          }
+        isRecognitionRunningRef.current = false;
+        // If voice call is active and we are not speaking and not muted, seamlessly restart listening
+        if (!isSpeakingRef.current && !isMutedRef.current) {
+          setTimeout(() => {
+            if (!isSpeakingRef.current && !isMutedRef.current && !isRecognitionRunningRef.current) {
+              try {
+                recognition.start();
+              } catch {
+                // Ignore start error
+              }
+            }
+          }, 200);
         }
       };
 
+      recognition.start();
+      recognitionRef.current = recognition;
+      isRecognitionRunningRef.current = true;
+      setStatus('listening');
+    } catch (err) {
+      console.warn('Recognition start exception:', err);
+    }
+  }, [lang]);
+
+  // Pause speech recognition safely while the AI speaks to prevent acoustic feedback
+  const pauseListening = useCallback(() => {
+    if (recognitionRef.current && isRecognitionRunningRef.current) {
       try {
-        recognition.start();
-        recognitionRef.current = recognition;
-      } catch (err) {
-        console.warn('Recognition start error:', err);
+        recognitionRef.current.stop();
+      } catch {
+        // Ignore
       }
+      isRecognitionRunningRef.current = false;
+    }
+  }, []);
+
+  // Speak aloud via Web Speech API and cleanly transition back to listening
+  const speakSpokenResponse = useCallback(
+    (text: string, onDone?: () => void) => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        onDone?.();
+        return;
+      }
+
+      // Stop any existing speech and pause recognition so the AI doesn't hear itself
+      stopAgentSpeech();
+      pauseListening();
+
+      const clean = cleanTextForSpeech(text);
+      if (!clean) {
+        onDone?.();
+        startListeningForUser();
+        return;
+      }
+
+      isSpeakingRef.current = true;
+      setStatus('speaking');
+
+      const utterance = new SpeechSynthesisUtterance(clean);
+      const voices = window.speechSynthesis.getVoices();
+      const bestVoice = selectBestVoice('ORIC Research Assistant', voices);
+      if (bestVoice) {
+        utterance.voice = bestVoice;
+        utterance.lang = bestVoice.lang;
+      }
+
+      utterance.rate = 1.05; // Conversational tempo
+      utterance.pitch = 1.0;
+
+      utterance.onend = () => {
+        isSpeakingRef.current = false;
+        onDone?.();
+        // Wait 250ms for room echo to clear, then start listening for user
+        setTimeout(() => {
+          startListeningForUser();
+        }, 250);
+      };
+
+      utterance.onerror = (e) => {
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+          console.warn('Speech synthesis error:', e);
+        }
+        isSpeakingRef.current = false;
+        onDone?.();
+        setTimeout(() => {
+          startListeningForUser();
+        }, 250);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [pauseListening, startListeningForUser, stopAgentSpeech]
+  );
+
+  // Send the user's spoken prompt to the backend with project context & history
+  const sendSpokenPrompt = useCallback(
+    async (promptText: string) => {
+      if (!promptText || promptText.trim().length === 0) return;
+
+      const trimmed = promptText.trim();
+      pauseListening();
+      setStatus('thinking');
+      setLastUserText(trimmed);
+      setTranscript('');
+
+      const userTurn: SpokenTurn = {
+        id: Date.now().toString(),
+        sender: 'user',
+        text: trimmed,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setTurns((prev) => [...prev, userTurn]);
+
+      // History of recent turns
+      const historyPayload = turnsRef.current.slice(-8).map((t) => ({
+        role: (t.sender === 'user' ? 'user' : 'model') as 'user' | 'model',
+        text: t.text,
+      }));
+
+      try {
+        const apiBase = getApiBaseUrl();
+        const currentProj = projectRef.current;
+
+        const res = await fetch(`${apiBase}/chat/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            prompt: trimmed,
+            message: trimmed,
+            mode: 'voice',
+            personaId: 'oric-assistant',
+            personaName: 'ORIC Voice Advisor',
+            history: historyPayload,
+            projectContext: currentProj
+              ? {
+                  title: currentProj.title,
+                  project_code: currentProj.project_code,
+                  lead_investigator: currentProj.lead_investigator,
+                  faculty: currentProj.faculty,
+                  department: currentProj.department,
+                  abstract: currentProj.abstract,
+                  problem_statement: currentProj.problem_statement,
+                  technology_stack: currentProj.technology_stack,
+                  trl_level: currentProj.trl_level,
+                  erl_level: currentProj.erl_level,
+                  target_industries: currentProj.target_industries,
+                  ip_status: currentProj.ip_status,
+                  development_stage: currentProj.development_stage,
+                }
+              : null,
+            sessionId: 'voice_session_active',
+          }),
+        });
+
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const data = await res.json();
+        const answer = data.response || 'I heard you. Could you please clarify that point?';
+
+        setLastAgentText(answer);
+
+        const agentTurn: SpokenTurn = {
+          id: (Date.now() + 1).toString(),
+          sender: 'agent',
+          text: answer,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setTurns((prev) => [...prev, agentTurn]);
+
+        // Speak aloud immediately and resume listening once done
+        speakSpokenResponse(answer);
+      } catch (err: any) {
+        console.error('Voice agent fetch error:', err);
+        const fallbackMsg = "I couldn't reach the ORIC server. Please try saying that again.";
+        setLastAgentText(fallbackMsg);
+        speakSpokenResponse(fallbackMsg);
+      }
+    },
+    [pauseListening, speakSpokenResponse]
+  );
+
+  // Start the voice agent session with proper welcome greeting first
+  const startVoiceAgent = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+
+    setIsActive(true);
+    setStatus('welcome');
+    setTranscript('');
+    isMutedRef.current = false;
+    setIsMicMuted(false);
+
+    // 1. Initialize microphone stream & Web Audio API analyzer for visualizer
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      micStreamRef.current = stream;
+
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const audioCtx = new AudioCtx();
+        audioContextRef.current = audioCtx;
+
+        const source = audioCtx.createMediaStreamSource(stream);
+        const analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 64;
+        analyser.smoothingTimeConstant = 0.8;
+        source.connect(analyser);
+        analyserRef.current = analyser;
+
+        animFrameRef.current = requestAnimationFrame(updateAudioVolume);
+      }
+    } catch (err) {
+      console.warn('Microphone permission or Web Audio API notice:', err);
     }
 
-    // 3. Spoken Welcome Salutation
+    // 2. Prepare the warm, context-aware welcome greeting
     const project = projectRef.current;
-    const initialGreeting = project
-      ? `Hello! I am your ORIC voice advisor for the ${project.title} project. What would you like to know about its TRL level, patent status, or industry partners?`
-      : 'Hello! I am your ORIC voice assistant. Ask me anything about our university projects, grants, or patent commercialization.';
+    let welcomeGreeting = '';
 
-    setLastAgentText(initialGreeting);
-    speakSpokenResponse(initialGreeting);
-  }, [lang, sendSpokenPrompt, speakSpokenResponse, stopAgentSpeech, updateAudioVolume]);
+    if (project) {
+      welcomeGreeting = `Welcome to Salim Habib University ORIC! I am your AI voice advisor for the ${project.title} project, led by ${project.lead_investigator}. How can I guide you today regarding its technology, patent status, or industrial partners in Karachi?`;
+    } else {
+      welcomeGreeting = `Welcome to Salim Habib University ORIC! Which research project would you like to discuss today? We have our AI Textile Quality Control project, the Nanoparticle Drug Delivery system, the Continuous Glucose Biosensor, or our Supply Chain Carbon Tracking platform. Which one would you like to explore?`;
+    }
+
+    setLastAgentText(welcomeGreeting);
+
+    // 3. Play the welcome greeting aloud FIRST.
+    // Notice: Recognition is NOT active while this greeting plays!
+    // As soon as the greeting finishes, speakSpokenResponse automatically calls startListeningForUser()!
+    speakSpokenResponse(welcomeGreeting);
+  }, [speakSpokenResponse, updateAudioVolume]);
 
   // End the voice agent session cleanly
   const endVoiceAgent = useCallback(() => {
@@ -334,6 +425,7 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     setAudioVolume(0);
 
     stopAgentSpeech();
+    pauseListening();
 
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
@@ -343,16 +435,6 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     if (animFrameRef.current) {
       cancelAnimationFrame(animFrameRef.current);
       animFrameRef.current = null;
-    }
-
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.onend = null;
-        recognitionRef.current.stop();
-      } catch {
-        // Ignore
-      }
-      recognitionRef.current = null;
     }
 
     if (micStreamRef.current) {
@@ -368,7 +450,7 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
       }
       audioContextRef.current = null;
     }
-  }, [stopAgentSpeech]);
+  }, [pauseListening, stopAgentSpeech]);
 
   // Toggle Mute
   const toggleMicMute = useCallback(() => {
@@ -377,25 +459,19 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     isMutedRef.current = next;
 
     if (next) {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch {
-          // Ignore
-        }
-      }
+      pauseListening();
       setStatus('paused');
     } else {
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.start();
-        } catch {
-          // Ignore
-        }
-      }
-      setStatus('listening');
+      startListeningForUser();
     }
-  }, [isMicMuted]);
+  }, [isMicMuted, pauseListening, startListeningForUser]);
+
+  // Interrupt AI immediately (Barge-in button / tap)
+  const interruptAndListen = useCallback(() => {
+    stopAgentSpeech();
+    setTranscript('');
+    startListeningForUser();
+  }, [startListeningForUser, stopAgentSpeech]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -413,11 +489,14 @@ export function useVoiceAgent({ selectedProject, lang = 'en-US' }: UseVoiceAgent
     turns,
     isMicMuted,
     audioVolume,
+    speechSupported,
     startVoiceAgent,
     endVoiceAgent,
     toggleMicMute,
     sendSpokenPrompt,
     stopAgentSpeech,
+    interruptAndListen,
+    startListeningForUser,
   };
 }
 
