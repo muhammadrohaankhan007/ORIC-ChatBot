@@ -174,8 +174,8 @@ projectsRouter.get('/:id', async (req: Request, res: Response) => {
  */
 projectsRouter.post('/', async (req: Request, res: Response) => {
   const newProject = {
-    id: `proj-${Date.now()}`,
-    project_code: req.body.project_code || `SHU-ORIC-${Date.now().toString().slice(-4)}`,
+    id: req.body.id || `proj-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    project_code: req.body.project_code || `SHU-ORIC-${Date.now().toString().slice(-4)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`,
     title: req.body.title || 'Untitled Research Project',
     faculty: req.body.faculty || 'Faculty of Pharmacy',
     faculty_code: req.body.faculty_code || 'FOP',
@@ -226,7 +226,13 @@ projectsRouter.post('/', async (req: Request, res: Response) => {
     }
   }
 
-  inMemoryProjects.unshift(newProject);
+  const existingIdx = inMemoryProjects.findIndex(p => p.id === newProject.id || (p.project_code && p.project_code === newProject.project_code));
+  if (existingIdx >= 0) {
+    inMemoryProjects[existingIdx] = newProject as any;
+  } else {
+    inMemoryProjects.unshift(newProject as any);
+  }
+
   res.status(201).json(newProject);
 });
 
@@ -317,8 +323,17 @@ projectsRouter.post('/import-document', upload.single('file'), async (req: Reque
       });
     }
 
-    // Prepend into inMemoryProjects so newly uploaded projects appear first
-    inMemoryProjects.unshift(...extractedProjects);
+    // Prepend into inMemoryProjects without duplicates so newly uploaded projects appear first
+    for (const p of extractedProjects) {
+      const idx = inMemoryProjects.findIndex(
+        (existing) => existing.id === p.id || (existing.project_code && existing.project_code === p.project_code)
+      );
+      if (idx >= 0) {
+        inMemoryProjects[idx] = p;
+      } else {
+        inMemoryProjects.unshift(p);
+      }
+    }
 
     // If DB is connected, insert them
     if (isDbConnected) {

@@ -611,9 +611,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                     {!selectedProject && <Check className="w-3.5 h-3.5 text-red-600" />}
                   </button>
 
-                  {filteredProjects.map((p) => (
+                  {filteredProjects.map((p, idx) => (
                     <button
-                      key={p.id}
+                      key={`${p.id}-${idx}`}
                       onClick={() => handleSelectProject(p)}
                       className={`w-full text-left px-2.5 py-2 rounded-lg transition flex flex-col gap-0.5 ${
                         selectedProject?.id === p.id
@@ -949,9 +949,9 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         );
                       })
                       .slice(0, 6)
-                      .map((p) => (
+                      .map((p, idx) => (
                         <button
-                          key={p.id}
+                          key={`${p.id}-${idx}`}
                           onClick={() => handleSelectProject(p)}
                           className="p-2.5 rounded-lg border border-zinc-200 bg-white hover:bg-red-50/50 hover:border-red-300 transition text-left space-y-1 shadow-2xs group"
                         >

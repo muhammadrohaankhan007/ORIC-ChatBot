@@ -199,8 +199,8 @@ export default function DashboardView({
           </div>
 
           <div className="divide-y divide-zinc-100">
-            {paginatedDashboardProjects.map((project) => (
-              <div key={project.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
+            {paginatedDashboardProjects.map((project, idx) => (
+              <div key={`${project.id}-${idx}`} className="py-4 first:pt-0 last:pb-0 space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">

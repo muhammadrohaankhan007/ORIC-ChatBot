@@ -155,7 +155,7 @@ export async function parseExcelProjectsClient(file: File): Promise<Project[]> {
       const erl = typeof row['ERL'] === 'number' ? Math.min(9, Math.max(1, row['ERL'])) : 4 + (i % 3);
 
       parsedProjects.push({
-        id: `proj-up-${Date.now()}-${i + 1}`,
+        id: `proj-up-${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${i + 1}`,
         project_code,
         title,
         faculty,
@@ -251,8 +251,8 @@ function extractProjectFromTextClient(text: string, defaultTitle: string, index:
     : ['Formulation Assay', 'Stability Protocols', 'Analytical Chemistry'];
 
   return {
-    id: `proj-up-${Date.now()}-${index + 1}`,
-    project_code: `SHU-${faculty_code}-2026-${Date.now().toString().slice(-3)}${index + 1}`,
+    id: `proj-up-${Date.now()}-${Math.random().toString(36).substring(2, 8)}-${index + 1}`,
+    project_code: `SHU-${faculty_code}-2026-${Date.now().toString().slice(-3)}${Math.random().toString(36).substring(2, 5).toUpperCase()}-${index + 1}`,
     title,
     faculty,
     faculty_code,
@@ -271,3 +271,4 @@ function extractProjectFromTextClient(text: string, defaultTitle: string, index:
     created_at: new Date().toISOString(),
   };
 }
+

@@ -412,9 +412,9 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
 
           {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {paginatedPipelineProjects.map((project) => (
+            {paginatedPipelineProjects.map((project, idx) => (
               <div
-                key={project.id}
+                key={`${project.id}-${idx}`}
                 className="bg-white border border-zinc-200 rounded-lg p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
               >
                 <div className="space-y-3">

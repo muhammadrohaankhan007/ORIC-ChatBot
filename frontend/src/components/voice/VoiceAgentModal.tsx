@@ -387,9 +387,9 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
                         proj.project_code.toLowerCase().includes(q)
                       );
                     })
-                    .map((proj) => (
+                    .map((proj, idx) => (
                       <button
-                        key={proj.id}
+                        key={`${proj.id}-${idx}`}
                         onClick={() => {
                           onSelectProject(proj);
                           setIsProjectDropdownOpen(false);

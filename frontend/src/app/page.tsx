@@ -16,9 +16,43 @@ import DiscussionsView from '@/components/views/DiscussionsView';
 import ReportsView from '@/components/views/ReportsView';
 import VoiceAgentModal from '@/components/voice/VoiceAgentModal';
 
+/**
+ * Strictly deduplicate research projects by unique ID and unique title.
+ * Automatically remediates duplicate IDs (e.g., from parallel uploads or legacy localStorage)
+ * by generating unique fallback IDs.
+ */
+function deduplicateProjects(list: Project[]): Project[] {
+  const seenIds = new Set<string>();
+  const seenTitles = new Set<string>();
+  const unique: Project[] = [];
+
+  for (const proj of list) {
+    if (!proj) continue;
+    const cleanTitle = (proj.title || '').trim().toLowerCase();
+    let id = (proj.id || '').trim();
+
+    // If duplicate or missing ID, give it a guaranteed unique ID
+    if (!id || seenIds.has(id)) {
+      id = `proj-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    }
+
+    // Skip duplicate items sharing the exact same title
+    if (cleanTitle && seenTitles.has(cleanTitle)) {
+      continue;
+    }
+
+    if (cleanTitle) seenTitles.add(cleanTitle);
+    seenIds.add(id);
+
+    unique.push({ ...proj, id });
+  }
+
+  return unique;
+}
+
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewMode>('home');
-  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>(() => deduplicateProjects(INITIAL_PROJECTS));
   const [personas] = useState<Persona[]>(INITIAL_PERSONAS);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
@@ -38,23 +72,25 @@ export default function Home() {
     fetchProjects()
       .then((data) => {
         if (data && data.length > 0) {
-          setProjects(data);
+          setProjects((prev) => deduplicateProjects([...prev, ...data]));
         }
       })
       .catch(() => {
         // Fallback already provided by INITIAL_PROJECTS
       });
 
-    // Restore user-uploaded projects from persistent localStorage
+    // Restore user-uploaded projects from persistent localStorage and clean any corrupted duplicate keys
     try {
       const cached = localStorage.getItem('shu_oric_custom_projects');
       if (cached) {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const sanitizedCached = deduplicateProjects(parsed);
+          localStorage.setItem('shu_oric_custom_projects', JSON.stringify(sanitizedCached));
+
           setProjects((prev) => {
-            const existingIds = new Set(prev.map((p) => p.id));
-            const toAdd = parsed.filter((p: Project) => !existingIds.has(p.id));
-            return [...toAdd, ...prev];
+            const combined = [...sanitizedCached, ...prev];
+            return deduplicateProjects(combined);
           });
         }
       }
@@ -65,23 +101,20 @@ export default function Home() {
 
   const handleAddProjects = (newProjects: Project[]) => {
     setProjects((prev) => {
-      const existingIds = new Set(prev.map((p) => p.id));
-      const toAdd = newProjects.filter((p) => !existingIds.has(p.id));
-      const updated = [...toAdd, ...prev];
+      const uniqueNew = deduplicateProjects(newProjects);
+      const combined = deduplicateProjects([...uniqueNew, ...prev]);
+
       if (typeof window !== 'undefined') {
         try {
           const cached = localStorage.getItem('shu_oric_custom_projects');
           const existingCached = cached ? JSON.parse(cached) : [];
-          const combinedCached = [
-            ...toAdd,
-            ...existingCached.filter((c: Project) => !new Set(toAdd.map((a) => a.id)).has(c.id)),
-          ];
+          const combinedCached = deduplicateProjects([...uniqueNew, ...existingCached]);
           localStorage.setItem('shu_oric_custom_projects', JSON.stringify(combinedCached));
         } catch (e) {
           console.warn('Could not persist custom projects:', e);
         }
       }
-      return updated;
+      return combined;
     });
   };
 

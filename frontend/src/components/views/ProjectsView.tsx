@@ -341,9 +341,9 @@ export default function ProjectsView({
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {paginatedProjects.map((project) => (
+        {paginatedProjects.map((project, idx) => (
           <div
-            key={project.id}
+            key={`${project.id}-${idx}`}
             className="rounded-lg bg-white border border-zinc-200 p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
           >
             <div className="space-y-3">
