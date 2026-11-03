@@ -28,7 +28,7 @@ export interface ProjectContext {
 
 export interface ChatRequestPayload {
   prompt: string;
-  mode: 'mentoring' | 'analysis';
+  mode: 'mentoring' | 'analysis' | 'voice';
   personaId: string;
   personaName: string;
   systemPrompt?: string;
@@ -211,6 +211,13 @@ CORE OPERATIONAL PRINCIPLES:
    - Answer directly and factually first.
    - Structure complex guidance using markdown bold headings, bullet points, and clear technical parameters.
    - Always conclude substantial technical advice with 1 concrete **Next Technical Milestone** or **Recommended Action** (e.g. testing parameter, draft MoU clause, or grant proposal section).
+
+${mode === 'voice' ? `7. REAL-TIME SPOKEN VOICE CALL RULES (CRITICAL):
+   - You are in an active, hands-free spoken voice phone conversation with the researcher.
+   - Keep answers natural, fluid, and spoken: exactly 2 to 3 concise, clear sentences.
+   - NEVER use markdown formatting (no asterisks, no bullet points, no numbered lists, no headers, no LaTeX math, no emojis).
+   - Answer immediately and ground your spoken reply in the selected project.
+   - Conclude naturally with an organic conversational follow-up question.` : ''}
 
 ${systemPrompt ? `ADDITIONAL DOMAIN INSTRUCTION: ${systemPrompt}` : ''}
 Focus Specialization: ${personaName || 'General ORIC'}

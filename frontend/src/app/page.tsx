@@ -14,6 +14,7 @@ import RadarView from '@/components/views/RadarView';
 import ErlView from '@/components/views/ErlView';
 import DiscussionsView from '@/components/views/DiscussionsView';
 import ReportsView from '@/components/views/ReportsView';
+import VoiceAgentModal from '@/components/voice/VoiceAgentModal';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewMode>('home');
@@ -22,6 +23,7 @@ export default function Home() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
   const [voiceGlobalEnabled, setVoiceGlobalEnabled] = useState(true);
+  const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
 
   useEffect(() => {
     // Check backend health
@@ -37,21 +39,30 @@ export default function Home() {
   // 1. Standalone Institutional Public Website View
   if (currentView === 'home') {
     return (
-      <HomeHeroView
-        projects={projects}
-        personas={personas}
-        onNavigate={setCurrentView}
-        onSelectProjectForChat={(project) => {
-          setSelectedProject(project);
-          setCurrentView('chat');
-        }}
-      />
+      <>
+        <HomeHeroView
+          projects={projects}
+          personas={personas}
+          onNavigate={setCurrentView}
+          onSelectProjectForChat={(project) => {
+            setSelectedProject(project);
+            setCurrentView('chat');
+          }}
+        />
+        <VoiceAgentModal
+          isOpen={isVoiceAgentOpen}
+          onClose={() => setIsVoiceAgentOpen(false)}
+          selectedProject={selectedProject}
+          onSelectProject={setSelectedProject}
+          projects={projects}
+        />
+      </>
     );
   }
 
   // 2. Executive Portal & Research Workspace Layout
   return (
-    <div className="flex h-screen bg-zinc-50 text-zinc-900 overflow-hidden font-sans">
+    <div className="flex h-screen bg-zinc-50 text-zinc-900 overflow-hidden font-sans relative">
       {/* Modern Left Sidebar with Clickable Logo to return home */}
       <Sidebar
         currentView={currentView}
@@ -61,13 +72,14 @@ export default function Home() {
 
       {/* Main Central Workspace */}
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-zinc-50">
-        {/* Top Header Bar with Public Website shortcut */}
+        {/* Top Header Bar with Public Website shortcut & Voice Agent trigger */}
         <Header
           currentView={currentView}
           apiConnected={apiConnected}
           voiceEnabled={voiceGlobalEnabled}
-          onToggleVoice={() => setVoiceGlobalEnabled(prev => !prev)}
+          onToggleVoice={() => setVoiceGlobalEnabled((prev) => !prev)}
           onNavigate={setCurrentView}
+          onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
         />
 
         {/* View Content Area */}
@@ -90,6 +102,7 @@ export default function Home() {
               selectedProject={selectedProject}
               onClearSelectedProject={() => setSelectedProject(null)}
               voiceGlobalEnabled={voiceGlobalEnabled}
+              onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
             />
           )}
 
@@ -132,6 +145,15 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      {/* Real-Time Duplex Voice Agent Modal */}
+      <VoiceAgentModal
+        isOpen={isVoiceAgentOpen}
+        onClose={() => setIsVoiceAgentOpen(false)}
+        selectedProject={selectedProject}
+        onSelectProject={setSelectedProject}
+        projects={projects}
+      />
     </div>
   );
 }

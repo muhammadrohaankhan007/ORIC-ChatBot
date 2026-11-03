@@ -53,8 +53,8 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
       'director-oric': 'Commercialization & IP Specialization',
     };
 
-    const mode = req.body.mode || 'mentoring';
-    const isResearch = mode === 'research' || mode === 'analysis';
+    const rawMode = req.body.mode || 'mentoring';
+    const mode = rawMode === 'voice' ? 'voice' : (rawMode === 'research' || rawMode === 'analysis' ? 'analysis' : 'mentoring');
     const personaId = req.body.personaId || req.body.persona_slug || 'oric-assistant';
     const personaName = req.body.personaName || PERSONA_MAP[personaId] || 'ORIC Research Assistant';
     const history = req.body.history || [];
@@ -63,7 +63,7 @@ app.post('/api/v1/chat/message', async (req: Request, res: Response) => {
 
     const response = await aiGateway.generateResponse({
       prompt: promptText.trim(),
-      mode: isResearch ? 'analysis' : 'mentoring',
+      mode,
       personaId,
       personaName,
       systemPrompt: req.body.systemPrompt || '',

@@ -43,7 +43,7 @@ export function handleChatConnection(ws: WebSocket) {
 
       const payload: ChatRequestPayload = {
         prompt: userText.trim(),
-        mode: mode === 'analysis' || mode === 'research' ? 'analysis' : 'mentoring',
+        mode: mode === 'voice' ? 'voice' : (mode === 'analysis' || mode === 'research' ? 'analysis' : 'mentoring'),
         personaId,
         personaName,
         systemPrompt,
