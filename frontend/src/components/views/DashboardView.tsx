@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Project, ViewMode } from '@/types';
 import { 
   Building2, 
@@ -11,6 +11,7 @@ import {
   Layers, 
   FileCheck2, 
   Award,
+  ChevronLeft,
   ChevronRight,
   Globe,
   Coins,
@@ -30,6 +31,15 @@ export default function DashboardView({
   onNavigate,
   onSelectProjectForChat
 }: DashboardViewProps) {
+  const [dashboardPage, setDashboardPage] = useState(1);
+  const DASHBOARD_PAGE_SIZE = 5;
+  const totalDashboardPages = Math.ceil(projects.length / DASHBOARD_PAGE_SIZE) || 1;
+  const safeDashboardPage = Math.min(Math.max(1, dashboardPage), totalDashboardPages);
+  const paginatedDashboardProjects = projects.slice(
+    (safeDashboardPage - 1) * DASHBOARD_PAGE_SIZE,
+    safeDashboardPage * DASHBOARD_PAGE_SIZE
+  );
+
   // Institutional aggregations
   const totalProjects = projects.length || 1;
   const highReadiness = projects.filter(p => p.commercial_readiness === 'High');
@@ -189,7 +199,7 @@ export default function DashboardView({
           </div>
 
           <div className="divide-y divide-zinc-100">
-            {projects.map((project) => (
+            {paginatedDashboardProjects.map((project) => (
               <div key={project.id} className="py-4 first:pt-0 last:pb-0 space-y-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="space-y-1">
@@ -240,6 +250,34 @@ export default function DashboardView({
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Dashboard Pipeline Pagination Bar */}
+          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+            <span className="text-zinc-500 font-medium">
+              Showing <strong className="text-zinc-900">{(safeDashboardPage - 1) * DASHBOARD_PAGE_SIZE + 1} - {Math.min(safeDashboardPage * DASHBOARD_PAGE_SIZE, projects.length)}</strong> of <strong className="text-zinc-900">{projects.length}</strong>
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setDashboardPage((p) => Math.max(1, p - 1))}
+                disabled={safeDashboardPage === 1}
+                className="px-2.5 py-1 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-700 font-medium flex items-center gap-1 transition"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>Prev</span>
+              </button>
+              <span className="px-2 font-mono text-zinc-600 font-semibold">
+                {safeDashboardPage} / {totalDashboardPages}
+              </span>
+              <button
+                onClick={() => setDashboardPage((p) => Math.min(totalDashboardPages, p + 1))}
+                disabled={safeDashboardPage === totalDashboardPages}
+                className="px-2.5 py-1 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed text-zinc-700 font-medium flex items-center gap-1 transition"
+              >
+                <span>Next</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 

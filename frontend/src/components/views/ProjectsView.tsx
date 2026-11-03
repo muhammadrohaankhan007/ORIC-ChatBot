@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Project, ViewMode } from '@/types';
 import { 
   Search, 
@@ -9,7 +9,11 @@ import {
   CheckCircle2, 
   X,
   ArrowRight,
-  Radio
+  Radio,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from 'lucide-react';
 
 interface ProjectsViewProps {
@@ -29,6 +33,9 @@ export default function ProjectsView({
   const [selectedFaculty, setSelectedFaculty] = useState<string>('ALL');
   const [activeModalProject, setActiveModalProject] = useState<Project | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const listTopRef = useRef<HTMLDivElement | null>(null);
 
   const faculties = [
     { code: 'ALL', label: 'All Faculties' },
@@ -37,6 +44,11 @@ export default function ProjectsView({
     { code: 'FE', label: 'Biomedical Engineering (FE)' },
     { code: 'FMS', label: 'Management Sciences (FMS)' }
   ];
+
+  // Reset to page 1 whenever search query, faculty, or page size changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFaculty, pageSize]);
 
   const filteredProjects = projects.filter(p => {
     const matchesFaculty = selectedFaculty === 'ALL' || p.faculty_code === selectedFaculty;
@@ -47,6 +59,49 @@ export default function ProjectsView({
       p.technology_stack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesFaculty && matchesSearch;
   });
+
+  const totalItems = filteredProjects.length;
+  const totalPages = Math.ceil(totalItems / pageSize) || 1;
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
+  const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
+
+  const goToPage = (pageNumber: number) => {
+    const target = Math.min(Math.max(1, pageNumber), totalPages);
+    setCurrentPage(target);
+    if (listTopRef.current) {
+      listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Generate pagination range with ellipses
+  const getPaginationRange = () => {
+    const delta = 2;
+    const range: (number | string)[] = [];
+    const rangeWithDots: (number | string)[] = [];
+    let l: number | undefined;
+
+    for (let i = 1; i <= totalPages; i++) {
+      if (i === 1 || i === totalPages || (i >= safeCurrentPage - delta && i <= safeCurrentPage + delta)) {
+        range.push(i);
+      }
+    }
+
+    for (const i of range) {
+      if (l) {
+        if ((i as number) - l === 2) {
+          rangeWithDots.push(l + 1);
+        } else if ((i as number) - l !== 1) {
+          rangeWithDots.push('...');
+        }
+      }
+      rangeWithDots.push(i);
+      l = i as number;
+    }
+
+    return rangeWithDots;
+  };
 
   const handleSimulateUpload = () => {
     setUploadSuccess(true);
@@ -109,26 +164,55 @@ export default function ProjectsView({
         </div>
       </div>
 
-      {/* Faculty Filter Buttons */}
-      <div className="flex flex-wrap items-center gap-2">
-        {faculties.map((f) => (
-          <button
-            key={f.code}
-            onClick={() => setSelectedFaculty(f.code)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-              selectedFaculty === f.code
-                ? 'bg-red-600 text-white shadow-xs'
-                : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
+      {/* Faculty Filter Buttons & Page Size Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
+          {faculties.map((f) => (
+            <button
+              key={f.code}
+              onClick={() => setSelectedFaculty(f.code)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                selectedFaculty === f.code
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
+              }`}
+            >
+              {f.label}
+              {f.code === 'ALL' && ` (${projects.length})`}
+              {f.code === 'FOP' && ` (${projects.filter(p => p.faculty_code === 'FOP').length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Page Size & Result Counter */}
+        <div className="flex items-center gap-2 text-xs text-zinc-500 self-end sm:self-auto">
+          <span>Show:</span>
+          {[10, 20, 50].map((size) => (
+            <button
+              key={size}
+              onClick={() => setPageSize(size)}
+              className={`px-2 py-1 rounded text-xs font-semibold transition ${
+                pageSize === size
+                  ? 'bg-zinc-900 text-white'
+                  : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-100'
+              }`}
+            >
+              {size}
+            </button>
+          ))}
+          <span className="ml-2 text-zinc-400">|</span>
+          <span className="font-medium text-zinc-700">
+            {totalItems} total
+          </span>
+        </div>
       </div>
+
+      {/* Anchor for smooth scroll-to-top on page change */}
+      <div ref={listTopRef} />
 
       {/* Projects Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredProjects.map((project) => (
+        {paginatedProjects.map((project) => (
           <div
             key={project.id}
             className="rounded-lg bg-white border border-zinc-200 p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
@@ -214,6 +298,107 @@ export default function ProjectsView({
           </div>
         ))}
       </div>
+
+      {/* Pagination Controls & Item Counter */}
+      {totalItems > 0 && (
+        <div className="bg-white border border-zinc-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+          {/* Results Summary */}
+          <div className="text-xs text-zinc-600 font-medium text-center md:text-left">
+            Showing <strong className="text-zinc-900">{startIndex + 1}</strong> to{' '}
+            <strong className="text-zinc-900">{endIndex}</strong> of{' '}
+            <strong className="text-zinc-900">{totalItems}</strong> projects
+            {searchTerm && <span> for &ldquo;{searchTerm}&rdquo;</span>}
+          </div>
+
+          {/* Page Navigation Buttons */}
+          <div className="flex items-center gap-1">
+            {/* First Page */}
+            <button
+              onClick={() => goToPage(1)}
+              disabled={safeCurrentPage === 1}
+              className="p-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              title="First Page"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+
+            {/* Previous Page */}
+            <button
+              onClick={() => goToPage(safeCurrentPage - 1)}
+              disabled={safeCurrentPage === 1}
+              className="px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+              title="Previous Page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              <span className="hidden sm:inline">Prev</span>
+            </button>
+
+            {/* Numbered Page Buttons */}
+            <div className="flex items-center gap-1 mx-1">
+              {getPaginationRange().map((pageItem, idx) => (
+                typeof pageItem === 'number' ? (
+                  <button
+                    key={idx}
+                    onClick={() => goToPage(pageItem)}
+                    className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold transition ${
+                      safeCurrentPage === pageItem
+                        ? 'bg-red-600 text-white shadow-xs'
+                        : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100'
+                    }`}
+                  >
+                    {pageItem}
+                  </button>
+                ) : (
+                  <span key={idx} className="px-1 text-zinc-400 text-xs">
+                    {pageItem}
+                  </span>
+                )
+              ))}
+            </div>
+
+            {/* Next Page */}
+            <button
+              onClick={() => goToPage(safeCurrentPage + 1)}
+              disabled={safeCurrentPage === totalPages}
+              className="px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+              title="Next Page"
+            >
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Last Page */}
+            <button
+              onClick={() => goToPage(totalPages)}
+              disabled={safeCurrentPage === totalPages}
+              className="p-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              title="Last Page"
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty State when 0 items match */}
+      {totalItems === 0 && (
+        <div className="p-12 text-center bg-white border border-zinc-200 rounded-lg space-y-3">
+          <FileText className="w-10 h-10 text-zinc-300 mx-auto" />
+          <h3 className="text-base font-bold text-zinc-900">No projects found</h3>
+          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+            No research projects matched your search criteria or faculty filter. Try searching with different terms or reset your filters.
+          </p>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedFaculty('ALL');
+            }}
+            className="px-4 py-2 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
 
       {/* Modal View for Project Detail */}
       {activeModalProject && (
