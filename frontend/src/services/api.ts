@@ -249,7 +249,12 @@ export async function fetchProjects(): Promise<Project[]> {
     const baseUrl = getApiBaseUrl();
     const res = await fetch(`${baseUrl}/projects`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch projects');
-    return await res.json();
+    const remote = await res.json();
+    if (Array.isArray(remote) && remote.length >= INITIAL_PROJECTS.length) {
+      return remote;
+    }
+    const remoteIds = new Set((remote || []).map((p: Project) => p.id));
+    return [...(remote || []), ...INITIAL_PROJECTS.filter((p) => !remoteIds.has(p.id))];
   } catch {
     return INITIAL_PROJECTS;
   }

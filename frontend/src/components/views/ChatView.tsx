@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useVoice, stopSpeechImmediately } from '@/hooks/useVoice';
 import { getApiBaseUrl } from '@/services/api';
+import { Project } from '@/types';
 import {
   Mic,
   MicOff,
@@ -19,7 +20,13 @@ import {
   ArrowRight,
   Info,
   RotateCcw,
-  Radio
+  Radio,
+  FolderKanban,
+  Search,
+  ChevronDown,
+  X,
+  FlaskConical,
+  GraduationCap
 } from 'lucide-react';
 
 interface Message {
@@ -68,17 +75,18 @@ const SUGGESTED_PROMPTS = [
 export interface ChatViewProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   personas?: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  projects?: any[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  selectedProject?: any | null;
+  projects?: Project[];
+  selectedProject?: Project | null;
+  onSelectProject?: (project: Project | null) => void;
   onClearSelectedProject?: () => void;
   voiceGlobalEnabled?: boolean;
   onOpenVoiceAgent?: () => void;
 }
 
 export const ChatView: React.FC<ChatViewProps> = ({
+  projects = [],
   selectedProject,
+  onSelectProject,
   onClearSelectedProject,
   onOpenVoiceAgent,
 }) => {
@@ -87,6 +95,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const [selectedDomain, setSelectedDomain] = useState(RESEARCH_DOMAINS[0]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
+  const [selectedFacultyTab, setSelectedFacultyTab] = useState<'ALL' | 'FOP' | 'FCS' | 'FE' | 'FMS'>('ALL');
+  const [emptyStateProjectSearch, setEmptyStateProjectSearch] = useState('');
   const [copiedMsgId, setCopiedMsgId] = useState<string | null>(null);
 
   const sessionIdRef = useRef<string>('');
@@ -94,6 +106,27 @@ export const ChatView: React.FC<ChatViewProps> = ({
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const settingsRef = useRef<HTMLDivElement | null>(null);
+  const projectDropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Filter projects for dropdown & quick search
+  const filteredProjects = projects.filter((p) => {
+    const matchesFaculty = selectedFacultyTab === 'ALL' || p.faculty_code === selectedFacultyTab;
+    if (!matchesFaculty) return false;
+    if (!projectSearch.trim()) return true;
+    const q = projectSearch.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.lead_investigator.toLowerCase().includes(q) ||
+      p.department.toLowerCase().includes(q) ||
+      p.project_code.toLowerCase().includes(q) ||
+      p.technology_stack?.some((t) => t.toLowerCase().includes(q))
+    );
+  });
+
+  const handleSelectProject = (proj: Project | null) => {
+    onSelectProject?.(proj);
+    setIsProjectDropdownOpen(false);
+  };
 
   // Initialize session ID and restore persistent chat memory
   useEffect(() => {
@@ -138,18 +171,21 @@ export const ChatView: React.FC<ChatViewProps> = ({
     }
   }, [inputPrompt]);
 
-  // Click outside to close settings popover
+  // Click outside to close settings and project dropdown popovers
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
         setIsSettingsOpen(false);
       }
+      if (projectDropdownRef.current && !projectDropdownRef.current.contains(e.target as Node)) {
+        setIsProjectDropdownOpen(false);
+      }
     };
-    if (isSettingsOpen) {
+    if (isSettingsOpen || isProjectDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, isProjectDropdownOpen]);
 
   const {
     isListening,
@@ -469,8 +505,8 @@ export const ChatView: React.FC<ChatViewProps> = ({
           </div>
         </div>
 
-        {/* Controls: New Chat, Domain Selector & Settings Popover */}
-        <div className="flex items-center gap-2.5">
+        {/* Controls: Live Voice Call, Project Selector, New Chat, Domain Selector & Settings Popover */}
+        <div className="flex items-center gap-2">
           {/* Live Voice Call Button */}
           {onOpenVoiceAgent && (
             <button
@@ -482,6 +518,134 @@ export const ChatView: React.FC<ChatViewProps> = ({
               <span className="hidden sm:inline">Voice Agent</span>
             </button>
           )}
+
+          {/* Project Grounding Selector Pill & Searchable Popover */}
+          <div className="relative" ref={projectDropdownRef}>
+            <button
+              onClick={() => {
+                setIsProjectDropdownOpen(!isProjectDropdownOpen);
+                setIsSettingsOpen(false);
+              }}
+              className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition shadow-xs ${
+                selectedProject
+                  ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                  : 'bg-white text-zinc-700 border-zinc-200 hover:bg-zinc-50 hover:text-zinc-900'
+              }`}
+              title="Ground AI in a specific research project (230+ projects)"
+            >
+              <FolderKanban className="w-3.5 h-3.5 text-red-600 shrink-0" />
+              <span className="max-w-[110px] sm:max-w-[160px] truncate">
+                {selectedProject ? selectedProject.title : `Select Project (${projects.length})`}
+              </span>
+              <ChevronDown className="w-3 h-3 text-zinc-400 shrink-0" />
+            </button>
+
+            {/* Project Switcher Dropdown Popover */}
+            {isProjectDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-xl bg-white border border-zinc-200 shadow-xl p-3 z-50 text-xs space-y-2">
+                <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                  <span className="font-bold text-zinc-900 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+                    <FolderKanban className="w-3.5 h-3.5 text-red-600" />
+                    Ground AI in Project
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    {projects.length} Total
+                  </span>
+                </div>
+
+                {/* Faculty filter tabs */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-1 text-[11px]">
+                  {[
+                    { code: 'ALL', label: 'All' },
+                    { code: 'FOP', label: 'Pharmacy (230+)' },
+                    { code: 'FCS', label: 'CS & AI' },
+                    { code: 'FE', label: 'Engineering' },
+                    { code: 'FMS', label: 'Management' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.code}
+                      onClick={() => setSelectedFacultyTab(tab.code as any)}
+                      className={`px-2 py-0.5 rounded-md whitespace-nowrap transition ${
+                        selectedFacultyTab === tab.code
+                          ? 'bg-red-600 text-white font-semibold'
+                          : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search bar */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={projectSearch}
+                    onChange={(e) => setProjectSearch(e.target.value)}
+                    placeholder="Search 230+ projects or supervisors..."
+                    className="w-full bg-zinc-50 border border-zinc-200 rounded-lg pl-8 pr-7 py-1.5 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-hidden focus:border-red-400"
+                    autoFocus
+                  />
+                  {projectSearch && (
+                    <button
+                      onClick={() => setProjectSearch('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Project list */}
+                <div className="max-h-64 overflow-y-auto space-y-1 pr-0.5">
+                  <button
+                    onClick={() => handleSelectProject(null)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg transition flex items-center justify-between ${
+                      !selectedProject
+                        ? 'bg-red-50 text-red-700 font-semibold border border-red-200'
+                        : 'text-zinc-700 hover:bg-zinc-50'
+                    }`}
+                  >
+                    <span>General ORIC Inquiries (All Faculty)</span>
+                    {!selectedProject && <Check className="w-3.5 h-3.5 text-red-600" />}
+                  </button>
+
+                  {filteredProjects.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => handleSelectProject(p)}
+                      className={`w-full text-left px-2.5 py-2 rounded-lg transition flex flex-col gap-0.5 ${
+                        selectedProject?.id === p.id
+                          ? 'bg-red-50 text-red-700 font-semibold border border-red-200'
+                          : 'text-zinc-700 hover:bg-zinc-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-medium text-zinc-900 truncate">{p.title}</span>
+                        <span className="text-[10px] font-mono px-1 py-0.2 rounded bg-zinc-100 text-zinc-600 shrink-0">
+                          TRL {p.trl_level}/9
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-zinc-500 truncate flex items-center gap-1.5">
+                        <span className="text-red-600 font-medium">{p.faculty_code}</span>
+                        <span>•</span>
+                        <span>{p.lead_investigator}</span>
+                        <span>•</span>
+                        <span className="truncate">{p.department}</span>
+                      </div>
+                    </button>
+                  ))}
+
+                  {filteredProjects.length === 0 && (
+                    <div className="text-center text-zinc-400 py-4 text-xs">
+                      No matching projects found.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Reset / New Chat Button */}
           {messages.length > 0 && (
@@ -673,22 +837,163 @@ export const ChatView: React.FC<ChatViewProps> = ({
               </div>
             )}
 
-            {/* 4 Actionable Prompt Chips */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 text-left">
-              {SUGGESTED_PROMPTS.map((promptText, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setInputPrompt(promptText);
-                    handleSendMessage(promptText);
-                  }}
-                  className="p-3 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs text-zinc-700 font-medium transition flex items-center justify-between group shadow-xs"
-                >
-                  <span className="line-clamp-2">{promptText}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-600 transition shrink-0 ml-2" />
-                </button>
-              ))}
-            </div>
+            {selectedProject ? (
+              /* Active Selected Project Card with Tailored Questions */
+              <div className="bg-red-50/60 border border-red-200 rounded-xl p-5 text-left space-y-3.5 shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-semibold px-2 py-0.5 rounded bg-red-600 text-white">
+                    Active Research Grounding
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white text-zinc-700 border border-red-200">
+                      TRL {selectedProject.trl_level}/9 • ERL {selectedProject.erl_level}/9
+                    </span>
+                    {onClearSelectedProject && (
+                      <button
+                        onClick={onClearSelectedProject}
+                        className="text-xs text-zinc-500 hover:text-red-600 transition underline"
+                      >
+                        Change
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="text-base font-bold text-zinc-900 leading-snug">
+                    {selectedProject.title}
+                  </h3>
+                  <div className="text-xs text-zinc-600 mt-1">
+                    Lead: <span className="font-semibold text-zinc-800">{selectedProject.lead_investigator}</span> • {selectedProject.department} ({selectedProject.faculty})
+                  </div>
+                </div>
+
+                <p className="text-xs text-zinc-600 leading-relaxed line-clamp-2">
+                  {selectedProject.abstract}
+                </p>
+
+                {onOpenVoiceAgent && (
+                  <button
+                    onClick={onOpenVoiceAgent}
+                    className="w-full py-2 px-3 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center justify-center gap-2 transition shadow-xs"
+                  >
+                    <Radio className="w-4 h-4 text-white animate-pulse" />
+                    <span>Talk about this project with Live Voice Agent</span>
+                  </button>
+                )}
+
+                <div className="pt-2 border-t border-red-200/60 space-y-2">
+                  <div className="text-[11px] font-semibold text-zinc-700 uppercase tracking-wider">
+                    Suggested Research Questions:
+                  </div>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      `Summarize the formulation mechanism and expected drug delivery outcomes of "${selectedProject.title}"`,
+                      `What are the DRAP (Drug Regulatory Authority of Pakistan) compliance requirements for this project?`,
+                      `How can we advance this project from TRL ${selectedProject.trl_level}/9 to clinical/commercial readiness?`,
+                    ].map((promptText, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setInputPrompt(promptText);
+                          handleSendMessage(promptText);
+                        }}
+                        className="p-2.5 rounded-lg border border-red-200/80 bg-white hover:bg-red-50 text-xs text-zinc-800 font-medium transition flex items-center justify-between group shadow-2xs"
+                      >
+                        <span className="line-clamp-1">{promptText}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-red-500 group-hover:translate-x-0.5 transition shrink-0 ml-2" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* No Project Selected: Select Project Section + Prompt Chips */
+              <div className="space-y-4">
+                {/* Project Quick-Selector Section */}
+                <div className="p-4 rounded-xl border border-zinc-200 bg-zinc-50/70 text-left space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-zinc-900 uppercase tracking-wider flex items-center gap-1.5">
+                      <FolderKanban className="w-3.5 h-3.5 text-red-600" />
+                      Select a Research Project to Ground AI ({projects.length} available)
+                    </span>
+                    <span className="text-[11px] text-zinc-500 font-medium hidden sm:inline">
+                      232 Pharmacy Initiatives
+                    </span>
+                  </div>
+
+                  {/* Empty state search input */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={emptyStateProjectSearch}
+                      onChange={(e) => setEmptyStateProjectSearch(e.target.value)}
+                      placeholder="Search 230+ projects by title, supervisor, drug/formulation, or keyword..."
+                      className="w-full bg-white border border-zinc-200 rounded-lg pl-8 pr-3 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-hidden focus:border-red-400 shadow-2xs"
+                    />
+                  </div>
+
+                  {/* 6 Quick Project Cards */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto pr-1">
+                    {projects
+                      .filter((p) => {
+                        if (!emptyStateProjectSearch.trim()) return true;
+                        const q = emptyStateProjectSearch.toLowerCase();
+                        return (
+                          p.title.toLowerCase().includes(q) ||
+                          p.lead_investigator.toLowerCase().includes(q) ||
+                          p.department.toLowerCase().includes(q) ||
+                          p.project_code.toLowerCase().includes(q) ||
+                          p.technology_stack?.some((t) => t.toLowerCase().includes(q))
+                        );
+                      })
+                      .slice(0, 6)
+                      .map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => handleSelectProject(p)}
+                          className="p-2.5 rounded-lg border border-zinc-200 bg-white hover:bg-red-50/50 hover:border-red-300 transition text-left space-y-1 shadow-2xs group"
+                        >
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-xs font-bold text-zinc-900 truncate group-hover:text-red-700">
+                              {p.title}
+                            </span>
+                            <span className="text-[9px] font-mono px-1 rounded bg-zinc-100 text-zinc-600 shrink-0">
+                              {p.faculty_code}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-zinc-500 truncate">
+                            {p.lead_investigator} • {p.department}
+                          </div>
+                        </button>
+                      ))}
+                  </div>
+                </div>
+
+                {/* 4 Actionable Prompt Chips */}
+                <div className="text-left space-y-1.5 pt-1">
+                  <div className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
+                    Or Ask General Inquiries:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-left">
+                    {SUGGESTED_PROMPTS.map((promptText, i) => (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setInputPrompt(promptText);
+                          handleSendMessage(promptText);
+                        }}
+                        className="p-3 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 hover:border-zinc-300 text-xs text-zinc-700 font-medium transition flex items-center justify-between group shadow-xs"
+                      >
+                        <span className="line-clamp-2">{promptText}</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-red-600 transition shrink-0 ml-2" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           /* Flattened Messages */

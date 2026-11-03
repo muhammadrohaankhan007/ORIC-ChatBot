@@ -58,6 +58,10 @@ export default function Home() {
             setSelectedProject(project);
             setCurrentView('chat');
           }}
+          onOpenVoiceAgentForProject={(project) => {
+            setSelectedProject(project);
+            setIsVoiceAgentOpen(true);
+          }}
         />
         <VoiceAgentModal
           isOpen={isVoiceAgentOpen}
@@ -110,6 +114,7 @@ export default function Home() {
               personas={personas}
               projects={projects}
               selectedProject={selectedProject}
+              onSelectProject={setSelectedProject}
               onClearSelectedProject={() => setSelectedProject(null)}
               voiceGlobalEnabled={voiceGlobalEnabled}
               onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
@@ -123,6 +128,10 @@ export default function Home() {
               onSelectProjectForChat={(project) => {
                 setSelectedProject(project);
                 setCurrentView('chat');
+              }}
+              onOpenVoiceAgentForProject={(project) => {
+                setSelectedProject(project);
+                setIsVoiceAgentOpen(true);
               }}
             />
           )}

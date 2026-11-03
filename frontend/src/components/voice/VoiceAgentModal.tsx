@@ -42,6 +42,7 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isDialectDropdownOpen, setIsDialectDropdownOpen] = useState(false);
   const [projectSearch, setProjectSearch] = useState('');
+  const [modalFacultyFilter, setModalFacultyFilter] = useState<'ALL' | 'FOP' | 'OTHER'>('ALL');
 
   const dialectDropdownRef = useRef<HTMLDivElement | null>(null);
   const projectDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -297,19 +298,19 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
                 setIsProjectDropdownOpen((prev) => !prev);
                 setIsDialectDropdownOpen(false);
               }}
-              className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-zinc-200 transition shadow-inner"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 sm:py-2 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 text-xs text-zinc-200 transition shadow-inner max-w-[180px] sm:max-w-sm"
               title="Ground Voice Agent in a Project"
             >
-              <FolderKanban className="w-3.5 h-3.5 text-red-400" />
-              <span className="max-w-[120px] sm:max-w-xs truncate font-medium">
+              <FolderKanban className="w-3.5 h-3.5 text-red-400 shrink-0" />
+              <span className="truncate font-medium">
                 {selectedProject ? selectedProject.title : 'All Projects'}
               </span>
               {selectedProject && (
-                <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-600/40 text-red-200 font-mono hidden sm:inline">
+                <span className="px-1.5 py-0.5 rounded text-[10px] bg-red-600/40 text-red-200 font-mono hidden sm:inline shrink-0">
                   TRL {selectedProject.trl_level}/9
                 </span>
               )}
-              <ChevronDown className="w-3.5 h-3.5 text-zinc-400" />
+              <ChevronDown className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
             </button>
 
             {/* Project Switcher Dropdown */}
@@ -322,6 +323,27 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
                   <span className="text-[10px] text-zinc-400 font-mono">
                     {projects.length} Available
                   </span>
+                </div>
+
+                {/* Faculty Category Filters */}
+                <div className="flex items-center gap-1 px-1">
+                  {[
+                    { code: 'ALL', label: 'All' },
+                    { code: 'FOP', label: `Pharmacy (${projects.filter(p => p.faculty_code === 'FOP').length})` },
+                    { code: 'OTHER', label: 'Other' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.code}
+                      onClick={() => setModalFacultyFilter(tab.code as any)}
+                      className={`px-2 py-0.5 rounded text-[10px] font-medium transition ${
+                        modalFacultyFilter === tab.code
+                          ? 'bg-red-600 text-white font-semibold'
+                          : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Filter Search Input */}
@@ -354,6 +376,8 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
 
                   {projects
                     .filter((proj) => {
+                      if (modalFacultyFilter === 'FOP' && proj.faculty_code !== 'FOP') return false;
+                      if (modalFacultyFilter === 'OTHER' && proj.faculty_code === 'FOP') return false;
                       if (!projectSearch.trim()) return true;
                       const q = projectSearch.toLowerCase();
                       return (

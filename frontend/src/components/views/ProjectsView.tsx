@@ -8,19 +8,22 @@ import {
   FileText, 
   CheckCircle2, 
   X,
-  ArrowRight
+  ArrowRight,
+  Radio
 } from 'lucide-react';
 
 interface ProjectsViewProps {
   projects: Project[];
   onNavigate: (view: ViewMode) => void;
   onSelectProjectForChat: (project: Project) => void;
+  onOpenVoiceAgentForProject?: (project: Project) => void;
 }
 
 export default function ProjectsView({
   projects,
   onNavigate,
-  onSelectProjectForChat
+  onSelectProjectForChat,
+  onOpenVoiceAgentForProject
 }: ProjectsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState<string>('ALL');
@@ -181,6 +184,15 @@ export default function ProjectsView({
                 PI: <span className="text-zinc-800 font-medium">{project.lead_investigator}</span>
               </div>
               <div className="flex items-center gap-2">
+                {onOpenVoiceAgentForProject && (
+                  <button
+                    onClick={() => onOpenVoiceAgentForProject(project)}
+                    title="Talk with Voice Agent about this project"
+                    className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition"
+                  >
+                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                  </button>
+                )}
                 <button
                   onClick={() => setActiveModalProject(project)}
                   className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-medium text-xs border border-zinc-200 transition"
@@ -254,6 +266,19 @@ export default function ProjectsView({
               >
                 Close
               </button>
+              {onOpenVoiceAgentForProject && (
+                <button
+                  onClick={() => {
+                    const p = activeModalProject;
+                    setActiveModalProject(null);
+                    onOpenVoiceAgentForProject(p);
+                  }}
+                  className="px-3.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-medium text-xs flex items-center gap-1.5 border border-red-200 transition"
+                >
+                  <Radio className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+                  <span>Talk with Voice Agent</span>
+                </button>
+              )}
               <button
                 onClick={() => {
                   onSelectProjectForChat(activeModalProject);

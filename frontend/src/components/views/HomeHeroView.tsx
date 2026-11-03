@@ -19,7 +19,10 @@ import {
   ChevronRight,
   CheckCircle2,
   FlaskConical,
-  Check
+  Check,
+  Search,
+  Radio,
+  X
 } from 'lucide-react';
 
 interface HomeHeroViewProps {
@@ -27,14 +30,19 @@ interface HomeHeroViewProps {
   personas?: Persona[];
   onNavigate: (view: ViewMode) => void;
   onSelectProjectForChat: (project: Project) => void;
+  onOpenVoiceAgentForProject?: (project: Project) => void;
 }
 
 export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
   projects,
   onNavigate,
   onSelectProjectForChat,
+  onOpenVoiceAgentForProject,
 }) => {
   const [currentYear, setCurrentYear] = useState(2026);
+  const [pipelineSearch, setPipelineSearch] = useState('');
+  const [pipelineFaculty, setPipelineFaculty] = useState<string>('ALL');
+  const [pipelinePage, setPipelinePage] = useState(1);
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -49,6 +57,30 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
   const disclosureCount = projects.filter((p) => p.ip_status === 'Disclosure Filed').length;
   const avgErl = (projects.reduce((acc, p) => acc + (p.erl_level || 0), 0) / (projects.length || 1)).toFixed(1);
   const avgTrl = (projects.reduce((acc, p) => acc + (p.trl_level || 0), 0) / (projects.length || 1)).toFixed(1);
+
+  // Filtered & Paginated Pipeline Portfolio
+  const filteredPipelineProjects = projects.filter((p) => {
+    const matchesFaculty = pipelineFaculty === 'ALL' || p.faculty_code === pipelineFaculty;
+    if (!matchesFaculty) return false;
+    if (!pipelineSearch.trim()) return true;
+    const q = pipelineSearch.toLowerCase();
+    return (
+      p.title.toLowerCase().includes(q) ||
+      p.lead_investigator.toLowerCase().includes(q) ||
+      p.department.toLowerCase().includes(q) ||
+      p.project_code.toLowerCase().includes(q) ||
+      p.technology_stack?.some((t) => t.toLowerCase().includes(q))
+    );
+  });
+
+  const PAGE_SIZE = 8;
+  const filteredProjectsCount = filteredPipelineProjects.length;
+  const totalPipelinePagesCount = Math.ceil(filteredProjectsCount / PAGE_SIZE) || 1;
+  const safeCurrentPage = Math.min(pipelinePage, totalPipelinePagesCount);
+  const paginatedPipelineProjects = filteredPipelineProjects.slice(
+    (safeCurrentPage - 1) * PAGE_SIZE,
+    safeCurrentPage * PAGE_SIZE
+  );
 
   const specializationAreas = [
     {
@@ -280,7 +312,7 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
           4. ACTIVE RESEARCH PIPELINE (#pipeline)
           ========================================================================= */}
       <section id="pipeline" className="border-b border-zinc-200 py-16 lg:py-20 bg-zinc-50/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
@@ -299,13 +331,88 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
               onClick={() => onNavigate('explorer')}
               className="px-3.5 py-2 rounded-lg bg-white hover:bg-zinc-50 text-zinc-800 font-medium text-xs border border-zinc-200 shadow-xs flex items-center gap-1.5 transition self-start md:self-auto"
             >
-              <span>View All {projects.length} Projects</span>
+              <span>View All {projects.length} in IP Repository</span>
               <ChevronRight className="w-3.5 h-3.5 text-zinc-400" />
             </button>
           </div>
 
+          {/* Search Bar & Faculty Filters */}
+          <div className="space-y-3">
+            {/* Faculty Filter Buttons */}
+            <div className="flex flex-wrap items-center gap-2">
+              {[
+                { code: 'ALL', label: `All Projects (${projects.length})` },
+                { code: 'FOP', label: `Pharmacy (${projects.filter(p => p.faculty_code === 'FOP').length})` },
+                { code: 'FCS', label: 'Computer Science & AI (FCS)' },
+                { code: 'FE', label: 'Biomedical Engineering (FE)' },
+                { code: 'FMS', label: 'Management Sciences (FMS)' },
+              ].map((tab) => (
+                <button
+                  key={tab.code}
+                  onClick={() => {
+                    setPipelineFaculty(tab.code);
+                    setPipelinePage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    pipelineFaculty === tab.code
+                      ? 'bg-red-600 text-white shadow-xs'
+                      : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search Input */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="relative flex-1 max-w-lg">
+                <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="text"
+                  value={pipelineSearch}
+                  onChange={(e) => {
+                    setPipelineSearch(e.target.value);
+                    setPipelinePage(1);
+                  }}
+                  placeholder="Search 230+ projects by title, supervisor, drug/formulation, or keyword..."
+                  className="w-full bg-white border border-zinc-200 rounded-lg pl-10 pr-8 py-2 text-xs text-zinc-900 placeholder-zinc-400 focus:outline-hidden focus:border-red-500 shadow-2xs"
+                />
+                {pipelineSearch && (
+                  <button
+                    onClick={() => {
+                      setPipelineSearch('');
+                      setPipelinePage(1);
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Counter */}
+              <div className="text-xs text-zinc-500 font-medium">
+                Showing{' '}
+                <strong className="text-zinc-900">
+                  {Math.min(
+                    filteredProjectsCount,
+                    (safeCurrentPage - 1) * 8 + 1
+                  )}{' '}
+                  -{' '}
+                  {Math.min(
+                    filteredProjectsCount,
+                    safeCurrentPage * 8
+                  )}
+                </strong>{' '}
+                of <strong className="text-zinc-900">{filteredProjectsCount}</strong> matching projects
+              </div>
+            </div>
+          </div>
+
+          {/* Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {projects.map((project) => (
+            {paginatedPipelineProjects.map((project) => (
               <div
                 key={project.id}
                 className="bg-white border border-zinc-200 rounded-lg p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
@@ -352,6 +459,16 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
                     Lead: <span className="text-zinc-800 font-medium">{project.lead_investigator}</span>
                   </div>
                   <div className="flex items-center gap-2">
+                    {onOpenVoiceAgentForProject && (
+                      <button
+                        onClick={() => onOpenVoiceAgentForProject(project)}
+                        title="Talk with Live Voice Agent about this project"
+                        className="px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-semibold text-xs border border-red-200 flex items-center gap-1 transition shadow-2xs"
+                      >
+                        <Radio className="w-3 h-3 text-red-600 animate-pulse" />
+                        <span className="hidden sm:inline">Voice Agent</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         onSelectProjectForChat(project);
@@ -366,13 +483,56 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
                       onClick={() => onNavigate('erl')}
                       className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-medium border border-zinc-200 transition"
                     >
-                      <span>ERL Assessment</span>
+                      <span>ERL</span>
                     </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* Empty state if search returned no results */}
+          {paginatedPipelineProjects.length === 0 && (
+            <div className="p-12 text-center bg-white border border-zinc-200 rounded-lg space-y-2">
+              <div className="text-sm font-bold text-zinc-900">No matching projects found</div>
+              <p className="text-xs text-zinc-500">
+                Try searching for different keywords, drug formulation names, or investigators.
+              </p>
+              <button
+                onClick={() => {
+                  setPipelineSearch('');
+                  setPipelineFaculty('ALL');
+                }}
+                className="mt-2 px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPipelinePagesCount > 1 && (
+            <div className="flex items-center justify-between pt-2">
+              <button
+                onClick={() => setPipelinePage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage === 1}
+                className="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition font-medium"
+              >
+                Previous
+              </button>
+              <span className="text-xs text-zinc-500 font-medium">
+                Page <strong className="text-zinc-900">{safeCurrentPage}</strong> of{' '}
+                <strong className="text-zinc-900">{totalPipelinePagesCount}</strong>
+              </span>
+              <button
+                onClick={() => setPipelinePage((p) => Math.min(totalPipelinePagesCount, p + 1))}
+                disabled={safeCurrentPage === totalPipelinePagesCount}
+                className="px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-xs text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition font-medium"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
