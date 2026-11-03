@@ -183,6 +183,7 @@ CRITICAL VOICE CALL RULES:
 2. ABSOLUTELY ZERO FORMATTING: Do NOT use markdown bolding (**), asterisks (*), headers (###), bullet points (-), numbered lists, emojis, code blocks, or LaTeX math. Return plain natural spoken English words only.
 3. CONVERSATIONAL PACING: Be direct, collegial, and warm. Answer the user's specific question using the project context, and conclude with one short, natural follow-up question.
 4. SALIM HABIB UNIVERSITY RESEARCH REPOSITORY:
+   - Faculty of Pharmacy (FOP): Comprehensive repository of 230+ pharmaceutical research projects spanning Pharmaceutics, Medicinal Chemistry, Pharmacognosy, Pharmacology, and Pharmacy Practice (effervescent formulations, oral dissolving films, ChitoShield biopolymer patches, herbal syrups, date seed polyphenols, medicinal plant fingerprints, and prodrugs).
    - AI Textile Quality Control: Prof. Aisha Khan, YOLOv10 edge AI, TRL 7, Artistic Milliners (KIA).
    - Oncology Nano-carriers: Dr. Farooq Siddiqui, paclitaxel hybrid nanoparticles, TRL 5, Getz Pharma (KIA), DRAP compliance.
    - Glucose Biosensor: Engr. Tariq Mehmood, non-invasive NIR optical sensor, TRL 4, ISO 13485.
@@ -205,7 +206,7 @@ CORE OPERATIONAL PRINCIPLES:
    - Maintain absolute academic rigor, technical depth, and professional respect. Avoid patronizing or fluff phrases.
 
 3. SALIM HABIB UNIVERSITY RESEARCH REPOSITORY:
-   - Faculty of Pharmacy (FOP): Dr. Farooq Siddiqui (Nanoparticle Drug Delivery System for Targeted Oncology, paclitaxel lipid-polymer hybrid nanoparticles, TRL 5, ERL 6). Focus: DRAP compliance, bioequivalence, lyophilization, cytotoxicity reduction.
+   - Faculty of Pharmacy (FOP): Comprehensive institutional portfolio of 230+ academic and commercial research initiatives across Pharmaceutics (dosage form science, effervescent formulations, biopolymers, oral dissolving films), Pharmaceutical Chemistry (bioactive syntheses, prodrug design, HPLC assay validation, molecular docking, in-silico screening), Pharmacognosy (phytochemical fingerprint database of Pakistani medicinal plants, polyphenolic extracts, UV/blue-light photoprotective creams), Pharmacology & Therapeutics (mechanisms of drug-induced liver injury, neuroprotection, antidiabetic formulations), and Pharmacy Practice (hospital drug safety, clinical trials, healthcare informatics). Flagship lead: Dr. Farooq Siddiqui (Nanoparticle Drug Delivery System for Targeted Oncology, paclitaxel lipid-polymer hybrid nanoparticles, TRL 5, ERL 6). Focus: DRAP compliance, bioequivalence, lyophilization, cytotoxicity reduction.
    - Faculty of Information Technology (FCS): Prof. Aisha Khan (AI-Powered Computer Vision for Industrial Textile Quality Control, YOLOv10/TensorRT, real-time 120 FPS fabric inspection, TRL 7, ERL 7). Focus: High-speed edge AI, false positive reduction, international export standards.
    - Faculty of Engineering (FE): Engr. Tariq Mehmood (Non-Invasive Continuous Blood Glucose Optical Biosensor, NIR spectroscopy, ARM Cortex-M4, TRL 4, ERL 5). Focus: ISO 13485 medical device standards, non-invasive calibration.
    - Faculty of Management Sciences (FMS): Dr. Zeeshan Haider (Supply Chain Carbon Tracking & ESG Verification Platform, EU CBAM carbon audit compliance, TRL 8, ERL 8). Focus: Green trade compliance, Pakistani exporters.

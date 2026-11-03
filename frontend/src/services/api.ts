@@ -1,4 +1,5 @@
 import { Project, Persona, IndustryCompany, ErlAssessment, MeetingTranscript } from '@/types';
+import { PHARMACY_PROJECTS } from '@/data/pharmacyProjects';
 
 /**
  * Resolves the API base URL dynamically based on execution context:
@@ -87,7 +88,7 @@ export const INITIAL_PERSONAS: Persona[] = [
 ];
 
 // Seed Projects
-export const INITIAL_PROJECTS: Project[] = [
+export const FLAGSHIP_PROJECTS: Project[] = [
   {
     id: 'proj-001',
     project_code: 'SHU-FOP-2026-001',
@@ -168,6 +169,12 @@ export const INITIAL_PROJECTS: Project[] = [
     estimated_funding_pkr: 1500000,
     created_at: '2026-06-01'
   }
+];
+
+// Complete University Repository combining Flagships and all 230+ Faculty of Pharmacy research initiatives
+export const INITIAL_PROJECTS: Project[] = [
+  ...FLAGSHIP_PROJECTS,
+  ...PHARMACY_PROJECTS
 ];
 
 // Industry Radar Verified Leads

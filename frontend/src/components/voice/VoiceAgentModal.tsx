@@ -19,7 +19,8 @@ import {
   Pause,
   Play,
   Check,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Search
 } from 'lucide-react';
 
 export interface VoiceAgentModalProps {
@@ -40,6 +41,7 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
   const [showHistory, setShowHistory] = useState(false);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isDialectDropdownOpen, setIsDialectDropdownOpen] = useState(false);
+  const [projectSearch, setProjectSearch] = useState('');
 
   const dialectDropdownRef = useRef<HTMLDivElement | null>(null);
   const projectDropdownRef = useRef<HTMLDivElement | null>(null);
@@ -312,47 +314,80 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
 
             {/* Project Switcher Dropdown */}
             {isProjectDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl p-2 z-50 text-xs space-y-1">
-                <div className="px-3 py-2 text-[11px] font-semibold text-zinc-400 uppercase tracking-wider border-b border-white/10">
-                  Ground Voice Agent in a Project:
+              <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-zinc-900 border border-white/15 shadow-2xl p-2 z-50 text-xs space-y-1.5">
+                <div className="px-2 pt-1 pb-2 border-b border-white/10 flex items-center justify-between">
+                  <span className="text-[11px] font-semibold text-zinc-300 uppercase tracking-wider">
+                    Ground Voice in Project
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-mono">
+                    {projects.length} Available
+                  </span>
                 </div>
-                <button
-                  onClick={() => {
-                    onSelectProject(null);
-                    setIsProjectDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2.5 rounded-xl transition flex items-center justify-between ${
-                    !selectedProject
-                      ? 'bg-red-600 text-white font-semibold'
-                      : 'text-zinc-300 hover:bg-white/5'
-                  }`}
-                >
-                  <span>General ORIC Guidance (All Faculty)</span>
-                </button>
-                {projects.map((proj) => (
+
+                {/* Filter Search Input */}
+                <div className="relative px-1">
+                  <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={projectSearch}
+                    onChange={(e) => setProjectSearch(e.target.value)}
+                    placeholder="Search 230+ projects or leads..."
+                    className="w-full bg-zinc-800 border border-white/15 rounded-lg pl-7 pr-2.5 py-1.5 text-[11px] text-zinc-200 placeholder-zinc-500 focus:outline-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
                   <button
-                    key={proj.id}
                     onClick={() => {
-                      onSelectProject(proj);
+                      onSelectProject(null);
                       setIsProjectDropdownOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl transition flex flex-col gap-0.5 ${
-                      selectedProject?.id === proj.id
+                    className={`w-full text-left px-3 py-2 rounded-xl transition flex items-center justify-between ${
+                      !selectedProject
                         ? 'bg-red-600 text-white font-semibold'
                         : 'text-zinc-300 hover:bg-white/5'
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="truncate font-medium">{proj.title}</span>
-                      <span className="text-[10px] font-mono shrink-0 ml-2 opacity-80">
-                        TRL {proj.trl_level}/9
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-zinc-400 truncate">
-                      {proj.lead_investigator} • {proj.faculty}
-                    </span>
+                    <span>General ORIC Guidance (All Faculty)</span>
                   </button>
-                ))}
+
+                  {projects
+                    .filter((proj) => {
+                      if (!projectSearch.trim()) return true;
+                      const q = projectSearch.toLowerCase();
+                      return (
+                        proj.title.toLowerCase().includes(q) ||
+                        proj.lead_investigator.toLowerCase().includes(q) ||
+                        proj.department.toLowerCase().includes(q) ||
+                        proj.project_code.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((proj) => (
+                      <button
+                        key={proj.id}
+                        onClick={() => {
+                          onSelectProject(proj);
+                          setIsProjectDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl transition flex flex-col gap-0.5 ${
+                          selectedProject?.id === proj.id
+                            ? 'bg-red-600 text-white font-semibold'
+                            : 'text-zinc-300 hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="truncate font-medium">{proj.title}</span>
+                          <span className="text-[10px] font-mono shrink-0 ml-2 opacity-80">
+                            TRL {proj.trl_level}/9
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-zinc-400 truncate">
+                          {proj.lead_investigator} • {proj.department || proj.faculty}
+                        </span>
+                      </button>
+                    ))}
+                </div>
               </div>
             )}
           </div>

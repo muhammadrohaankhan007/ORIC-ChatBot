@@ -217,23 +217,20 @@ export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect
         if (currentSpoken) {
           setTranscript(currentSpoken);
 
-          // Automatic Project Matching: If user mentions a project by name, switch context automatically
+          // Automatic Project Matching: If user mentions a project or keyword by name, switch context automatically
           const lowerSpoken = currentSpoken.toLowerCase();
           for (const proj of INITIAL_PROJECTS) {
-            const matchesTextile =
-              (lowerSpoken.includes('textile') || lowerSpoken.includes('vision') || lowerSpoken.includes('fabric')) &&
-              proj.id === 'proj-002';
-            const matchesDrug =
-              (lowerSpoken.includes('drug') || lowerSpoken.includes('nano') || lowerSpoken.includes('cancer') || lowerSpoken.includes('oncology')) &&
-              proj.id === 'proj-001';
-            const matchesGlucose =
-              (lowerSpoken.includes('glucose') || lowerSpoken.includes('blood') || lowerSpoken.includes('biosensor')) &&
-              proj.id === 'proj-003';
-            const matchesCarbon =
-              (lowerSpoken.includes('carbon') || lowerSpoken.includes('esg') || lowerSpoken.includes('supply chain')) &&
-              proj.id === 'proj-004';
+            const matchesFlagship =
+              ((lowerSpoken.includes('textile') || lowerSpoken.includes('fabric')) && proj.id === 'proj-002') ||
+              ((lowerSpoken.includes('glucose') || lowerSpoken.includes('biosensor')) && proj.id === 'proj-003') ||
+              ((lowerSpoken.includes('carbon') || lowerSpoken.includes('esg') || lowerSpoken.includes('cbam')) && proj.id === 'proj-004') ||
+              ((lowerSpoken.includes('paclitaxel') || lowerSpoken.includes('targeted oncology')) && proj.id === 'proj-001');
 
-            if (matchesTextile || matchesDrug || matchesGlucose || matchesCarbon) {
+            // Match pharmacy specific project keywords (e.g. "chitoshield", "dapagliflozin", "effervescent", etc.)
+            const titleKeywords = proj.title.toLowerCase().split(/[\s:,\-–—()]+/).filter(w => w.length >= 7 && !['development', 'evaluation', 'formulation'].includes(w));
+            const matchesPharmacy = titleKeywords.some(w => lowerSpoken.includes(w));
+
+            if (matchesFlagship || matchesPharmacy) {
               if (projectRef.current?.id !== proj.id && onProjectChangeRef.current) {
                 onProjectChangeRef.current(proj);
                 projectRef.current = proj;

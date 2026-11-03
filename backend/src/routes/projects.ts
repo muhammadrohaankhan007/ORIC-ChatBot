@@ -3,6 +3,7 @@ import multer from 'multer';
 import { pool, isDbConnected } from '../config/db.js';
 import { DocumentParser } from '../services/documentParser.js';
 import { VectorStore } from '../services/vectorStore.js';
+import { PHARMACY_PROJECTS } from '../data/pharmacyProjects.js';
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -95,7 +96,7 @@ const SEED_PROJECTS = [
   }
 ];
 
-let inMemoryProjects = [...SEED_PROJECTS];
+let inMemoryProjects = [...SEED_PROJECTS, ...PHARMACY_PROJECTS];
 
 /**
  * GET /api/v1/projects

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { ViewMode, Project, Persona } from '@/types';
-import { INITIAL_PROJECTS, INITIAL_PERSONAS, fetchHealth } from '@/services/api';
+import { INITIAL_PROJECTS, INITIAL_PERSONAS, fetchHealth, fetchProjects } from '@/services/api';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
@@ -18,7 +18,7 @@ import VoiceAgentModal from '@/components/voice/VoiceAgentModal';
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<ViewMode>('home');
-  const [projects] = useState<Project[]>(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>(INITIAL_PROJECTS);
   const [personas] = useState<Persona[]>(INITIAL_PERSONAS);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apiConnected, setApiConnected] = useState(false);
@@ -26,13 +26,23 @@ export default function Home() {
   const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
 
   useEffect(() => {
-    // Check backend health
+    // Check backend health & fetch projects if backend is live
     fetchHealth()
       .then((res) => {
         setApiConnected(res.status === 'ok' || res.status === 'online-fallback');
       })
       .catch(() => {
         setApiConnected(false);
+      });
+
+    fetchProjects()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setProjects(data);
+        }
+      })
+      .catch(() => {
+        // Fallback already provided by INITIAL_PROJECTS
       });
   }, []);
 
