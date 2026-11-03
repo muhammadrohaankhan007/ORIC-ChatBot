@@ -3,7 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Project } from '@/types';
 import { getApiBaseUrl, INITIAL_PROJECTS } from '@/services/api';
-import { cleanTextForSpeech, selectBestVoice } from './useVoice';
+import {
+  cleanTextForSpeech,
+  stopSpeechImmediately,
+  selectVoiceForDialect,
+  VOICE_DIALECTS,
+  VoiceDialect,
+} from './useVoice';
 
 export type VoiceAgentStatus = 'idle' | 'welcome' | 'listening' | 'thinking' | 'speaking' | 'paused';
 
@@ -17,10 +23,10 @@ export interface SpokenTurn {
 export interface UseVoiceAgentOptions {
   selectedProject?: Project | null;
   onProjectChange?: (project: Project | null) => void;
-  lang?: string;
+  defaultDialect?: string;
 }
 
-export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US' }: UseVoiceAgentOptions = {}) {
+export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect = 'en-US' }: UseVoiceAgentOptions = {}) {
   const [isActive, setIsActive] = useState(false);
   const [status, setStatus] = useState<VoiceAgentStatus>('idle');
   const [transcript, setTranscript] = useState('');
@@ -28,10 +34,36 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   const [lastAgentText, setLastAgentText] = useState('');
   const [turns, setTurns] = useState<SpokenTurn[]>([]);
   const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [audioVolume, setAudioVolume] = useState(0); // 0.0 to 1.0 for visualizer
   const [speechSupported, setSpeechSupported] = useState(true);
 
-  // References
+  // Dialect, Voice, and Speed States
+  const [selectedDialect, setSelectedDialect] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('shu_oric_voice_dialect') || defaultDialect;
+    }
+    return defaultDialect;
+  });
+
+  const [selectedVoiceName, setSelectedVoiceName] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('shu_oric_preferred_voice') || '';
+    }
+    return '';
+  });
+
+  const [speechSpeed, setSpeechSpeed] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('shu_oric_speech_speed');
+      return saved ? parseFloat(saved) : 1.05;
+    }
+    return 1.05;
+  });
+
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+
+  // References for reliable real-time event checks
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const isRecognitionRunningRef = useRef(false);
@@ -40,8 +72,19 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   const analyserRef = useRef<AnalyserNode | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
   const animFrameRef = useRef<number | null>(null);
-  const isSpeakingRef = useRef(false);
+
+  const isActiveRef = useRef(false);
+  const isPausedRef = useRef(false);
   const isMutedRef = useRef(false);
+  const isSpeakingRef = useRef(false);
+
+  const dialectRef = useRef(selectedDialect);
+  dialectRef.current = selectedDialect;
+  const speechSpeedRef = useRef(speechSpeed);
+  speechSpeedRef.current = speechSpeed;
+  const selectedVoiceNameRef = useRef(selectedVoiceName);
+  selectedVoiceNameRef.current = selectedVoiceName;
+
   const projectRef = useRef(selectedProject);
   projectRef.current = selectedProject;
   const onProjectChangeRef = useRef(onProjectChange);
@@ -50,9 +93,33 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   turnsRef.current = turns;
   const activeProjectIdRef = useRef<string | null>(selectedProject?.id || null);
 
+  // Dynamically load browser voices
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    const updateVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) {
+        setAvailableVoices(v);
+      }
+    };
+    updateVoices();
+    window.speechSynthesis.onvoiceschanged = updateVoices;
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, []);
+
   // Real-time microphone audio volume calculation for the pulsing visualizer orb
   const updateAudioVolume = useCallback(() => {
-    if (analyserRef.current && !isMutedRef.current && !isSpeakingRef.current) {
+    if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) {
+      setAudioVolume(0);
+      animFrameRef.current = requestAnimationFrame(updateAudioVolume);
+      return;
+    }
+
+    if (analyserRef.current && !isSpeakingRef.current) {
       const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
       analyserRef.current.getByteFrequencyData(dataArray);
 
@@ -76,22 +143,28 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     animFrameRef.current = requestAnimationFrame(updateAudioVolume);
   }, []);
 
-  // Stop active speech synthesis
+  // Stop active speech synthesis immediately
   const stopAgentSpeech = useCallback(() => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch {
-        // Ignore synthesis cancel error
-      }
-    }
+    stopSpeechImmediately();
     isSpeakingRef.current = false;
+  }, []);
+
+  // Pause speech recognition safely
+  const pauseListening = useCallback(() => {
+    if (recognitionRef.current && isRecognitionRunningRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // Ignore
+      }
+      isRecognitionRunningRef.current = false;
+    }
   }, []);
 
   // Safe starter for speech recognition
   const startListeningForUser = useCallback(() => {
     if (typeof window === 'undefined') return;
-    if (isMutedRef.current) return;
+    if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) return;
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -111,16 +184,22 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = lang;
+      recognition.lang = dialectRef.current;
 
       recognition.onstart = () => {
+        if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) {
+          try {
+            recognition.abort();
+          } catch {}
+          return;
+        }
         isRecognitionRunningRef.current = true;
         setStatus('listening');
       };
 
       recognition.onresult = (event: any) => {
-        // Prevent acoustic loop: do not process if the AI is currently speaking
-        if (isSpeakingRef.current) return;
+        // Prevent acoustic feedback: do not process if call is not active, paused, or AI is speaking
+        if (!isActiveRef.current || isPausedRef.current || isSpeakingRef.current) return;
 
         let interim = '';
         let finalPhrase = '';
@@ -138,7 +217,7 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
         if (currentSpoken) {
           setTranscript(currentSpoken);
 
-          // Automatic Project Matching: If user mentions a project by name, switch context automatically!
+          // Automatic Project Matching: If user mentions a project by name, switch context automatically
           const lowerSpoken = currentSpoken.toLowerCase();
           for (const proj of INITIAL_PROJECTS) {
             const matchesTextile =
@@ -168,9 +247,9 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
             clearTimeout(silenceTimerRef.current);
           }
 
-          // Silence Detection: 1.1 seconds of silence after speaking automatically commits the turn
+          // Silence Detection: 1.1s of silence automatically commits the turn
           silenceTimerRef.current = setTimeout(() => {
-            if (currentSpoken.length >= 2) {
+            if (isActiveRef.current && !isPausedRef.current && currentSpoken.length >= 2) {
               sendSpokenPrompt(currentSpoken);
             }
           }, 1100);
@@ -186,10 +265,10 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
 
       recognition.onend = () => {
         isRecognitionRunningRef.current = false;
-        // If voice call is active and we are not speaking and not muted, seamlessly restart listening
-        if (!isSpeakingRef.current && !isMutedRef.current) {
+        // Check strict active flags: DO NOT restart if ended, paused, muted, or AI speaking
+        if (isActiveRef.current && !isPausedRef.current && !isMutedRef.current && !isSpeakingRef.current) {
           setTimeout(() => {
-            if (!isSpeakingRef.current && !isMutedRef.current && !isRecognitionRunningRef.current) {
+            if (isActiveRef.current && !isPausedRef.current && !isMutedRef.current && !isSpeakingRef.current && !isRecognitionRunningRef.current) {
               try {
                 recognition.start();
               } catch {
@@ -207,24 +286,17 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     } catch (err) {
       console.warn('Recognition start exception:', err);
     }
-  }, [lang]);
-
-  // Pause speech recognition safely while the AI speaks to prevent acoustic feedback
-  const pauseListening = useCallback(() => {
-    if (recognitionRef.current && isRecognitionRunningRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // Ignore
-      }
-      isRecognitionRunningRef.current = false;
-    }
   }, []);
 
   // Speak aloud via Web Speech API and cleanly transition back to listening
   const speakSpokenResponse = useCallback(
     (text: string, onDone?: () => void) => {
       if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+        onDone?.();
+        return;
+      }
+
+      if (!isActiveRef.current || isPausedRef.current) {
         onDone?.();
         return;
       }
@@ -236,7 +308,9 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
       const clean = cleanTextForSpeech(text);
       if (!clean) {
         onDone?.();
-        startListeningForUser();
+        if (isActiveRef.current && !isPausedRef.current && !isMutedRef.current) {
+          startListeningForUser();
+        }
         return;
       }
 
@@ -244,21 +318,31 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
       setStatus('speaking');
 
       const utterance = new SpeechSynthesisUtterance(clean);
-      const voices = window.speechSynthesis.getVoices();
-      const bestVoice = selectBestVoice('ORIC Research Assistant', voices);
+      const voicesPool = availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
+      const bestVoice = selectVoiceForDialect(
+        dialectRef.current,
+        voicesPool,
+        selectedVoiceNameRef.current,
+        'ORIC Research Assistant'
+      );
+
       if (bestVoice) {
         utterance.voice = bestVoice;
         utterance.lang = bestVoice.lang;
+      } else {
+        utterance.lang = dialectRef.current;
       }
 
-      utterance.rate = 1.05; // Conversational tempo
+      utterance.rate = speechSpeedRef.current;
       utterance.pitch = 1.0;
 
       utterance.onend = () => {
         isSpeakingRef.current = false;
         onDone?.();
-        // Wait 250ms for room echo to clear, then start listening for user
+        // Strict guard: DO NOT resume listening if call was closed or paused
+        if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) return;
         setTimeout(() => {
+          if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) return;
           startListeningForUser();
         }, 250);
       };
@@ -269,14 +353,16 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
         }
         isSpeakingRef.current = false;
         onDone?.();
+        if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) return;
         setTimeout(() => {
+          if (!isActiveRef.current || isPausedRef.current || isMutedRef.current) return;
           startListeningForUser();
         }, 250);
       };
 
       window.speechSynthesis.speak(utterance);
     },
-    [pauseListening, startListeningForUser, stopAgentSpeech]
+    [availableVoices, pauseListening, startListeningForUser, stopAgentSpeech]
   );
 
   // Audio acknowledgement when project changes while voice call is active
@@ -304,6 +390,7 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   const sendSpokenPrompt = useCallback(
     async (promptText: string) => {
       if (!promptText || promptText.trim().length === 0) return;
+      if (!isActiveRef.current || isPausedRef.current) return;
 
       const trimmed = promptText.trim();
       pauseListening();
@@ -361,6 +448,8 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
           }),
         });
 
+        if (!isActiveRef.current || isPausedRef.current) return;
+
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
         const data = await res.json();
         const rawAnswer = data.response || 'I heard you. Could you please clarify that point?';
@@ -374,8 +463,8 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
         if (sentences && sentences.length > 2) {
           conversationalAnswer = sentences.slice(0, 2).join(' ').trim();
         } else if (cleanAnswer.length > 220) {
-          const trimmed = cleanAnswer.substring(0, 210).replace(/\s+\S*$/, '');
-          conversationalAnswer = trimmed + '.';
+          const trimmedWord = cleanAnswer.substring(0, 210).replace(/\s+\S*$/, '');
+          conversationalAnswer = trimmedWord + '.';
         }
 
         setLastAgentText(conversationalAnswer);
@@ -389,10 +478,13 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
 
         setTurns((prev) => [...prev, agentTurn]);
 
+        if (!isActiveRef.current || isPausedRef.current) return;
+
         // Speak aloud immediately and resume listening once done
         speakSpokenResponse(conversationalAnswer);
       } catch (err: any) {
         console.error('Voice agent fetch error:', err);
+        if (!isActiveRef.current || isPausedRef.current) return;
         const fallbackMsg = "I couldn't reach the ORIC server. Please try saying that again.";
         setLastAgentText(fallbackMsg);
         speakSpokenResponse(fallbackMsg);
@@ -405,11 +497,15 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   const startVoiceAgent = useCallback(async () => {
     if (typeof window === 'undefined') return;
 
+    isActiveRef.current = true;
+    isPausedRef.current = false;
+    isMutedRef.current = false;
+
     setIsActive(true);
+    setIsPaused(false);
+    setIsMicMuted(false);
     setStatus('welcome');
     setTranscript('');
-    isMutedRef.current = false;
-    setIsMicMuted(false);
 
     // 1. Initialize microphone stream & Web Audio API analyzer for visualizer
     try {
@@ -456,21 +552,27 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     setTurns([welcomeTurn]);
 
     // 3. Play the welcome greeting aloud FIRST.
-    // Notice: Recognition is NOT active while this greeting plays!
-    // As soon as the greeting finishes, speakSpokenResponse automatically calls startListeningForUser()!
     speakSpokenResponse(welcomeGreeting);
   }, [speakSpokenResponse, updateAudioVolume]);
 
-  // End the voice agent session cleanly
+  // End the voice agent session completely and reliably
   const endVoiceAgent = useCallback(() => {
+    isActiveRef.current = false;
+    isPausedRef.current = false;
+    isMutedRef.current = false;
+    isSpeakingRef.current = false;
+
     setIsActive(false);
+    setIsPaused(false);
+    setIsMicMuted(false);
     setStatus('idle');
     setTranscript('');
     setAudioVolume(0);
 
-    stopAgentSpeech();
-    pauseListening();
+    // 1. Immediately terminate all speech synthesis
+    stopSpeechImmediately();
 
+    // 2. Clear silence timer and visualizer frame
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
@@ -481,11 +583,31 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
       animFrameRef.current = null;
     }
 
+    // 3. Decouple and abort SpeechRecognition to guarantee zero background restarts
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.abort();
+      } catch {
+        // Ignore
+      }
+      recognitionRef.current = null;
+    }
+    isRecognitionRunningRef.current = false;
+
+    // 4. Stop and release all microphone media stream tracks
     if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((track) => track.stop());
+      micStreamRef.current.getTracks().forEach((track) => {
+        track.stop();
+        track.enabled = false;
+      });
       micStreamRef.current = null;
     }
 
+    // 5. Close AudioContext
     if (audioContextRef.current) {
       try {
         audioContextRef.current.close();
@@ -494,9 +616,10 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
       }
       audioContextRef.current = null;
     }
-  }, [pauseListening, stopAgentSpeech]);
+    analyserRef.current = null;
+  }, []);
 
-  // Toggle Mute
+  // Toggle Microphone Mute
   const toggleMicMute = useCallback(() => {
     const next = !isMicMuted;
     setIsMicMuted(next);
@@ -504,17 +627,75 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
 
     if (next) {
       pauseListening();
+      setAudioVolume(0);
       setStatus('paused');
     } else {
-      startListeningForUser();
+      if (isActiveRef.current && !isPausedRef.current) {
+        startListeningForUser();
+      }
     }
   }, [isMicMuted, pauseListening, startListeningForUser]);
+
+  // Toggle Call Pause / Resume
+  const togglePause = useCallback(() => {
+    const next = !isPaused;
+    setIsPaused(next);
+    isPausedRef.current = next;
+
+    if (next) {
+      stopAgentSpeech();
+      pauseListening();
+      setAudioVolume(0);
+      setStatus('paused');
+    } else {
+      if (isActiveRef.current && !isMutedRef.current) {
+        startListeningForUser();
+      }
+    }
+  }, [isPaused, pauseListening, startListeningForUser, stopAgentSpeech]);
+
+  // Change Dialect / Language
+  const changeDialect = useCallback((dialectCode: string) => {
+    setSelectedDialect(dialectCode);
+    dialectRef.current = dialectCode;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shu_oric_voice_dialect', dialectCode);
+    }
+    // Update recognition language on the fly if running
+    if (recognitionRef.current && isRecognitionRunningRef.current) {
+      try {
+        recognitionRef.current.lang = dialectCode;
+      } catch {
+        // Ignore
+      }
+    }
+  }, []);
+
+  // Change Voice
+  const changeVoice = useCallback((voiceName: string) => {
+    setSelectedVoiceName(voiceName);
+    selectedVoiceNameRef.current = voiceName;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shu_oric_preferred_voice', voiceName);
+    }
+  }, []);
+
+  // Change Speech Speed
+  const changeSpeed = useCallback((speed: number) => {
+    setSpeechSpeed(speed);
+    speechSpeedRef.current = speed;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('shu_oric_speech_speed', String(speed));
+    }
+  }, []);
 
   // Interrupt AI immediately (Barge-in button / tap)
   const interruptAndListen = useCallback(() => {
     stopAgentSpeech();
     setTranscript('');
-    startListeningForUser();
+    if (isActiveRef.current && !isPausedRef.current && !isMutedRef.current) {
+      startListeningForUser();
+    }
   }, [startListeningForUser, stopAgentSpeech]);
 
   // Cleanup on unmount
@@ -532,11 +713,21 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     lastAgentText,
     turns,
     isMicMuted,
+    isPaused,
     audioVolume,
     speechSupported,
+    selectedDialect,
+    selectedVoiceName,
+    speechSpeed,
+    availableVoices,
+    dialects: VOICE_DIALECTS,
     startVoiceAgent,
     endVoiceAgent,
     toggleMicMute,
+    togglePause,
+    changeDialect,
+    changeVoice,
+    changeSpeed,
     sendSpokenPrompt,
     stopAgentSpeech,
     interruptAndListen,

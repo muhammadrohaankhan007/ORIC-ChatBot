@@ -70,6 +70,74 @@ export function chunkForSmoothSpeech(cleanText: string): string[] {
 /**
  * Select the highest-fidelity, most natural, human-sounding voice available in the browser.
  */
+export interface VoiceDialect {
+  code: string;
+  label: string;
+  flag: string;
+  shortLabel: string;
+}
+
+export const VOICE_DIALECTS: VoiceDialect[] = [
+  { code: 'en-US', label: 'English (United States)', flag: '🇺🇸', shortLabel: 'US English' },
+  { code: 'en-GB', label: 'English (United Kingdom)', flag: '🇬🇧', shortLabel: 'UK English' },
+  { code: 'en-IN', label: 'English (Pakistan / South Asia)', flag: '🇵🇰', shortLabel: 'Pakistani / South Asian' },
+  { code: 'en-AU', label: 'English (Australia)', flag: '🇦🇺', shortLabel: 'Australian' },
+  { code: 'en-CA', label: 'English (Canada)', flag: '🇨🇦', shortLabel: 'Canadian' },
+  { code: 'ur-PK', label: 'Urdu (Pakistan)', flag: '🇵🇰', shortLabel: 'Urdu' },
+];
+
+/**
+ * Select the best voice matching a specific dialect / accent code.
+ */
+export function selectVoiceForDialect(
+  dialectCode: string = 'en-US',
+  voices: SpeechSynthesisVoice[] = [],
+  preferredVoiceName?: string,
+  personaName?: string
+): SpeechSynthesisVoice | null {
+  if (!voices || voices.length === 0) return null;
+
+  if (preferredVoiceName) {
+    const found = voices.find((v) => v.name === preferredVoiceName);
+    if (found) return found;
+  }
+
+  const normalized = dialectCode.toLowerCase().replace('_', '-');
+  const langPrefix = normalized.split('-')[0];
+
+  // 1. Strict exact dialect match (e.g. en-gb, en-us, en-in, ur-pk)
+  const exactMatches = voices.filter((v) =>
+    v.lang.toLowerCase().replace('_', '-').startsWith(normalized)
+  );
+
+  // 2. Fallback to same language family (e.g. en-*)
+  const langMatches =
+    exactMatches.length > 0
+      ? exactMatches
+      : voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
+
+  const pool = langMatches.length > 0 ? langMatches : voices;
+
+  const isFemale = (personaName || '').toLowerCase().includes('aisha');
+
+  // Search natural/neural voices
+  const natural = pool.filter((v) => /natural|neural|online|google/i.test(v.name));
+  if (isFemale) {
+    const female = (natural.length > 0 ? natural : pool).find((v) =>
+      /female|jenny|aria|sonia|ava|victoria|clara|samantha|zira/i.test(v.name)
+    );
+    if (female) return female;
+  } else {
+    const male = (natural.length > 0 ? natural : pool).find((v) =>
+      /male|guy|christopher|ryan|brian|george|arthur|david|daniel/i.test(v.name)
+    );
+    if (male) return male;
+  }
+
+  if (natural.length > 0) return natural[0];
+  return pool[0] || null;
+}
+
 export function selectBestVoice(
   personaName?: string,
   voices: SpeechSynthesisVoice[] = [],
