@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORIC Industrial Intelligence & Opportunity Assessment Platform (ORIC-IOAP) | Salim Habib University (SHU), Karachi</title>
+  
+  <meta name="description" content="Production-oriented industrial intelligence and commercialization platform developed for the Office of Research, Innovation & Commercialization (ORIC), Salim Habib University (SHU), Karachi, Pakistan. Extracts and assesses academic research, predicts market sizing, maps Karachi industrial areas, and generates professional PDF reports.">
+  <meta name="author" content="Office of Research, Innovation & Commercialization (ORIC), Salim Habib University">
+  <meta name="theme-color" content="#0A2540">
+
+  <!-- Modern Typography: Inter & Outfit from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Core Platform Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/views.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+
+  <!-- Chart.js for High-Fidelity Responsive Data Visualizations -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="appSidebar">
+      <div class="sidebar-header">
+        <div class="shu-logo-badge">SHU</div>
+        <div class="sidebar-brand-text">
+          <div class="sidebar-brand-title">ORIC-IOAP</div>
+          <div class="sidebar-brand-sub">Salim Habib University</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">Core Intelligence</div>
+        
+        <div class="nav-item active" data-view="dashboard" onclick="window.oricApp.navigate('dashboard')">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span>Dashboard</span>
+        </div>
+
+        <div class="nav-item" data-view="upload" onclick="window.oricApp.navigate('upload')">
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          <span>Upload Documents</span>
+          <span class="nav-badge" style="background: rgba(13, 148, 136, 0.4); color: #99F6E4;">New</span>
+        </div>
+
+        <div class="nav-item" data-view="library" onclick="window.oricApp.navigate('library')">
+          <i class="fa-solid fa-book-bookmark"></i>
+          <span>Document Library</span>
+          <span class="nav-badge" id="badgeDocCount">233</span>
+        </div>
+
+        <div class="nav-item" data-view="intelligence" onclick="window.oricApp.navigate('intelligence')">
+          <i class="fa-solid fa-brain"></i>
+          <span>AI Intelligence Dossier</span>
+        </div>
+
+        <div class="nav-section-title">Commercialization & Sectors</div>
+
+        <div class="nav-item" data-view="products" onclick="window.oricApp.navigate('products')">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>Product & Services</span>
+        </div>
+
+        <div class="nav-item" data-view="industries" onclick="window.oricApp.navigate('industries')">
+          <i class="fa-solid fa-layer-group"></i>
+          <span>Industry Applications</span>
+          <span class="nav-badge">22</span>
+        </div>
+
+        <div class="nav-item" data-view="karachi" onclick="window.oricApp.navigate('karachi')">
+          <i class="fa-solid fa-city"></i>
+          <span>Karachi Intelligence</span>
+          <span class="nav-badge" style="background: rgba(2, 132, 199, 0.4); color: #BAE6FD;">10</span>
+        </div>
+
+        <div class="nav-item" data-view="forecasting" onclick="window.oricApp.navigate('forecasting')">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>5-Year Forecasts</span>
+        </div>
+
+        <div class="nav-item" data-view="commercialization" onclick="window.oricApp.navigate('commercialization')">
+          <i class="fa-solid fa-award"></i>
+          <span>Commercial Scoring</span>
+          <span class="nav-badge" id="badgeDealsCount" style="background: rgba(245, 158, 11, 0.4); color: #FDE68A;">24</span>
+        </div>
+
+        <div class="nav-section-title">Reports & Governance</div>
+
+        <div class="nav-item" data-view="reports" onclick="window.oricApp.navigate('reports')">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>Reports & Downloads</span>
+          <span class="nav-badge">PDF</span>
+        </div>
+
+        <div class="nav-item" data-view="sources" onclick="window.oricApp.navigate('sources')">
+          <i class="fa-solid fa-scale-balanced"></i>
+          <span>Data Sources & Citations</span>
+        </div>
+      </nav>
+
+      <!-- Sidebar Footer User Profile -->
+      <div class="sidebar-footer">
+        <div class="user-mini-profile">
+          <div class="user-avatar">OR</div>
+          <div class="user-info">
+            <div class="user-name">ORIC Portal</div>
+            <div class="user-role-label" id="sidebarUserRole">ORIC Director</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Layout -->
+    <div class="main-wrapper">
+      <!-- Topbar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn-sidebar-toggle" onclick="window.oricApp.toggleMobileSidebar()" aria-label="Toggle Navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          
+          <div class="topbar-breadcrumbs">
+            <span class="crumb-portal"><i class="fa-solid fa-graduation-cap" style="color: var(--shu-blue-primary); margin-right: 4px;"></i> ORIC</span>
+            <span class="crumb-divider">/</span>
+            <span class="crumb-active" id="topbarPageHeading">Executive Intelligence</span>
+          </div>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Currency Toggle (PKR / USD) -->
+          <div class="currency-toggle-wrapper" title="Toggle Reporting Currency (1 USD = 280 PKR Dated SBP Benchmark)">
+            <button class="currency-btn active" id="currBtnPkr" onclick="window.oricStore.setCurrency('PKR')">PKR</button>
+            <button class="currency-btn" id="currBtnUsd" onclick="window.oricStore.setCurrency('USD')">USD</button>
+          </div>
+
+          <!-- Quick Search -->
+          <div class="quick-search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="topbarSearchInput" placeholder="Quick search..." onkeydown="if(event.key === 'Enter') { window.oricStore.filters.searchQuery = this.value; window.oricApp.navigate('library'); }">
+          </div>
+
+          <!-- Role Selector -->
+          <div class="role-badge-select" title="Active Institutional Persona">
+            <i class="fa-solid fa-user-shield"></i>
+            <select id="topbarRoleSelect" onchange="window.oricStore.setRole(this.value)">
+              <option value="ORIC Director">ORIC Director</option>
+              <option value="ORIC Manager">ORIC Manager</option>
+              <option value="Research Officer">Research Officer</option>
+              <option value="Faculty Member">Faculty Member</option>
+              <option value="Industry Reviewer">Industry Reviewer</option>
+            </select>
+          </div>
+
+          <!-- Glowing AI Status Indicator -->
+          <div class="ai-status-indicator" title="Google Gemini AI Online & Cascading">
+            <span class="pulse-dot-green"></span>
+            <span class="ai-status-label">Gemini Live</span>
+          </div>
+
+          <!-- Launch AI Copilot Button -->
+          <button class="btn btn-teal btn-sm" onclick="window.oricApp.openAiCopilot()" title="Launch ORIC AI Copilot">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> <span class="btn-label-copilot">Copilot</span>
+          </button>
+
+          <!-- Ingest Document Button -->
+          <button class="btn btn-primary btn-sm" onclick="window.oricApp.navigate('upload')" title="Ingest Research Document">
+            <i class="fa-solid fa-plus"></i> <span class="btn-label-ingest">Ingest</span>
+          </button>
+
+          <!-- Notification Bell -->
+          <button class="btn-icon-topbar" title="Institutional Activity Notifications" onclick="window.oricApp.showToast('ORIC Audit: All 327 research submissions synchronized with FoP LMS repository.', 'info')">
+            <i class="fa-regular fa-bell"></i>
+            <span class="ping-dot"></span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Body Container (Renders active page view) -->
+      <main class="content-area">
+        <div id="mainContentContainer">
+          <!-- Views render here dynamically via OricApp router -->
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- ORIC AI Research & Commercialization Copilot Drawer -->
+  <aside class="ai-copilot-drawer" id="aiCopilotDrawer">
+    <div class="ai-drawer-header">
+      <div class="ai-drawer-title-box">
+        <div class="ai-sparkle-avatar">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </div>
+        <div>
+          <div style="font-family: var(--font-heading); font-weight: 700; font-size: 1.05rem;">ORIC AI Copilot</div>
+          <div style="font-size: 0.72rem; color: #BAE6FD;">Powered by Google Gemini AI</div>
+        </div>
+      </div>
+      <button class="btn-sidebar-toggle" style="display: block; color: #FFFFFF;" onclick="window.oricApp.closeAiCopilot()" aria-label="Close AI Copilot">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Active Project Context Bar in Drawer -->
+    <div style="background: #061727; color: #94A3B8; padding: 8px 16px; font-size: 0.72rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <span>Context:</span>
+      <span id="aiDrawerProjectBadge" style="color: #38BDF8; font-weight: 600; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 380px;">Active Research Project</span>
+    </div>
+
+    <!-- Chat Messages Scroll -->
+    <div class="ai-chat-body" id="aiChatMessages">
+      <div class="ai-message-bubble assistant">
+        <strong>Assalamu Alaikum & Welcome to the ORIC AI Copilot!</strong>
+        <div style="margin-top: 6px; font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;">
+          I am your intelligent university commercialization advisor for <strong>Salim Habib University (SHU), Karachi</strong>.
+          <br><br>
+          I can help you:
+          <ul style="padding-left: 18px; margin-top: 4px;">
+            <li>Identify top pharmaceutical manufacturers in <strong>Korangi, Landhi & S.I.T.E.</strong></li>
+            <li>Prepare regulatory submissions for <strong>DRAP (Drug Regulatory Authority of Pakistan)</strong></li>
+            <li>Draft an industry partnership pitch memo or NDA request</li>
+            <li>Outline an application for the <strong>HEC Technology Development Fund (TDF)</strong></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Prompt Chips -->
+    <div class="ai-quick-prompts-bar">
+      <button class="ai-quick-btn" onclick="window.oricApp.sendAiCopilotMessage('Identify the top 3 prospective pharmaceutical partners in Korangi Industrial Area for this formulation and explain their commercial synergy.')">
+        🏢 Top Korangi Partners
+      </button>
+      <button class="ai-quick-btn" onclick="window.oricApp.sendAiCopilotMessage('What are the specific DRAP registration requirements and clinical stability parameters needed for this product?')">
+        📋 DRAP Filing Steps
+      </button>
+      <button class="ai-quick-btn" onclick="window.oricApp.sendAiCopilotMessage('Draft a professional commercialization inquiry email to the Head of R&D at The Searle Company / Getz Pharma proposing a joint trial.')">
+        ✉️ Pitch Email to Searle/Getz
+      </button>
+      <button class="ai-quick-btn" onclick="window.oricApp.sendAiCopilotMessage('Draft an executive proposal summary for the Higher Education Commission (HEC) Technology Development Fund (TDF) grant.')">
+        🎓 HEC TDF Proposal
+      </button>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="ai-input-bar">
+      <input type="text" id="aiCopilotInput" placeholder="Ask ORIC AI Copilot about this innovation..." onkeydown="if(event.key === 'Enter') window.oricApp.sendAiCopilotMessage()">
+      <button class="btn btn-primary btn-sm" onclick="window.oricApp.sendAiCopilotMessage()" title="Send">
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Client Data Bundle (Guarantees immediate zero-latency load in any environment, whether http or file://) -->
+  <script src="data/data_bundle.js"></script>
+
+  <!-- Core Data Layer -->
+  <script src="js/data.js"></script>
+
+  <!-- View Components -->
+  <script src="js/views/dashboard.js"></script>
+  <script src="js/views/upload.js"></script>
+  <script src="js/views/library.js"></script>
+  <script src="js/views/intelligence.js"></script>
+  <script src="js/views/products.js"></script>
+  <script src="js/views/industries.js"></script>
+  <script src="js/views/karachi.js"></script>
+  <script src="js/views/forecasting.js"></script>
+  <script src="js/views/commercialization.js"></script>
+  <script src="js/views/reports.js"></script>
+  <script src="js/views/sources.js"></script>
+
+  <!-- App Bootstrap -->
+  <script src="js/app.js"></script>
+</body>
+</html>

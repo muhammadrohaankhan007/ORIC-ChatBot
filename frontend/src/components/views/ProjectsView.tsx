@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Project, ViewMode } from '@/types';
+import { Project, ViewMode, CurrencyMode } from '@/types';
 import { importProjectsDocument } from '@/services/api';
-import { 
-  Search, 
-  UploadCloud, 
-  FileText, 
-  CheckCircle2, 
+import { formatMoney } from '@/utils/formatters';
+import {
+  Search,
+  UploadCloud,
+  FileText,
+  CheckCircle2,
   X,
   ArrowRight,
   Radio,
@@ -17,7 +18,13 @@ import {
   ChevronsRight,
   AlertCircle,
   Loader2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download,
+  Filter,
+  Sparkles,
+  MapPin,
+  Building,
+  GraduationCap
 } from 'lucide-react';
 
 interface ProjectsViewProps {
@@ -26,6 +33,8 @@ interface ProjectsViewProps {
   onSelectProjectForChat: (project: Project) => void;
   onOpenVoiceAgentForProject?: (project: Project) => void;
   onAddProjects?: (newProjects: Project[]) => void;
+  onOpenDossier?: (project: Project) => void;
+  currency?: CurrencyMode;
 }
 
 export default function ProjectsView({
@@ -33,15 +42,23 @@ export default function ProjectsView({
   onNavigate,
   onSelectProjectForChat,
   onOpenVoiceAgentForProject,
-  onAddProjects
+  onAddProjects,
+  onOpenDossier,
+  currency = 'PKR'
 }: ProjectsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState<string>('ALL');
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [selectedDomain, setSelectedDomain] = useState<string>('');
+  const [selectedPriority, setSelectedPriority] = useState<string>('');
+  const [selectedArea, setSelectedArea] = useState<string>('');
+
   const [activeModalProject, setActiveModalProject] = useState<Project | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(15);
   const listTopRef = useRef<HTMLDivElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const csvFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Upload States
   const [isUploading, setIsUploading] = useState(false);
@@ -49,6 +66,23 @@ export default function ProjectsView({
   const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
   const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Extract distinct courses & domains
+  const distinctCourses = Array.from(
+    new Set(projects.map((p) => p.courseTitle).filter(Boolean) as string[])
+  ).sort();
+
+  const distinctDomains = Array.from(
+    new Set(projects.map((p) => p.domain).filter(Boolean) as string[])
+  ).sort();
+
+  const industrialAreasList = [
+    'Korangi Industrial Area',
+    'S.I.T.E. Industrial Area',
+    'Landhi Industrial Area',
+    'Port Qasim Industrial Zone',
+    'Federal B Area'
+  ];
 
   const faculties = [
     { code: 'ALL', label: 'All Faculties' },
@@ -58,21 +92,53 @@ export default function ProjectsView({
     { code: 'FMS', label: 'Management Sciences (FMS)' }
   ];
 
-  // Reset to page 1 whenever search query, faculty, or page size changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedFaculty, pageSize]);
+  // Filtering Logic
+  const filteredProjects = projects.filter((project) => {
+    // 1. Faculty code filter
+    if (selectedFaculty !== 'ALL' && project.faculty_code !== selectedFaculty) {
+      return false;
+    }
 
-  const filteredProjects = projects.filter(p => {
-    const matchesFaculty = selectedFaculty === 'ALL' || p.faculty_code === selectedFaculty;
-    const matchesSearch = 
-      p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.project_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.lead_investigator.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.technology_stack.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesFaculty && matchesSearch;
+    // 2. Course filter
+    if (selectedCourse && project.courseTitle !== selectedCourse) {
+      return false;
+    }
+
+    // 3. Domain filter
+    if (selectedDomain && project.domain !== selectedDomain) {
+      return false;
+    }
+
+    // 4. Commercial Priority filter
+    if (selectedPriority) {
+      const priority = project.commercialization?.priority || (project.trl_level >= 6 ? 'High Priority' : 'Standard Priority');
+      if (priority !== selectedPriority) return false;
+    }
+
+    // 5. Industrial Area filter
+    if (selectedArea) {
+      const matchesArea = project.matchedAreas?.some((m) => m.areaName.toLowerCase().includes(selectedArea.toLowerCase()));
+      if (!matchesArea && !project.target_industries?.some((t) => t.toLowerCase().includes(selectedArea.toLowerCase()))) {
+        return false;
+      }
+    }
+
+    // 6. Text query
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      const matchTitle = (project.title || '').toLowerCase().includes(q);
+      const matchAbstract = (project.abstract || '').toLowerCase().includes(q);
+      const matchLead = (project.lead_investigator || project.facultyPI || '').toLowerCase().includes(q);
+      const matchCode = (project.project_code || project.id || '').toLowerCase().includes(q);
+      const matchCourse = (project.courseTitle || '').toLowerCase().includes(q);
+      const matchDomain = (project.domain || '').toLowerCase().includes(q);
+      return matchTitle || matchAbstract || matchLead || matchCode || matchCourse || matchDomain;
+    }
+
+    return true;
   });
 
+  // Pagination calculation
   const totalItems = filteredProjects.length;
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
   const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -80,184 +146,250 @@ export default function ProjectsView({
   const endIndex = Math.min(startIndex + pageSize, totalItems);
   const paginatedProjects = filteredProjects.slice(startIndex, endIndex);
 
-  const goToPage = (pageNumber: number) => {
-    const target = Math.min(Math.max(1, pageNumber), totalPages);
-    setCurrentPage(target);
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedFaculty, selectedCourse, selectedDomain, selectedPriority, selectedArea, pageSize]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
     if (listTopRef.current) {
       listTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
-  // Generate pagination range with ellipses
-  const getPaginationRange = () => {
-    const delta = 2;
-    const range: (number | string)[] = [];
-    const rangeWithDots: (number | string)[] = [];
-    let l: number | undefined;
-
-    for (let i = 1; i <= totalPages; i++) {
-      if (i === 1 || i === totalPages || (i >= safeCurrentPage - delta && i <= safeCurrentPage + delta)) {
-        range.push(i);
-      }
-    }
-
-    for (const i of range) {
-      if (l) {
-        if ((i as number) - l === 2) {
-          rangeWithDots.push(l + 1);
-        } else if ((i as number) - l !== 1) {
-          rangeWithDots.push('...');
-        }
-      }
-      rangeWithDots.push(i);
-      l = i as number;
-    }
-
-    return rangeWithDots;
-  };
-
-  const processUploadedFile = async (file: File) => {
-    const ext = file.name.toLowerCase().split('.').pop() || '';
-    const validExts = ['xlsx', 'xls', 'docx', 'doc', 'csv', 'pdf'];
-    if (!validExts.includes(ext)) {
-      setUploadErrorMessage(`Invalid file format ".${ext}". Please upload an Excel (.xlsx, .xls) or Word (.docx, .doc) file.`);
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadErrorMessage(null);
-    setUploadSuccessMessage(null);
-    setUploadStatusText(`Extracting & indexing projects from "${file.name}"...`);
-
-    try {
-      const res = await importProjectsDocument(file);
-      if (res.success && Array.isArray(res.projects) && res.projects.length > 0) {
-        onAddProjects?.(res.projects);
-        setUploadSuccessMessage(`Successfully imported ${res.count} research project(s) from "${file.name}"! Added to the repository.`);
-        setCurrentPage(1);
-        setTimeout(() => setUploadSuccessMessage(null), 8000);
-      } else {
-        setUploadErrorMessage(res.message || 'No valid projects could be extracted from this document.');
-      }
-    } catch (err: any) {
-      console.error('File upload error:', err);
-      setUploadErrorMessage(err.message || 'Failed to upload document. Please check the file contents.');
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
+  // Drag and drop upload handlers
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleDragLeave = () => {
     setIsDragging(false);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
-    e.stopPropagation();
     setIsDragging(false);
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      processUploadedFile(e.dataTransfer.files[0]);
+      await handleFileUpload(e.dataTransfer.files[0]);
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      processUploadedFile(e.target.files[0]);
+      await handleFileUpload(e.target.files[0]);
     }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    setIsUploading(true);
+    setUploadStatusText(`Extracting research projects from "${file.name}"...`);
+    setUploadSuccessMessage(null);
+    setUploadErrorMessage(null);
+
+    try {
+      const res = await importProjectsDocument(file);
+      if (res && res.projects && res.projects.length > 0) {
+        onAddProjects?.(res.projects);
+        setUploadSuccessMessage(
+          `Successfully ingested ${res.count || res.projects.length} project(s) from "${file.name}". They are now indexed across the AI knowledge base!`
+        );
+      } else {
+        setUploadErrorMessage(`Could not extract valid projects from "${file.name}".`);
+      }
+    } catch (err: any) {
+      console.error('File upload error:', err);
+      setUploadErrorMessage(err.message || `Failed to process "${file.name}".`);
+    } finally {
+      setIsUploading(false);
+      setUploadStatusText('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Native CSV Import Handler with Intelligent Column Mapper
+  const handleCsvImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    const text = await file.text();
+
+    try {
+      const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      if (lines.length < 2) {
+        alert('CSV file contains no data rows.');
+        return;
+      }
+
+      const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/["']/g, ''));
+      const idIdx = headers.findIndex((h) => h.includes('id') || h.includes('code'));
+      const titleIdx = headers.findIndex((h) => h.includes('title') || h.includes('topic') || h.includes('name'));
+      const abstractIdx = headers.findIndex((h) => h.includes('abstract') || h.includes('desc') || h.includes('summary'));
+      const piIdx = headers.findIndex((h) => h.includes('pi') || h.includes('investigator') || h.includes('supervisor'));
+      const courseIdx = headers.findIndex((h) => h.includes('course') || h.includes('dept') || h.includes('department'));
+      const trlIdx = headers.findIndex((h) => h.includes('trl'));
+
+      const imported: Project[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        // Basic CSV regex to handle commas inside quotes
+        const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+        const cleanRow = row.map((c) => c.replace(/^"|"$/g, '').trim());
+
+        const pTitle = titleIdx >= 0 && cleanRow[titleIdx] ? cleanRow[titleIdx] : `Imported Innovation ${i}`;
+        const pAbstract = abstractIdx >= 0 && cleanRow[abstractIdx] ? cleanRow[abstractIdx] : 'Formulation research and laboratory development.';
+        const pPi = piIdx >= 0 && cleanRow[piIdx] ? cleanRow[piIdx] : 'Faculty Lead Investigator';
+        const pCourse = courseIdx >= 0 && cleanRow[courseIdx] ? cleanRow[courseIdx] : 'Faculty of Pharmacy (FoP)';
+        const pTrl = trlIdx >= 0 && !isNaN(Number(cleanRow[trlIdx])) ? Number(cleanRow[trlIdx]) : 4;
+
+        const randomSalt = Math.random().toString(36).substring(2, 7);
+        const pId = idIdx >= 0 && cleanRow[idIdx] ? cleanRow[idIdx] : `SHU-CSV-${Date.now().toString().slice(-4)}-${randomSalt}`;
+
+        imported.push({
+          id: pId,
+          project_code: pId,
+          title: pTitle,
+          faculty: 'Faculty of Pharmacy',
+          faculty_code: 'FOP',
+          department: pCourse,
+          lead_investigator: pPi,
+          abstract: pAbstract,
+          problem_statement: `Addresses formulation challenges and commercial requirements for ${pTitle}.`,
+          technology_stack: ['Assay Validation', 'Analytical Chemistry', 'Formulation Protocols'],
+          development_stage: pTrl >= 6 ? 'Bench Validated' : 'Lab Prototype',
+          trl_level: pTrl,
+          erl_level: Math.min(9, Math.max(1, pTrl + 1)),
+          ip_status: pTrl >= 5 ? 'Patent Pending' : 'Disclosure Filed',
+          target_industries: ['Pharmaceuticals', 'Healthcare'],
+          commercial_readiness: pTrl >= 5 ? 'High' : 'Medium',
+          estimated_funding_pkr: 1500000,
+          created_at: new Date().toISOString().split('T')[0],
+
+          facultyPI: pPi,
+          courseTitle: pCourse,
+          products: [
+            {
+              name: `${pTitle.slice(0, 30)} Formulation`,
+              dosageForm: 'Healthcare Formulation',
+              unitCostPKR: 450,
+              unitPricePKR: 1200,
+              marginPct: 62.5
+            }
+          ],
+          services: [
+            {
+              name: 'In-Vitro Dissolution & Assay Protocol',
+              protocol: 'USP/BP Compendial Standard',
+              turnaroundDays: 4,
+              feePKR: 35000
+            }
+          ],
+          marketSizing: {
+            tamPKR: 14000,
+            samPKR: 4000,
+            somPKR: 500
+          },
+          commercialization: {
+            trlLevel: pTrl,
+            overallScore: 4.10,
+            priority: pTrl >= 5 ? 'High Priority' : 'Medium Priority'
+          },
+          matchedAreas: [
+            {
+              areaName: 'Korangi Industrial Area',
+              relevancePct: 92,
+              candidatePartners: ['Getz Pharma (Pvt) Ltd', 'Searle Company Limited']
+            }
+          ]
+        });
+      }
+
+      if (imported.length > 0) {
+        onAddProjects?.(imported);
+        setUploadSuccessMessage(`Successfully imported ${imported.length} projects from CSV!`);
+      }
+    } catch (csvErr: any) {
+      console.error('CSV import error:', csvErr);
+      setUploadErrorMessage(`Failed to parse CSV: ${csvErr.message}`);
+    } finally {
+      if (csvFileInputRef.current) csvFileInputRef.current.value = '';
+    }
+  };
+
+  // Native CSV Export of Filtered Projects
+  const handleExportCsv = () => {
+    if (filteredProjects.length === 0) {
+      alert('No projects match current filters to export.');
+      return;
+    }
+
+    const headers = ['ID', 'Title', 'Lead PI', 'Department', 'TRL', 'Priority', 'SOM Valuation (PKR)', 'Abstract'];
+    const rows = filteredProjects.map((p) => {
+      const somVal = p.marketSizing?.somPKR ? p.marketSizing.somPKR * 1000 : 450000;
+      const cleanTitle = `"${(p.title || '').replace(/"/g, '""')}"`;
+      const cleanAbstract = `"${(p.abstract || '').replace(/"/g, '""')}"`;
+      const cleanLead = `"${(p.lead_investigator || p.facultyPI || '').replace(/"/g, '""')}"`;
+      const cleanDept = `"${(p.department || '').replace(/"/g, '""')}"`;
+      const priority = p.commercialization?.priority || (p.trl_level >= 6 ? 'High Priority' : 'Standard Priority');
+
+      return [p.id, cleanTitle, cleanLead, cleanDept, p.trl_level, priority, somVal, cleanAbstract].join(',');
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `SHU_ORIC_Research_Repository_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   };
 
   return (
     <div className="p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans bg-zinc-50 min-h-screen text-zinc-900">
-      {/* Top Header & Search */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold font-display text-zinc-900 tracking-tight">University Intellectual Property Repository</h2>
+          <h2 className="text-2xl font-extrabold font-display text-zinc-900 tracking-tight">
+            Document Library & Research Repository
+          </h2>
           <p className="text-xs text-zinc-500">
-            {projects.length} verified research initiatives with indexed relational metadata and vector embeddings
+            Search, filter, inspect, and export <strong>{projects.length}</strong> university research innovations & IP dossiers
           </p>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => csvFileInputRef.current?.click()}
+            className="px-3 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition"
+            title="Import projects from custom CSV"
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>Import CSV</span>
+          </button>
           <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search projects, technologies, or investigators..."
-            className="w-full bg-white border border-zinc-200 text-xs text-zinc-900 placeholder-zinc-400 pl-10 pr-4 py-2.5 rounded-lg focus:outline-hidden focus:border-zinc-400 shadow-xs transition"
+            ref={csvFileInputRef}
+            type="file"
+            accept=".csv"
+            onChange={handleCsvImport}
+            className="hidden"
           />
-        </div>
-      </div>
 
-      {/* Real Document Ingestion Dropzone */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`p-6 rounded-xl border-2 border-dashed transition flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs ${
-          isDragging
-            ? 'bg-red-50/80 border-red-500 scale-[1.01]'
-            : 'bg-white border-zinc-300 hover:border-zinc-400'
-        }`}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          accept=".xlsx,.xls,.docx,.doc,.csv,.pdf"
-          className="hidden"
-        />
+          <button
+            onClick={handleExportCsv}
+            className="px-3 py-2 rounded-lg bg-white border border-zinc-300 hover:bg-zinc-50 text-zinc-700 text-xs font-bold flex items-center gap-1.5 shadow-xs transition"
+            title="Export filtered records as CSV"
+          >
+            <Download className="w-4 h-4 text-zinc-500" />
+            <span>Export CSV</span>
+          </button>
 
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
-            {isUploading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
-            ) : (
-              <UploadCloud className="w-6 h-6" />
-            )}
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-bold text-zinc-900">
-                Upload & Ingest Research Projects
-              </h4>
-              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
-                Excel & Word Supported
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500">
-              Upload course LMS sheets, proposal lists, or research synopses (<strong>.xlsx</strong>, <strong>.xls</strong>, <strong>.docx</strong>, <strong>.doc</strong>). Projects are automatically parsed, added to your active repository, and indexed for AI chat.
-            </p>
-          </div>
-        </div>
-
-        <div className="shrink-0 flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
-          {isUploading ? (
-            <div className="px-4 py-2.5 rounded-lg bg-zinc-100 text-zinc-700 text-xs font-semibold flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
-              <span>{uploadStatusText}</span>
-            </div>
-          ) : (
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
-            >
-              <UploadCloud className="w-4 h-4" />
-              <span>Choose Excel / Word File</span>
-            </button>
-          )}
+          <button
+            onClick={() => onNavigate('upload')}
+            className="px-3.5 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition"
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>Ingest Document</span>
+          </button>
         </div>
       </div>
 
@@ -293,6 +425,107 @@ export default function ProjectsView({
         </div>
       )}
 
+      {/* Multi-Filter Search Bar */}
+      <div className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3 shadow-xs">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          {/* Keyword Search Input */}
+          <div className="md:col-span-4 relative">
+            <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by title, keyword, PI, or ID..."
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-50 border border-zinc-300 text-xs text-zinc-900 focus:outline-hidden focus:border-red-500 font-medium"
+            />
+          </div>
+
+          {/* Course Dropdown */}
+          <div className="md:col-span-2">
+            <select
+              value={selectedCourse}
+              onChange={(e) => setSelectedCourse(e.target.value)}
+              className="w-full px-2.5 py-2 rounded-lg bg-zinc-50 border border-zinc-300 text-xs text-zinc-900 font-medium focus:outline-hidden focus:border-red-500 truncate"
+            >
+              <option value="">All Courses ({distinctCourses.length})</option>
+              {distinctCourses.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Research Domain Dropdown */}
+          <div className="md:col-span-2">
+            <select
+              value={selectedDomain}
+              onChange={(e) => setSelectedDomain(e.target.value)}
+              className="w-full px-2.5 py-2 rounded-lg bg-zinc-50 border border-zinc-300 text-xs text-zinc-900 font-medium focus:outline-hidden focus:border-red-500 truncate"
+            >
+              <option value="">All Domains ({distinctDomains.length})</option>
+              {distinctDomains.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Commercial Priority Dropdown */}
+          <div className="md:col-span-2">
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="w-full px-2.5 py-2 rounded-lg bg-zinc-50 border border-zinc-300 text-xs text-zinc-900 font-medium focus:outline-hidden focus:border-red-500"
+            >
+              <option value="">All Priorities</option>
+              <option value="High Priority">High Priority</option>
+              <option value="Medium Priority">Medium Priority</option>
+              <option value="Standard Priority">Standard Priority</option>
+            </select>
+          </div>
+
+          {/* Industrial Area Dropdown */}
+          <div className="md:col-span-2">
+            <select
+              value={selectedArea}
+              onChange={(e) => setSelectedArea(e.target.value)}
+              className="w-full px-2.5 py-2 rounded-lg bg-zinc-50 border border-zinc-300 text-xs text-zinc-900 font-medium focus:outline-hidden focus:border-red-500 truncate"
+            >
+              <option value="">All Industrial Areas</option>
+              {industrialAreasList.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Clear Filters row */}
+        {(searchTerm || selectedCourse || selectedDomain || selectedPriority || selectedArea || selectedFaculty !== 'ALL') && (
+          <div className="flex items-center justify-between text-xs pt-1 border-t border-zinc-100">
+            <span className="text-zinc-500">
+              Showing <strong>{filteredProjects.length}</strong> matching projects
+            </span>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setSelectedCourse('');
+                setSelectedDomain('');
+                setSelectedPriority('');
+                setSelectedArea('');
+                setSelectedFaculty('ALL');
+              }}
+              className="text-red-600 font-bold hover:underline"
+            >
+              Reset All Filters
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Faculty Filter Buttons & Page Size Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -308,7 +541,7 @@ export default function ProjectsView({
             >
               {f.label}
               {f.code === 'ALL' && ` (${projects.length})`}
-              {f.code === 'FOP' && ` (${projects.filter(p => p.faculty_code === 'FOP').length})`}
+              {f.code === 'FOP' && ` (${projects.filter((p) => p.faculty_code === 'FOP').length})`}
             </button>
           ))}
         </div>
@@ -316,7 +549,7 @@ export default function ProjectsView({
         {/* Page Size & Result Counter */}
         <div className="flex items-center gap-2 text-xs text-zinc-500 self-end sm:self-auto">
           <span>Show:</span>
-          {[10, 20, 50].map((size) => (
+          {[10, 15, 25, 50].map((size) => (
             <button
               key={size}
               onClick={() => setPageSize(size)}
@@ -336,275 +569,140 @@ export default function ProjectsView({
         </div>
       </div>
 
-      {/* Anchor for smooth scroll-to-top on page change */}
       <div ref={listTopRef} />
 
       {/* Projects Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {paginatedProjects.map((project, idx) => (
-          <div
-            key={`${project.id}-${idx}`}
-            className="rounded-lg bg-white border border-zinc-200 p-6 space-y-4 shadow-xs hover:border-zinc-300 transition flex flex-col justify-between"
-          >
-            <div className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
-                  {project.project_code}
-                </span>
-                <span className="text-xs font-medium px-2 py-0.5 rounded bg-zinc-50 text-zinc-600 border border-zinc-200">
-                  {project.development_stage}
-                </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {paginatedProjects.map((project, idx) => {
+          const somVal = project.marketSizing?.somPKR ? project.marketSizing.somPKR * 1000 : 450000;
+          const commScore = project.commercialization?.overallScore || 3.8;
+          const priority = project.commercialization?.priority || (project.trl_level >= 6 ? 'High Priority' : 'Standard Priority');
+
+          return (
+            <div
+              key={`${project.id}-${idx}`}
+              className="rounded-xl bg-white border border-zinc-200 p-5 space-y-3.5 shadow-xs hover:border-zinc-300 hover:shadow-sm transition flex flex-col justify-between"
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-zinc-100 text-zinc-800 border border-zinc-200">
+                    {project.id}
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                    priority === 'High Priority' ? 'bg-amber-100 text-amber-800' :
+                    priority === 'Medium Priority' ? 'bg-blue-100 text-blue-800' : 'bg-zinc-100 text-zinc-700'
+                  }`}>
+                    {priority}
+                  </span>
+                </div>
+
+                <h3 className="text-sm font-bold text-zinc-900 leading-snug line-clamp-2">
+                  {project.title}
+                </h3>
+
+                <p className="text-xs text-zinc-600 leading-relaxed line-clamp-3">
+                  {project.abstract}
+                </p>
+
+                <div className="text-[11px] text-zinc-500 space-y-0.5 pt-1">
+                  <div>Lead: <strong className="text-zinc-800">{project.lead_investigator || project.facultyPI}</strong></div>
+                  {project.courseTitle && <div className="truncate text-zinc-400">{project.courseTitle}</div>}
+                </div>
               </div>
 
-              <h3 className="text-base font-bold text-zinc-900 leading-snug">{project.title}</h3>
-              <p className="text-xs text-zinc-600 leading-relaxed line-clamp-3">{project.abstract}</p>
-
-              {/* Technologies */}
-              <div className="space-y-1">
-                <div className="text-xs font-medium text-zinc-500">Core Technologies:</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {project.technology_stack.map((tech, i) => (
-                    <span
-                      key={i}
-                      className="text-xs px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200"
-                    >
-                      {tech}
+              <div className="pt-3 border-t border-zinc-100 space-y-3">
+                <div className="flex items-center justify-between text-xs">
+                  <div>
+                    <div className="font-extrabold text-zinc-900 font-mono">
+                      {formatMoney(somVal, currency)}
+                    </div>
+                    <div className="text-[10px] text-zinc-400 uppercase">Target SOM</div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs font-bold text-red-600 font-mono">
+                      TRL {project.trl_level}/9
                     </span>
-                  ))}
+                    <div className="text-[10px] text-zinc-400 font-mono">Score: {commScore.toFixed(2)}</div>
+                  </div>
                 </div>
-              </div>
 
-              {/* Metrics Strip */}
-              <div className="pt-2 border-t border-zinc-100 grid grid-cols-3 gap-2 text-center">
-                <div className="bg-zinc-50 p-2 rounded-lg border border-zinc-200">
-                  <div className="text-[10px] text-zinc-500 font-medium">TRL Level</div>
-                  <div className="text-sm font-bold text-zinc-900">{project.trl_level} / 9</div>
-                </div>
-                <div className="bg-zinc-50 p-2 rounded-lg border border-zinc-200">
-                  <div className="text-[10px] text-zinc-500 font-medium">ERL Score</div>
-                  <div className="text-sm font-bold text-red-600">{project.erl_level} / 9</div>
-                </div>
-                <div className="bg-zinc-50 p-2 rounded-lg border border-zinc-200">
-                  <div className="text-[10px] text-zinc-500 font-medium">IP Status</div>
-                  <div className="text-xs font-semibold text-zinc-800 truncate">{project.ip_status}</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Card Footer Actions */}
-            <div className="pt-4 border-t border-zinc-100 flex items-center justify-between gap-3">
-              <div className="text-xs text-zinc-500 truncate">
-                PI: <span className="text-zinc-800 font-medium">{project.lead_investigator}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                {onOpenVoiceAgentForProject && (
+                <div className="grid grid-cols-2 gap-2">
                   <button
-                    onClick={() => onOpenVoiceAgentForProject(project)}
-                    title="Talk with Voice Agent about this project"
-                    className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 transition"
+                    onClick={() => {
+                      if (onOpenDossier) {
+                        onOpenDossier(project);
+                      } else {
+                        setActiveModalProject(project);
+                      }
+                    }}
+                    className="py-1.5 px-2 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-white text-[11px] font-bold transition flex items-center justify-center gap-1 shadow-xs"
                   >
-                    <Radio className="w-3.5 h-3.5 animate-pulse" />
+                    <span>Inspect Dossier</span>
+                    <ArrowRight className="w-3 h-3" />
                   </button>
-                )}
-                <button
-                  onClick={() => setActiveModalProject(project)}
-                  className="px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 text-zinc-700 font-medium text-xs border border-zinc-200 transition"
-                >
-                  Details
-                </button>
-                <button
-                  onClick={() => {
-                    onSelectProjectForChat(project);
-                    onNavigate('chat');
-                  }}
-                  className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1 transition shadow-xs"
-                >
-                  <span>Analyze</span>
-                  <ArrowRight className="w-3 h-3" />
-                </button>
+
+                  <button
+                    onClick={() => {
+                      onSelectProjectForChat(project);
+                      onNavigate('chat');
+                    }}
+                    className="py-1.5 px-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-[11px] font-bold transition flex items-center justify-center gap-1"
+                  >
+                    <Sparkles className="w-3 h-3 text-red-600" />
+                    <span>Ask AI</span>
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
-      {/* Pagination Controls & Item Counter */}
-      {totalItems > 0 && (
-        <div className="bg-white border border-zinc-200 rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
-          {/* Results Summary */}
-          <div className="text-xs text-zinc-600 font-medium text-center md:text-left">
-            Showing <strong className="text-zinc-900">{startIndex + 1}</strong> to{' '}
-            <strong className="text-zinc-900">{endIndex}</strong> of{' '}
-            <strong className="text-zinc-900">{totalItems}</strong> projects
-            {searchTerm && <span> for &ldquo;{searchTerm}&rdquo;</span>}
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-zinc-200 text-xs text-zinc-600">
+          <div>
+            Showing <strong>{startIndex + 1}</strong> to <strong>{endIndex}</strong> of <strong>{totalItems}</strong> projects
           </div>
 
-          {/* Page Navigation Buttons */}
-          <div className="flex items-center gap-1">
-            {/* First Page */}
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={() => goToPage(1)}
+              onClick={() => handlePageChange(1)}
               disabled={safeCurrentPage === 1}
-              className="p-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              className="p-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 transition"
               title="First Page"
             >
               <ChevronsLeft className="w-4 h-4" />
             </button>
-
-            {/* Previous Page */}
             <button
-              onClick={() => goToPage(safeCurrentPage - 1)}
+              onClick={() => handlePageChange(safeCurrentPage - 1)}
               disabled={safeCurrentPage === 1}
-              className="px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+              className="p-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 transition"
               title="Previous Page"
             >
               <ChevronLeft className="w-4 h-4" />
-              <span className="hidden sm:inline">Prev</span>
             </button>
 
-            {/* Numbered Page Buttons */}
-            <div className="flex items-center gap-1 mx-1">
-              {getPaginationRange().map((pageItem, idx) => (
-                typeof pageItem === 'number' ? (
-                  <button
-                    key={idx}
-                    onClick={() => goToPage(pageItem)}
-                    className={`min-w-8 h-8 px-2 rounded-md text-xs font-semibold transition ${
-                      safeCurrentPage === pageItem
-                        ? 'bg-red-600 text-white shadow-xs'
-                        : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-100'
-                    }`}
-                  >
-                    {pageItem}
-                  </button>
-                ) : (
-                  <span key={idx} className="px-1 text-zinc-400 text-xs">
-                    {pageItem}
-                  </span>
-                )
-              ))}
-            </div>
+            <span className="px-3 py-1 font-mono font-bold text-zinc-900 bg-white border border-zinc-200 rounded-md">
+              Page {safeCurrentPage} of {totalPages}
+            </span>
 
-            {/* Next Page */}
             <button
-              onClick={() => goToPage(safeCurrentPage + 1)}
+              onClick={() => handlePageChange(safeCurrentPage + 1)}
               disabled={safeCurrentPage === totalPages}
-              className="px-2.5 py-1.5 rounded-md border border-zinc-200 bg-white text-xs font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+              className="p-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 transition"
               title="Next Page"
             >
-              <span className="hidden sm:inline">Next</span>
               <ChevronRight className="w-4 h-4" />
             </button>
-
-            {/* Last Page */}
             <button
-              onClick={() => goToPage(totalPages)}
+              onClick={() => handlePageChange(totalPages)}
               disabled={safeCurrentPage === totalPages}
-              className="p-1.5 rounded-md border border-zinc-200 bg-white text-zinc-600 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              className="p-1.5 rounded-md border border-zinc-200 bg-white hover:bg-zinc-50 disabled:opacity-40 transition"
               title="Last Page"
             >
               <ChevronsRight className="w-4 h-4" />
             </button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty State when 0 items match */}
-      {totalItems === 0 && (
-        <div className="p-12 text-center bg-white border border-zinc-200 rounded-lg space-y-3">
-          <FileText className="w-10 h-10 text-zinc-300 mx-auto" />
-          <h3 className="text-base font-bold text-zinc-900">No projects found</h3>
-          <p className="text-xs text-zinc-500 max-w-sm mx-auto">
-            No research projects matched your search criteria or faculty filter. Try searching with different terms or reset your filters.
-          </p>
-          <button
-            onClick={() => {
-              setSearchTerm('');
-              setSelectedFaculty('ALL');
-            }}
-            className="px-4 py-2 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
-          >
-            Clear Filters
-          </button>
-        </div>
-      )}
-
-      {/* Modal View for Project Detail */}
-      {activeModalProject && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-zinc-200 rounded-lg max-w-2xl w-full p-6 space-y-5 shadow-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 border border-zinc-200">
-                {activeModalProject.project_code}
-              </span>
-              <button
-                onClick={() => setActiveModalProject(null)}
-                className="p-1 rounded-md text-zinc-400 hover:text-zinc-800 transition"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-lg font-bold text-zinc-900">{activeModalProject.title}</h3>
-              <div className="text-xs text-zinc-500">
-                Lead Investigator: <strong className="text-zinc-800">{activeModalProject.lead_investigator}</strong> ({activeModalProject.faculty})
-              </div>
-            </div>
-
-            <p className="text-xs text-zinc-600 leading-relaxed">{activeModalProject.abstract}</p>
-
-            <div className="p-4 rounded-lg bg-zinc-50 border border-zinc-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div>
-                <span className="text-zinc-500 block">TRL Level</span>
-                <strong className="text-zinc-900">{activeModalProject.trl_level} of 9</strong>
-              </div>
-              <div>
-                <span className="text-zinc-500 block">ERL Level</span>
-                <strong className="text-red-600">{activeModalProject.erl_level} of 9</strong>
-              </div>
-              <div>
-                <span className="text-zinc-500 block">IP Status</span>
-                <strong className="text-zinc-900">{activeModalProject.ip_status}</strong>
-              </div>
-              <div>
-                <span className="text-zinc-500 block">Readiness</span>
-                <strong className="text-zinc-900">{activeModalProject.commercial_readiness}</strong>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() => setActiveModalProject(null)}
-                className="px-4 py-2 rounded-lg bg-zinc-100 text-zinc-700 font-medium text-xs hover:bg-zinc-200 transition"
-              >
-                Close
-              </button>
-              {onOpenVoiceAgentForProject && (
-                <button
-                  onClick={() => {
-                    const p = activeModalProject;
-                    setActiveModalProject(null);
-                    onOpenVoiceAgentForProject(p);
-                  }}
-                  className="px-3.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-700 font-medium text-xs flex items-center gap-1.5 border border-red-200 transition"
-                >
-                  <Radio className="w-3.5 h-3.5 text-red-600 animate-pulse" />
-                  <span>Talk with Voice Agent</span>
-                </button>
-              )}
-              <button
-                onClick={() => {
-                  onSelectProjectForChat(activeModalProject);
-                  setActiveModalProject(null);
-                  onNavigate('chat');
-                }}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 shadow-xs transition"
-              >
-                <span>Analyze in Research Assistant</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
           </div>
         </div>
       )}

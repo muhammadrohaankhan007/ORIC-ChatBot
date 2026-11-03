@@ -65,10 +65,10 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
     if (!pipelineSearch.trim()) return true;
     const q = pipelineSearch.toLowerCase();
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.lead_investigator.toLowerCase().includes(q) ||
-      p.department.toLowerCase().includes(q) ||
-      p.project_code.toLowerCase().includes(q) ||
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.lead_investigator || '').toLowerCase().includes(q) ||
+      (p.department || '').toLowerCase().includes(q) ||
+      (p.project_code || '').toLowerCase().includes(q) ||
       p.technology_stack?.some((t) => t.toLowerCase().includes(q))
     );
   });

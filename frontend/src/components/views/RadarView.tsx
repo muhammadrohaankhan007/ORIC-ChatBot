@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import { IndustryCompany, ViewMode } from '@/types';
 import { INITIAL_COMPANIES } from '@/services/api';
+import karachiIndustrialAreas from '@/data/karachi_industrial_areas.json';
 import { 
   Building2, 
   Search, 
   MapPin, 
   CheckCircle2, 
   Handshake, 
-  Cpu
+  Cpu,
+  Factory
 } from 'lucide-react';
 
 interface RadarViewProps {
@@ -25,14 +27,19 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
 
   const clusters = [
     { id: 'ALL', label: 'All Industrial Zones' },
-    { id: 'Korangi Industrial Area', label: 'Korangi' },
-    { id: 'S.I.T.E. Industrial Area', label: 'S.I.T.E.' },
-    { id: 'Landhi Industrial Area', label: 'Landhi' },
-    { id: 'Port Qasim', label: 'Port Qasim' }
+    ...karachiIndustrialAreas.map((area) => ({
+      id: area.name,
+      label: area.name.replace(' Industrial Area', '').replace(' (Sindh Industrial Trading Estate)', ''),
+    }))
   ];
 
+  const activeEstate = karachiIndustrialAreas.find(
+    (a) => a.name.toLowerCase() === selectedCluster.toLowerCase() ||
+           selectedCluster.toLowerCase().includes(a.name.toLowerCase())
+  );
+
   const filteredCompanies = companies.filter(c => {
-    const matchesCluster = selectedCluster === 'ALL' || c.cluster === selectedCluster;
+    const matchesCluster = selectedCluster === 'ALL' || c.cluster.toLowerCase().includes(selectedCluster.toLowerCase()) || selectedCluster.toLowerCase().includes(c.cluster.toLowerCase());
     const matchesSearch = 
       c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       c.sector.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -48,15 +55,15 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
       const newCompany: IndustryCompany = {
         id: `comp-${Date.now()}`,
         name: searchQuery.includes(' ') ? searchQuery : `${searchQuery} Industries Pakistan`,
-        cluster: 'Korangi Industrial Area',
-        sector: 'Pharmaceutical',
+        cluster: selectedCluster === 'ALL' ? 'Korangi Industrial Area' : selectedCluster,
+        sector: 'Pharmaceutical & Chemical',
         turnover_range: 'PKR 5B+',
         verified_status: true,
-        contact_person: 'GM Production & Technology',
+        contact_person: 'GM Production & Commercialization',
         contact_email: 'procurement@industry.example',
-        matching_project_code: 'SHU-FOP-2026-001',
+        matching_project_code: 'SHU-FOP-001',
         synergy_potential: 'High',
-        tech_needs: ['Lipid formulation', 'Automated QA', 'DRAP Dossier Validation']
+        tech_needs: ['Lipid nano-formulation', 'Automated QA', 'DRAP Dossier Validation', 'Process Analytical Tech']
       };
 
       setCompanies(prev => [newCompany, ...prev]);
@@ -76,11 +83,16 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
       {/* Top Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold font-display text-zinc-900 tracking-tight">
-            Karachi Industrial Intelligence Radar
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-extrabold font-display text-zinc-900 tracking-tight">
+              Karachi Industrial Intelligence Radar
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200">
+              10 Major Industrial Zones
+            </span>
+          </div>
           <p className="text-xs text-zinc-500">
-            Corporate discovery matching university research directly to Karachi manufacturing demand
+            Corporate discovery matching university research directly to Karachi&apos;s industrial manufacturing estates and trade associations
           </p>
         </div>
 
@@ -100,7 +112,7 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
           <button
             onClick={handleLiveSearch}
             disabled={liveScanning}
-            className="px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 shrink-0 transition shadow-xs"
+            className="px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-1.5 shrink-0 transition shadow-xs cursor-pointer"
           >
             {liveScanning ? (
               <>
@@ -120,9 +132,9 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
           <button
             key={c.id}
             onClick={() => setSelectedCluster(c.id)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer ${
               selectedCluster === c.id
-                ? 'bg-red-600 text-white shadow-xs'
+                ? 'bg-red-600 text-white shadow-xs font-semibold'
                 : 'bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900'
             }`}
           >
@@ -130,6 +142,55 @@ export default function RadarView({ onNavigate }: RadarViewProps) {
           </button>
         ))}
       </div>
+
+      {/* Active Industrial Estate Information Banner */}
+      {activeEstate && (
+        <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-xs space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2 border-b border-zinc-100 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-bold">
+                <Factory className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-sm text-zinc-900">{activeEstate.name}</h3>
+                <p className="text-[11px] text-zinc-500">{activeEstate.association} • Established {activeEstate.establishedYear}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="font-mono bg-zinc-100 px-2.5 py-1 rounded text-zinc-700 font-semibold">
+                {activeEstate.unitsCount}
+              </span>
+              <span className="font-mono bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded font-bold">
+                Turnover: {activeEstate.annualTurnoverEst}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Major Pharma Presence:</span>
+              <p className="text-zinc-700 font-medium">{activeEstate.majorPharmaPresence}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Infrastructure & Logistics:</span>
+              <p className="text-zinc-700">{activeEstate.infrastructure}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-zinc-400 tracking-wider">Tech Adoption Potential:</span>
+              <p className="text-red-700 font-medium">{activeEstate.techAdoptionPotential}</p>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-zinc-100 flex flex-wrap items-center gap-1.5">
+            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mr-1">Verified Sectors:</span>
+            {activeEstate.verifiedSectors.map((sector: string, idx: number) => (
+              <span key={idx} className="px-2 py-0.5 rounded bg-zinc-100 text-zinc-700 text-[11px]">
+                {sector}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Notification if MoU triggered */}
       {mouDraftedCompany && (

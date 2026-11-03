@@ -1,5 +1,5 @@
 import { Project, Persona, IndustryCompany, ErlAssessment, MeetingTranscript } from '@/types';
-import { PHARMACY_PROJECTS } from '@/data/pharmacyProjects';
+import { ORIC_ENRICHED_PROJECTS } from '@/data/oricProjectsData';
 import { parseDocumentClient } from './clientDocumentParser';
 
 /**
@@ -108,7 +108,83 @@ export const FLAGSHIP_PROJECTS: Project[] = [
     target_industries: ['Pharmaceuticals', 'Specialty Chemicals', 'Clinical Oncology'],
     commercial_readiness: 'High',
     estimated_funding_pkr: 4500000,
-    created_at: '2026-03-15'
+    created_at: '2026-03-15',
+    facultyPI: 'Dr. Farooq Siddiqui',
+    courseTitle: 'Advanced Drug Delivery Systems',
+    domain: 'Nanomedicine & Targeted Oncology',
+    products: [
+      {
+        name: 'OncoShield Nano-Paclitaxel Injectable',
+        dosageForm: 'Lyophilized Nanoparticle Suspension',
+        packaging: '100mg single-dose sterile vial',
+        targetCustomer: 'Tertiary Oncology Hospitals & Cancer Centers',
+        unitCostPKR: 4200,
+        unitPricePKR: 12500,
+        marginPct: 66.4,
+        differentiation: 'Enhanced tumor permeability with 45% reduced systemic nephrotoxicity and neurotoxicity compared to generic paclitaxel',
+      },
+    ],
+    services: [
+      {
+        name: 'Nanoparticle Particle Size & Zeta Potential Analysis',
+        protocol: 'Dynamic Light Scattering (DLS) Malvern Zetasizer',
+        targetClientele: 'Pharma Formulation R&D Labs',
+        turnaroundDays: 3,
+        feePKR: 45000,
+      },
+      {
+        name: 'In-Vitro Cell Line Cytotoxicity Assay',
+        protocol: 'MTT Assay on Solid Tumor Cultures',
+        targetClientele: 'Biotech & Academic Researchers',
+        turnaroundDays: 7,
+        feePKR: 85000,
+      },
+    ],
+    marketSizing: {
+      tamPKR: 48500,
+      samPKR: 14200,
+      somPKR: 2850,
+      tamUSD: 173.2,
+      samUSD: 50.7,
+      somUSD: 10.18,
+      methodology: 'National cancer incidence data from Pakistan Health Research Council (PHRC) combined with oncology import metrics from DRAP.',
+      confidence: 'High',
+    },
+    commercialization: {
+      trlLevel: 5,
+      trlDescription: 'TRL 5 - Component Validation in Relevant Environment',
+      overallScore: 4.62,
+      priority: 'High Priority',
+      recommendation: 'Proceed with GLP toxicity studies and Korangi pharmaceutical pilot scale-up.',
+      criteriaScores: {
+        technicalFeasibility: 4.8,
+        marketAttractiveness: 4.7,
+        customerDemandEvidence: 4.5,
+        trlScore: 5.0,
+        intellectualProperty: 4.4,
+        teamCapability: 4.6,
+        scalability: 4.5,
+        importSubstitution: 4.9,
+      },
+      nextActions: [
+        'Complete accelerated stability testing (ICH Q1A) at SHU CADR',
+        'File PCT international application with IPO-Pakistan',
+        'Execute commercial joint venture with Getz Pharma Pvt Ltd (KATI)',
+      ],
+    },
+    matchedAreas: [
+      {
+        areaName: 'Korangi Industrial Area',
+        relevancePct: 96,
+        rationale: 'Home to leading national pharmaceutical manufacturing facilities with sterile injectable lines.',
+        candidatePartners: ['Getz Pharma (Pvt) Ltd', 'Hilton Pharma (Pvt) Ltd', 'Searle Company Limited'],
+      },
+    ],
+    growthForecast: [
+      { year: 2026, scenario: 'Base Case', unitVolume: 12000, revenuePKR: 150000000 },
+      { year: 2027, scenario: 'Base Case', unitVolume: 28000, revenuePKR: 350000000 },
+      { year: 2028, scenario: 'Base Case', unitVolume: 55000, revenuePKR: 687500000 },
+    ],
   },
   {
     id: 'proj-002',
@@ -128,7 +204,76 @@ export const FLAGSHIP_PROJECTS: Project[] = [
     target_industries: ['Textile & Apparel', 'Garment Manufacturing', 'Quality Assurance'],
     commercial_readiness: 'High',
     estimated_funding_pkr: 2800000,
-    created_at: '2026-04-10'
+    created_at: '2026-04-10',
+    facultyPI: 'Prof. Aisha Khan',
+    courseTitle: 'Computer Vision & Edge Computing',
+    domain: 'Industrial Edge AI & Automation',
+    products: [
+      {
+        name: 'TexVision Edge Industrial Inspection Unit',
+        dosageForm: 'Embedded Hardware-Software Appliance',
+        packaging: 'IP67 Ruggedized Edge Box with Industrial GigE Camera',
+        targetCustomer: 'Export Textile Weaving & Denim Mills',
+        unitCostPKR: 380000,
+        unitPricePKR: 950000,
+        marginPct: 60.0,
+        differentiation: '120 FPS real-time detection on moving fabric rolls with under 0.8% false alarm rate on raw greige and dyed fabric',
+      },
+    ],
+    services: [
+      {
+        name: 'Automated Fabric Defect Benchmark & Dataset Tagging',
+        protocol: 'ASTM D5430 4-Point Fabric Inspection Standard',
+        targetClientele: 'Textile Quality Assurance Departments',
+        turnaroundDays: 2,
+        feePKR: 50000,
+      },
+    ],
+    marketSizing: {
+      tamPKR: 62000,
+      samPKR: 22000,
+      somPKR: 4400,
+      tamUSD: 221.4,
+      samUSD: 78.5,
+      somUSD: 15.7,
+      methodology: 'All Pakistan Textile Mills Association (APTMA) loom census and export quality penalty audits.',
+      confidence: 'High',
+    },
+    commercialization: {
+      trlLevel: 7,
+      trlDescription: 'TRL 7 - System Prototype Demonstration in Operational Environment',
+      overallScore: 4.75,
+      priority: 'High Priority',
+      recommendation: 'Expand factory floor pilot deployment across Korangi and Landhi denim export lines.',
+      criteriaScores: {
+        technicalFeasibility: 4.9,
+        marketAttractiveness: 4.8,
+        customerDemandEvidence: 4.7,
+        trlScore: 7.0,
+        intellectualProperty: 4.2,
+        teamCapability: 4.8,
+        scalability: 4.8,
+        importSubstitution: 4.8,
+      },
+      nextActions: [
+        'Complete 1,000-hour continuous stress test on Artistic Milliners loom line',
+        'Package Python TensorRT inference engine for commercial licensing',
+        'Sign exclusive supplier MoU with Landhi & Korangi textile clusters',
+      ],
+    },
+    matchedAreas: [
+      {
+        areaName: 'Korangi Industrial Area',
+        relevancePct: 98,
+        rationale: 'Major hub for Pakistan premier denim and composite garment export houses.',
+        candidatePartners: ['Artistic Milliners (Pvt) Ltd', 'Gul Ahmed Textile Mills', 'Al-Karam Studio'],
+      },
+    ],
+    growthForecast: [
+      { year: 2026, scenario: 'Base Case', unitVolume: 25, revenuePKR: 23750000 },
+      { year: 2027, scenario: 'Base Case', unitVolume: 80, revenuePKR: 76000000 },
+      { year: 2028, scenario: 'Base Case', unitVolume: 190, revenuePKR: 180500000 },
+    ],
   },
   {
     id: 'proj-003',
@@ -148,7 +293,76 @@ export const FLAGSHIP_PROJECTS: Project[] = [
     target_industries: ['Biomedical & Healthcare', 'Wearable Electronics', 'Consumer Health'],
     commercial_readiness: 'Medium',
     estimated_funding_pkr: 3200000,
-    created_at: '2026-05-22'
+    created_at: '2026-05-22',
+    facultyPI: 'Engr. Tariq Mehmood',
+    courseTitle: 'Biomedical Instrumentation & Biosensors',
+    domain: 'Biomedical Optics & Wearables',
+    products: [
+      {
+        name: 'GlucoWave Non-Invasive Wrist Monitor',
+        dosageForm: 'Wearable Biosensing Device',
+        packaging: 'Wrist wearable with OLED display and wireless smartphone dock',
+        targetCustomer: 'Type-1 and Type-2 Diabetic Patients & Clinics',
+        unitCostPKR: 6500,
+        unitPricePKR: 18500,
+        marginPct: 64.8,
+        differentiation: 'Completely needle-free continuous glucose trend tracking with clinical MARD under 11.2%',
+      },
+    ],
+    services: [
+      {
+        name: 'Multi-wavelength Optical Biosensor Spectral Calibration',
+        protocol: 'ISO 15197:2013 In-Vitro Glucose Monitoring Standard',
+        targetClientele: 'Medical Device Manufacturers & Clinics',
+        turnaroundDays: 4,
+        feePKR: 35000,
+      },
+    ],
+    marketSizing: {
+      tamPKR: 85000,
+      samPKR: 28000,
+      somPKR: 3500,
+      tamUSD: 303.5,
+      samUSD: 100.0,
+      somUSD: 12.5,
+      methodology: 'International Diabetes Federation (IDF) Pakistan Atlas (33 million diabetics).',
+      confidence: 'Medium',
+    },
+    commercialization: {
+      trlLevel: 4,
+      trlDescription: 'TRL 4 - Component & Laboratory Breadboard Validation',
+      overallScore: 4.15,
+      priority: 'High Priority',
+      recommendation: 'Initiate 50-patient clinical correlation trial at Salim Habib Teaching Hospital.',
+      criteriaScores: {
+        technicalFeasibility: 4.1,
+        marketAttractiveness: 4.9,
+        customerDemandEvidence: 4.6,
+        trlScore: 4.0,
+        intellectualProperty: 3.5,
+        teamCapability: 4.2,
+        scalability: 4.3,
+        importSubstitution: 4.8,
+      },
+      nextActions: [
+        'Secure Ethical Review Committee (ERC) approval for clinical validation',
+        'Miniaturize optical path onto multi-layer flexible PCB',
+        'Apply for DRAP Medical Device Class-B registration',
+      ],
+    },
+    matchedAreas: [
+      {
+        areaName: 'S.I.T.E. Industrial Area',
+        relevancePct: 88,
+        rationale: 'Concentration of medical instrumentation distributors and electronics assembly plants.',
+        candidatePartners: ['Ferozsons Laboratories Ltd', 'Medisure Laboratories', 'Abbott Pakistan'],
+      },
+    ],
+    growthForecast: [
+      { year: 2026, scenario: 'Base Case', unitVolume: 2000, revenuePKR: 37000000 },
+      { year: 2027, scenario: 'Base Case', unitVolume: 8500, revenuePKR: 157250000 },
+      { year: 2028, scenario: 'Base Case', unitVolume: 22000, revenuePKR: 407000000 },
+    ],
   },
   {
     id: 'proj-004',
@@ -168,14 +382,83 @@ export const FLAGSHIP_PROJECTS: Project[] = [
     target_industries: ['Logistics & Supply Chain', 'Export Industries', 'Manufacturing'],
     commercial_readiness: 'High',
     estimated_funding_pkr: 1500000,
-    created_at: '2026-06-01'
-  }
+    created_at: '2026-06-01',
+    facultyPI: 'Dr. Zeeshan Haider',
+    courseTitle: 'Sustainable Supply Chain & ESG Compliance',
+    domain: 'Enterprise ESG & Carbon Auditing',
+    products: [
+      {
+        name: 'EcoLedger CBAM Enterprise Platform SaaS',
+        dosageForm: 'Cloud Enterprise SaaS Solution',
+        packaging: 'Annual Enterprise Subscription Tier with API connectors',
+        targetCustomer: 'Export Textile, Chemical, Steel and Cement Exporters',
+        unitCostPKR: 120000,
+        unitPricePKR: 850000,
+        marginPct: 85.8,
+        differentiation: 'Direct mapping to official EU CBAM communication templates with tamper-evident audit trails',
+      },
+    ],
+    services: [
+      {
+        name: 'Scope 1, 2 & 3 Corporate Carbon Footprint Audit',
+        protocol: 'GHG Protocol Corporate Standard & ISO 14064-1',
+        targetClientele: 'Exporters facing European & US buyer audits',
+        turnaroundDays: 14,
+        feePKR: 250000,
+      },
+    ],
+    marketSizing: {
+      tamPKR: 35000,
+      samPKR: 12500,
+      somPKR: 2500,
+      tamUSD: 125.0,
+      samUSD: 44.6,
+      somUSD: 8.9,
+      methodology: 'TDAP EU export statistics for energy-intensive manufacturing goods.',
+      confidence: 'High',
+    },
+    commercialization: {
+      trlLevel: 8,
+      trlDescription: 'TRL 8 - Actual System Completed and Qualified through Test and Demonstration',
+      overallScore: 4.82,
+      priority: 'High Priority',
+      recommendation: 'Market directly to KATI, LATI, and SITE export associations as official university spin-off.',
+      criteriaScores: {
+        technicalFeasibility: 4.9,
+        marketAttractiveness: 4.8,
+        customerDemandEvidence: 4.8,
+        trlScore: 8.0,
+        intellectualProperty: 4.0,
+        teamCapability: 4.9,
+        scalability: 5.0,
+        importSubstitution: 4.5,
+      },
+      nextActions: [
+        'Deploy production cluster on secure local cloud infrastructure',
+        'Sign pilot institutional MoU with Korangi Association of Trade & Industry (KATI)',
+        'Train 50 enterprise compliance officers at SHU Executive Development Center',
+      ],
+    },
+    matchedAreas: [
+      {
+        areaName: 'Port Qasim Industrial Zone',
+        relevancePct: 95,
+        rationale: 'Primary export terminal and energy-intensive manufacturing zone.',
+        candidatePartners: ['Engro Polymer & Chemicals', 'Lotte Chemical Pakistan', 'Lucky Core Industries'],
+      },
+    ],
+    growthForecast: [
+      { year: 2026, scenario: 'Base Case', unitVolume: 40, revenuePKR: 34000000 },
+      { year: 2027, scenario: 'Base Case', unitVolume: 120, revenuePKR: 102000000 },
+      { year: 2028, scenario: 'Base Case', unitVolume: 250, revenuePKR: 212500000 },
+    ],
+  },
 ];
 
-// Complete University Repository combining Flagships and all 230+ Faculty of Pharmacy research initiatives
+// Complete University Repository combining Flagships and all 238 enriched research initiatives
 export const INITIAL_PROJECTS: Project[] = [
   ...FLAGSHIP_PROJECTS,
-  ...PHARMACY_PROJECTS
+  ...ORIC_ENRICHED_PROJECTS,
 ];
 
 // Industry Radar Verified Leads

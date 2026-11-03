@@ -1,0 +1,77 @@
+/* ==========================================================================
+   ORIC-IOAP Print & PDF Export Stylesheet
+   Salim Habib University (SHU), Karachi
+   ========================================================================== */
+
+@media print {
+  /* Hide UI chrome */
+  .sidebar,
+  .topbar,
+  .pagination-bar,
+  .btn,
+  .quick-search-box,
+  .currency-toggle-wrapper,
+  .role-badge-select,
+  .library-filter-bar,
+  .dossier-tabs,
+  .report-catalog-grid,
+  .oric-modal-backdrop {
+    display: none !important;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    font-size: 10.5pt !important;
+    line-height: 1.4 !important;
+  }
+
+  .main-wrapper {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .content-area {
+    padding: 0 !important;
+  }
+
+  /* Show only active report paper preview if in reports page, or current page */
+  .report-paper-preview {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .oric-card {
+    border: 1px solid #CCCCCC !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    margin-bottom: 20px !important;
+  }
+
+  .oric-table th {
+    background: #EEEEEE !important;
+    color: #000000 !important;
+    border-bottom: 2px solid #333333 !important;
+  }
+
+  .oric-table td {
+    border-bottom: 1px solid #DDDDDD !important;
+    color: #222222 !important;
+  }
+
+  .dossier-header-card {
+    background: #0A2540 !important;
+    color: #FFFFFF !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+}

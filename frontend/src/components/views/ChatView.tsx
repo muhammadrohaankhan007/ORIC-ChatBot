@@ -115,10 +115,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
     if (!projectSearch.trim()) return true;
     const q = projectSearch.toLowerCase();
     return (
-      p.title.toLowerCase().includes(q) ||
-      p.lead_investigator.toLowerCase().includes(q) ||
-      p.department.toLowerCase().includes(q) ||
-      p.project_code.toLowerCase().includes(q) ||
+      (p.title || '').toLowerCase().includes(q) ||
+      (p.lead_investigator || '').toLowerCase().includes(q) ||
+      (p.department || '').toLowerCase().includes(q) ||
+      (p.project_code || '').toLowerCase().includes(q) ||
       p.technology_stack?.some((t) => t.toLowerCase().includes(q))
     );
   });
@@ -941,10 +941,10 @@ export const ChatView: React.FC<ChatViewProps> = ({
                         if (!emptyStateProjectSearch.trim()) return true;
                         const q = emptyStateProjectSearch.toLowerCase();
                         return (
-                          p.title.toLowerCase().includes(q) ||
-                          p.lead_investigator.toLowerCase().includes(q) ||
-                          p.department.toLowerCase().includes(q) ||
-                          p.project_code.toLowerCase().includes(q) ||
+                          (p.title || '').toLowerCase().includes(q) ||
+                          (p.lead_investigator || '').toLowerCase().includes(q) ||
+                          (p.department || '').toLowerCase().includes(q) ||
+                          (p.project_code || '').toLowerCase().includes(q) ||
                           p.technology_stack?.some((t) => t.toLowerCase().includes(q))
                         );
                       })

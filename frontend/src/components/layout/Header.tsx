@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { ViewMode } from '@/types';
-import { Volume2, VolumeX, Globe, Radio } from 'lucide-react';
+import { ViewMode, CurrencyMode } from '@/types';
+import { Volume2, VolumeX, Globe, Radio, Coins } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -11,6 +11,8 @@ interface HeaderProps {
   onToggleVoice: () => void;
   onNavigate?: (view: ViewMode) => void;
   onOpenVoiceAgent?: () => void;
+  currency?: CurrencyMode;
+  onToggleCurrency?: () => void;
 }
 
 export default function Header({
@@ -20,6 +22,8 @@ export default function Header({
   onToggleVoice,
   onNavigate,
   onOpenVoiceAgent,
+  currency = 'PKR',
+  onToggleCurrency
 }: HeaderProps) {
   const titles: Record<ViewMode, { title: string; subtitle: string }> = {
     home: {
@@ -27,32 +31,40 @@ export default function Header({
       subtitle: 'Office of Research, Innovation & Commercialization',
     },
     dashboard: {
-      title: 'Dashboard',
-      subtitle: 'Portfolio Overview, Grant Pipeline & Commercialization Metrics',
+      title: 'Executive Intelligence Dashboard',
+      subtitle: 'Portfolio Overview, Addressable Market Valuation & Opportunity Overview',
     },
     chat: {
       title: 'ORIC Research Assistant',
-      subtitle: 'AI Guidance for Proposal Review, Patent Discovery & Commercialization',
+      subtitle: 'Conversational & Analytical Guidance Grounded in University Research Dossiers',
     },
     explorer: {
-      title: 'Patents & IP Repository',
-      subtitle: 'Verified Research Projects and Intellectual Property Records',
+      title: 'Document Library & Research Repository',
+      subtitle: 'Search, Filter, Inspect & Export Complete Institutional Research Portfolios',
     },
     radar: {
-      title: 'Industry Contacts & Radar',
-      subtitle: 'Commercialization Matching Across Karachi Industrial Estates',
+      title: 'Karachi Industrial Hub & Radar',
+      subtitle: 'Commercialization Matching Across Karachi 10 Industrial Estates',
     },
     erl: {
-      title: 'Readiness Assessment Canvas',
-      subtitle: '8-Dimension Commercialization Maturity Benchmarking',
+      title: 'Commercial Readiness Canvas',
+      subtitle: '8-Dimension Commercialization Maturity & TRL Evaluation',
     },
     discussions: {
       title: 'Meeting Transcriptions',
       subtitle: 'Meeting Audio Records, Dictation & Action Item Extraction',
     },
     reports: {
-      title: 'Commercial Reports & Dossiers',
-      subtitle: 'Investor Briefs, Feasibility Reports & Bilateral MoUs',
+      title: 'Institutional Report Suite (Reports A–H)',
+      subtitle: 'Publication-Ready Briefs, Feasibility Reports, Multi-Project Ranking & Official Signatures',
+    },
+    sources: {
+      title: 'Data Sources, Evidence & Assumptions Registry',
+      subtitle: 'Verified Statutory Authorities (PBS, SBP, DRAP, PPMA) & Economic Baselines',
+    },
+    upload: {
+      title: 'Document Ingestion Pipeline',
+      subtitle: '6-Stage Automated AI Extraction & Metadata Intake Architecture',
     },
   };
 
@@ -71,7 +83,19 @@ export default function Header({
       </div>
 
       {/* Clean Right Actions */}
-      <div className="flex items-center gap-3 shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Currency Switcher Pill */}
+        {onToggleCurrency && (
+          <button
+            onClick={onToggleCurrency}
+            title="Toggle between PKR and USD (280 PKR/USD benchmark)"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-zinc-50 hover:bg-zinc-100 border border-zinc-200 text-zinc-800 transition"
+          >
+            <Coins className="w-3.5 h-3.5 text-amber-500" />
+            <span>{currency}</span>
+          </button>
+        )}
+
         {/* Public Website Button */}
         {onNavigate && currentView !== 'home' && (
           <button
@@ -108,12 +132,12 @@ export default function Header({
           {voiceEnabled ? (
             <>
               <Volume2 className="w-3.5 h-3.5 text-red-600" />
-              <span className="hidden sm:inline">Voice Audio On</span>
+              <span className="hidden md:inline">Voice Audio On</span>
             </>
           ) : (
             <>
               <VolumeX className="w-3.5 h-3.5 text-zinc-400" />
-              <span className="hidden sm:inline">Voice Audio Muted</span>
+              <span className="hidden md:inline">Voice Audio Muted</span>
             </>
           )}
         </button>
@@ -125,7 +149,7 @@ export default function Header({
               apiConnected ? 'bg-emerald-500' : 'bg-amber-500'
             }`}
           />
-          <span className="hidden md:inline">
+          <span className="hidden lg:inline">
             {apiConnected ? 'Connected' : 'Offline Mode'}
           </span>
         </div>

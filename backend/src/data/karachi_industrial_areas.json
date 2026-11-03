@@ -1,0 +1,260 @@
+[
+  {
+    "id": "KIA-01",
+    "name": "Korangi Industrial Area",
+    "association": "Korangi Association of Trade & Industry (KATI)",
+    "type": "Metropolitan Industrial Zone",
+    "establishedYear": 1960,
+    "areaSqKm": "34 sq km (8,500 acres)",
+    "unitsCount": "~4,500 active units",
+    "coordinates": {
+      "lat": 24.8387,
+      "lng": 67.1205
+    },
+    "verifiedSectors": [
+      "Pharmaceuticals & Medical Formulations",
+      "Chemicals & Petrochemicals",
+      "Textiles & Garments",
+      "Cosmetics & Toiletries",
+      "Food Processing & Confectionery",
+      "Packaging & Printing"
+    ],
+    "infrastructure": "Combined Effluent Treatment Plant (CETP), Dedicated Grid Station, KATI Fire Station, Highway Link to KPT",
+    "logisticsConstraints": "Heavy traffic congestion on Jam Sadiq Bridge, intermittent water pressure, drainage bottlenecks during monsoon",
+    "majorPharmaPresence": "High (Home to major national pharma labs, contract formulators, API distributors)",
+    "techAdoptionPotential": "High - Cleanroom automation, green chemistry, effluent recycling, herbal extraction tech",
+    "annualTurnoverEst": "PKR 450+ Billion",
+    "dataSource": "KATI Annual Directory 2025-2026 / Sindh Board of Investment"
+  },
+  {
+    "id": "KIA-02",
+    "name": "Landhi Industrial Area",
+    "association": "Landhi Association of Trade & Industry (LATI)",
+    "type": "Metropolitan Industrial Zone",
+    "establishedYear": 1953,
+    "areaSqKm": "20 sq km (5,000 acres)",
+    "unitsCount": "~1,800 active units",
+    "coordinates": {
+      "lat": 24.8471,
+      "lng": 67.1983
+    },
+    "verifiedSectors": [
+      "Pharmaceuticals & Healthcare",
+      "Food & Beverage Processing",
+      "FMCG & Personal Care",
+      "Textile Processing & Dyeing",
+      "Automotive Assembly & Components"
+    ],
+    "infrastructure": "Proximity to National Highway & Bin Qasim Railway, Industrial Water line, 132kV Substation",
+    "logisticsConstraints": "Road surface degradation on feeder roads, local power fluctuations",
+    "majorPharmaPresence": "High (Several multinational and top-tier local pharmaceutical plants located on Main National Highway)",
+    "techAdoptionPotential": "Very High - Solid oral dosage automated lines, HVAC energy management, clean energy solarization",
+    "annualTurnoverEst": "PKR 280+ Billion",
+    "dataSource": "LATI Industrial Census & SBP Industrial Review"
+  },
+  {
+    "id": "KIA-03",
+    "name": "S.I.T.E. Industrial Area (Sindh Industrial Trading Estate)",
+    "association": "SITE Association of Industry (SAI)",
+    "type": "Historic Primary Industrial Estate",
+    "establishedYear": 1947,
+    "areaSqKm": "44 sq km (10,800 acres)",
+    "unitsCount": "~4,000 industrial units",
+    "coordinates": {
+      "lat": 24.8967,
+      "lng": 66.9856
+    },
+    "verifiedSectors": [
+      "Pharmaceuticals & Bulk Drugs",
+      "Industrial Chemicals & Solvents",
+      "Textiles, Spinning & Weaving",
+      "Plastics, Polymers & Packaging",
+      "Edible Oil & Ghee Refining",
+      "Paints & Coatings"
+    ],
+    "infrastructure": "Direct connectivity to Karachi Port (Keamari) via Mauripur Road, Industrial gas pipelines, CETP Phase-1",
+    "logisticsConstraints": "Aging underground sewerage network, water shortages requiring tanker logistics, severe traffic at Sher Shah",
+    "majorPharmaPresence": "Pioneer Hub (Oldest pharma manufacturing clusters in Pakistan, over 45 licensed formulation plants)",
+    "techAdoptionPotential": "High - Process analytical technology (PAT), automated packaging, water reclamation systems",
+    "annualTurnoverEst": "PKR 650+ Billion",
+    "dataSource": "SITE Association of Industry Official Trade Roster / KCCI"
+  },
+  {
+    "id": "KIA-04",
+    "name": "Federal B Area Industrial Zone",
+    "association": "Federal B. Area Association of Trade & Industry (FBATI)",
+    "type": "Urban Specialized Light Industrial Zone",
+    "establishedYear": 1972,
+    "areaSqKm": "8.5 sq km (2,100 acres)",
+    "unitsCount": "~2,200 active units",
+    "coordinates": {
+      "lat": 24.9351,
+      "lng": 67.0784
+    },
+    "verifiedSectors": [
+      "Light Pharmaceuticals & Nutraceuticals",
+      "Medical Plastics & Packaging",
+      "Garments & Knitwear",
+      "Printing, Paper & Blister Packaging",
+      "Diagnostic Kits & Laboratory Reagents"
+    ],
+    "infrastructure": "Urban setting with immediate access to skilled workforce, universities (near Salim Habib University, KU, NED), fiber optic grid",
+    "logisticsConstraints": "Restricted heavy truck access hours during daytime, zero room for horizontal geographic expansion",
+    "majorPharmaPresence": "Medium-High (Specialized in secondary packaging, herbal products, nutraceutical dosage forms, diagnostic supplies)",
+    "techAdoptionPotential": "Very High - Digital pharmacy software, mini-tableting & blistering, cold chain logistics for diagnostics",
+    "annualTurnoverEst": "PKR 140+ Billion",
+    "dataSource": "FBATI Membership Registry & SMEDA Enterprise Profiles"
+  },
+  {
+    "id": "KIA-05",
+    "name": "North Karachi Industrial Area",
+    "association": "North Karachi Association of Trade & Industry (NKATI)",
+    "type": "SME & Export Support Estate",
+    "establishedYear": 1974,
+    "areaSqKm": "12 sq km (3,000 acres)",
+    "unitsCount": "~2,500 active units",
+    "coordinates": {
+      "lat": 24.9782,
+      "lng": 67.0651
+    },
+    "verifiedSectors": [
+      "Herbal Medicines & Traditional Formulations",
+      "Cosmetics & Skincare",
+      "Textile Made-Ups & Towels",
+      "Plastic Injection Molding & Caps/Bottles",
+      "Food Flavors & Food Grade Additives"
+    ],
+    "infrastructure": "New arterial connectivity via Northern Bypass and Lyari Expressway, localized grid stations",
+    "logisticsConstraints": "Low industrial gas pressure in winter months, reliance on sub-surface brackish water",
+    "majorPharmaPresence": "Medium (Dominated by certified herbal/Unani manufacturers, nutraceutical startups, cosmeceutical brands)",
+    "techAdoptionPotential": "High - Standardized botanical extraction, spray drying equipment, GMP compliance digitization",
+    "annualTurnoverEst": "PKR 125+ Billion",
+    "dataSource": "NKATI Sectoral Directory 2025"
+  },
+  {
+    "id": "KIA-06",
+    "name": "Port Qasim Industrial & Port Zone",
+    "association": "Port Qasim Authority (PQA) Industrial Area",
+    "type": "Deep-Sea Port Industrial & Maritime Zone",
+    "establishedYear": 1980,
+    "areaSqKm": "50+ sq km (12,000+ acres)",
+    "unitsCount": "~450 mega units",
+    "coordinates": {
+      "lat": 24.7831,
+      "lng": 67.3392
+    },
+    "verifiedSectors": [
+      "Bulk Chemical Processing & Solvents",
+      "Heavy Industrial Gases & Cryogenics",
+      "Edible Oils, Ghee & Agro-commodities",
+      "Automotive Assembly Plants",
+      "Cold-Chain Logistics & Bulk Warehousing"
+    ],
+    "infrastructure": "Direct multi-modal port berths, dedicated LNG import terminals, heavy rail connection, 24/7 customs clearance",
+    "logisticsConstraints": "Distance from central Karachi (35+ km), high security gate passes, expensive initial land lease capital",
+    "majorPharmaPresence": "Medium (API intermediate chemical synthesis, bulk excipient imports, medical gas manufacturing)",
+    "techAdoptionPotential": "High - Continuous flow chemical reactors, industrial cryogenic storage, green hydrogen integration",
+    "annualTurnoverEst": "PKR 850+ Billion",
+    "dataSource": "Port Qasim Authority Annual Factbook / Ministry of Maritime Affairs"
+  },
+  {
+    "id": "KIA-07",
+    "name": "Karachi Export Processing Zone (KEPZ)",
+    "association": "Export Processing Zones Authority (EPZA)",
+    "type": "Customs-Free Special Export Enclave",
+    "establishedYear": 1981,
+    "areaSqKm": "3.2 sq km (800 acres)",
+    "unitsCount": "~250 high-tech units",
+    "coordinates": {
+      "lat": 24.8465,
+      "lng": 67.2289
+    },
+    "verifiedSectors": [
+      "Export Pharmaceuticals & Sterile Formulations",
+      "Surgical Instruments & Diagnostic Disposables",
+      "Precision Electronics & Medical Sensors",
+      "Specialty Chemicals & Fine Fragrances"
+    ],
+    "infrastructure": "Duty-free raw material import, 100% foreign ownership allowed, uninterruptible power feeder, one-window customs",
+    "logisticsConstraints": "Strict zero-domestic sales quotas (must export 100% or pay full local tariffs for domestic clearance)",
+    "majorPharmaPresence": "High (Export-grade WHO-prequalified oral and injectable pharma units exporting to Africa and Central Asia)",
+    "techAdoptionPotential": "Elite - Lyophilization, BFS (Blow-Fill-Seal) sterile vials, robotics in packaging",
+    "annualTurnoverEst": "PKR 160+ Billion (USD ~570M Exports)",
+    "dataSource": "EPZA Annual Export Statistics / TDAP"
+  },
+  {
+    "id": "KIA-08",
+    "name": "Bin Qasim Industrial Park & Special Economic Zone",
+    "association": "National Industrial Parks Development (NIP)",
+    "type": "Modern Master-Planned SEZ",
+    "establishedYear": 2012,
+    "areaSqKm": "4.2 sq km (1,050 acres)",
+    "unitsCount": "~120 large-scale enterprises",
+    "coordinates": {
+      "lat": 24.7667,
+      "lng": 67.3621
+    },
+    "verifiedSectors": [
+      "Modern Pharmaceutical Manufacturing",
+      "Food Processing & Confectionery (Global MNCs)",
+      "Automotive & Engineering Components",
+      "Specialty Packaging Polymers"
+    ],
+    "infrastructure": "Underground utilities, state-of-the-art effluent drainage, 10-year income tax holiday under SEZ Act 2012",
+    "logisticsConstraints": "Developing public transit for shopfloor workers, remote location requiring staff van services",
+    "majorPharmaPresence": "Growing Rapidly (Hosts multi-national greenfield pharmaceutical and consumer health facilities)",
+    "techAdoptionPotential": "Elite - Industry 4.0 IoT predictive maintenance, GMP Annex 1 compliant cleanrooms, automated warehousing",
+    "annualTurnoverEst": "PKR 210+ Billion",
+    "dataSource": "NIP / Sindh Economic Zones Authority (SEZA)"
+  },
+  {
+    "id": "KIA-09",
+    "name": "Dhabeji Special Economic Zone (CPEC Priority SEZ)",
+    "association": "Sindh Economic Zones Management Company (SEZMC)",
+    "type": "CPEC Mega Industrial Corridor SEZ",
+    "establishedYear": 2021,
+    "areaSqKm": "6.2 sq km (1,530 acres)",
+    "unitsCount": "Under active development & rapid colonization",
+    "coordinates": {
+      "lat": 24.821,
+      "lng": 67.502
+    },
+    "verifiedSectors": [
+      "Active Pharmaceutical Ingredient (API) Synthesis",
+      "Herbal & Botanical Processing for Global Trade",
+      "Light Engineering & Automotive",
+      "Building Materials & Advanced Composites"
+    ],
+    "infrastructure": "Direct access to M-9 Motorway & N-5 National Highway, 50 MW dedicated solar-hybrid grid, priority customs",
+    "logisticsConstraints": "Inter-city transit distance from Karachi core (55 km), early-stage civic infrastructure",
+    "majorPharmaPresence": "Strategic Focus (Designated zone for national API import-substitution cluster by Government of Sindh)",
+    "techAdoptionPotential": "Maximum - Greenfield chemical synthesis plants, bulk fermentation reactors, continuous distillation",
+    "annualTurnoverEst": "Projected PKR 180+ Billion at full colonization",
+    "dataSource": "CPEC Authority / Board of Investment (BOI) Pakistan"
+  },
+  {
+    "id": "KIA-10",
+    "name": "Super Highway Industrial Corridor (M-9 & Northern Bypass)",
+    "association": "Super Highway Industrial Development Group",
+    "type": "Emerging Logistics & Modern Industrial Hub",
+    "establishedYear": 2010,
+    "areaSqKm": "30+ sq km regional sprawl",
+    "unitsCount": "~600 distribution centers & factories",
+    "coordinates": {
+      "lat": 25.045,
+      "lng": 67.195
+    },
+    "verifiedSectors": [
+      "Pharmaceutical Warehousing & Cold-Chain Hubs",
+      "Consumer Goods (FMCG) Distribution",
+      "Specialty Plastic Molding & Containers",
+      "Agro-Commodity Cold Storage & Processing"
+    ],
+    "infrastructure": "Direct 6-lane motorway connection to Upcountry Pakistan (Punjab, KPK, Balochistan), modern high-bay warehouses",
+    "logisticsConstraints": "Lack of centralized municipal sewer lines, dependence on private industrial borewells",
+    "majorPharmaPresence": "Medium (Primary distribution centers for major national pharma brands supplying upcountry markets)",
+    "techAdoptionPotential": "High - Temperature mapping IoT sensors, automated inventory picking, refrigerated fleet telematics",
+    "annualTurnoverEst": "PKR 190+ Billion",
+    "dataSource": "Karachi Logistics & Supply Chain Council / PBS"
+  }
+]

@@ -1,0 +1,16 @@
+{
+  "name": "oric-ioap-platform",
+  "version": "1.0.0",
+  "description": "ORIC Industrial Intelligence & Opportunity Assessment Platform for Salim Habib University (SHU), Karachi",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build-data": "node build_full_database.js && node make_bundle.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "multer": "^2.5.0",
+    "xlsx": "^0.18.5"
+  }
+}

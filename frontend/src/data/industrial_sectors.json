@@ -1,0 +1,178 @@
+[
+  {
+    "id": "SEC-01",
+    "name": "Pharmaceuticals & Finished Dosage Forms",
+    "code": "PHARMA",
+    "growthRate": 11.4,
+    "nationalMarketPKR": "850 Billion",
+    "icon": "pill"
+  },
+  {
+    "id": "SEC-02",
+    "name": "Nutraceuticals & Dietary Supplements",
+    "code": "NUTRA",
+    "growthRate": 15.8,
+    "nationalMarketPKR": "115 Billion",
+    "icon": "apple-alt"
+  },
+  {
+    "id": "SEC-03",
+    "name": "Cosmeceuticals & Dermatological Care",
+    "code": "COSME",
+    "growthRate": 14.2,
+    "nationalMarketPKR": "180 Billion",
+    "icon": "spa"
+  },
+  {
+    "id": "SEC-04",
+    "name": "Hospitals & Tertiary Healthcare Networks",
+    "code": "HEALTH",
+    "growthRate": 12,
+    "nationalMarketPKR": "420 Billion",
+    "icon": "hospital"
+  },
+  {
+    "id": "SEC-05",
+    "name": "Biotechnology & Life Sciences",
+    "code": "BIOTECH",
+    "growthRate": 16.5,
+    "nationalMarketPKR": "65 Billion",
+    "icon": "dna"
+  },
+  {
+    "id": "SEC-06",
+    "name": "Medical Devices & Diagnostic Disposables",
+    "code": "MEDDEV",
+    "growthRate": 13.5,
+    "nationalMarketPKR": "95 Billion",
+    "icon": "stethoscope"
+  },
+  {
+    "id": "SEC-07",
+    "name": "Food Processing & Functional Beverages",
+    "code": "FOOD",
+    "growthRate": 9.8,
+    "nationalMarketPKR": "950 Billion",
+    "icon": "utensils"
+  },
+  {
+    "id": "SEC-08",
+    "name": "Agriculture, Agro-Chemicals & Post-Harvest",
+    "code": "AGRO",
+    "growthRate": 8.2,
+    "nationalMarketPKR": "1,200 Billion",
+    "icon": "seedling"
+  },
+  {
+    "id": "SEC-09",
+    "name": "Veterinary Medicine & Poultry Health",
+    "code": "VET",
+    "growthRate": 12.6,
+    "nationalMarketPKR": "140 Billion",
+    "icon": "paw"
+  },
+  {
+    "id": "SEC-10",
+    "name": "Active Pharmaceutical Ingredients (APIs) & Fine Chemicals",
+    "code": "API",
+    "growthRate": 14.8,
+    "nationalMarketPKR": "230 Billion",
+    "icon": "flask"
+  },
+  {
+    "id": "SEC-11",
+    "name": "Packaging, Biopolymers & Barrier Films",
+    "code": "PACK",
+    "growthRate": 10.5,
+    "nationalMarketPKR": "310 Billion",
+    "icon": "box-open"
+  },
+  {
+    "id": "SEC-12",
+    "name": "Textiles & Antimicrobial Medical Fabrics",
+    "code": "TEX",
+    "growthRate": 7.5,
+    "nationalMarketPKR": "1,850 Billion",
+    "icon": "tshirt"
+  },
+  {
+    "id": "SEC-13",
+    "name": "Digital Health, Pharmacy AI & HealthTech",
+    "code": "DIGI",
+    "growthRate": 21,
+    "nationalMarketPKR": "45 Billion",
+    "icon": "laptop-medical"
+  },
+  {
+    "id": "SEC-14",
+    "name": "Contract Research & Specialized Testing Labs",
+    "code": "CRO",
+    "growthRate": 17.5,
+    "nationalMarketPKR": "28 Billion",
+    "icon": "microscope"
+  },
+  {
+    "id": "SEC-15",
+    "name": "Environmental Biotech & Industrial Effluent Treatment",
+    "code": "ENVIRO",
+    "growthRate": 13,
+    "nationalMarketPKR": "62 Billion",
+    "icon": "leaf"
+  },
+  {
+    "id": "SEC-16",
+    "name": "Herbal Medicines & Traditional Complementary Remedies",
+    "code": "HERBAL",
+    "growthRate": 13.8,
+    "nationalMarketPKR": "85 Billion",
+    "icon": "cannabis"
+  },
+  {
+    "id": "SEC-17",
+    "name": "Plastic & Rubber Industrial Products",
+    "code": "PLASTIC",
+    "growthRate": 8.9,
+    "nationalMarketPKR": "280 Billion",
+    "icon": "recycle"
+  },
+  {
+    "id": "SEC-18",
+    "name": "Logistics, Cold-Chain & Pharmaceutical Distribution",
+    "code": "LOGIST",
+    "growthRate": 12.3,
+    "nationalMarketPKR": "390 Billion",
+    "icon": "truck"
+  },
+  {
+    "id": "SEC-19",
+    "name": "Paints, Inks & Specialty Chemical Additives",
+    "code": "CHEM",
+    "growthRate": 9.1,
+    "nationalMarketPKR": "190 Billion",
+    "icon": "brush"
+  },
+  {
+    "id": "SEC-20",
+    "name": "Fisheries & Marine Bioactive Extraction",
+    "code": "MARINE",
+    "growthRate": 10.4,
+    "nationalMarketPKR": "55 Billion",
+    "icon": "fish"
+  },
+  {
+    "id": "SEC-21",
+    "name": "Industrial Enzymes & Biocatalysts",
+    "code": "ENZYME",
+    "growthRate": 15.2,
+    "nationalMarketPKR": "38 Billion",
+    "icon": "atom"
+  },
+  {
+    "id": "SEC-22",
+    "name": "Water Purification & Advanced Filtration Media",
+    "code": "WATER",
+    "growthRate": 11.7,
+    "nationalMarketPKR": "88 Billion",
+    "icon": "tint"
+  }
+]

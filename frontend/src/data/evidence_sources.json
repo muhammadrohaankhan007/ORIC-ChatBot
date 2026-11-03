@@ -1,0 +1,82 @@
+[
+  {
+    "id": "SRC-01",
+    "name": "Pakistan Bureau of Statistics (PBS)",
+    "type": "National Statistical Body",
+    "url": "https://www.pbs.gov.pk",
+    "description": "National Census of Manufacturing Industries (CMI), Monthly Large-Scale Manufacturing Index (LSMI), trade stats",
+    "credibility": "Tier 1 - Official Government Authority",
+    "relevantAreas": "Industrial production volumes, inflation indices, import/export commodity breakdown",
+    "lastVerified": "October 2026"
+  },
+  {
+    "id": "SRC-02",
+    "name": "State Bank of Pakistan (SBP) Annual State of Economy Report",
+    "type": "Central Bank",
+    "url": "https://www.sbp.org.pk",
+    "description": "Comprehensive macroeconomic reviews, industrial credit disbursement, foreign exchange reserves, currency valuation",
+    "credibility": "Tier 1 - Central Monetary Authority",
+    "relevantAreas": "Exchange rate benchmarks (1 USD = ~280 PKR), industrial investment financing, export refinancing (EFS/TERF)",
+    "lastVerified": "October 2026"
+  },
+  {
+    "id": "SRC-03",
+    "name": "Drug Regulatory Authority of Pakistan (DRAP)",
+    "type": "Federal Pharmaceutical Regulator",
+    "url": "https://www.dra.gov.pk",
+    "description": "Registration lists for finished pharmaceuticals, nutraceuticals (Form 6/7), medical devices, cGMP inspection standards",
+    "credibility": "Tier 1 - Statutory Regulator",
+    "relevantAreas": "Regulatory pathways, clinical trial approvals, Maximum Retail Price (MRP) formulas, import substitution guidelines",
+    "lastVerified": "October 2026"
+  },
+  {
+    "id": "SRC-04",
+    "name": "Pakistan Pharmaceutical Manufacturers Association (PPMA)",
+    "type": "Apex Industry Association",
+    "url": "https://ppma.org.pk",
+    "description": "Industry census covering 650+ licensed pharmaceutical manufacturers, market share analytics, pharma export targets",
+    "credibility": "Tier 1 - Primary Industry Body",
+    "relevantAreas": "Domestic market valuation (PKR 850+ Billion), therapeutic category demand, Karachi manufacturing capacity share",
+    "lastVerified": "September 2026"
+  },
+  {
+    "id": "SRC-05",
+    "name": "Trade Development Authority of Pakistan (TDAP)",
+    "type": "National Export Promotion Agency",
+    "url": "https://tdap.gov.pk",
+    "description": "Export potential studies for pharmaceuticals, surgical goods, herbal cosmetics, and value-added agri-produce",
+    "credibility": "Tier 1 - Federal Trade Body",
+    "relevantAreas": "Export destinations (Central Asia, GCC, Africa, ASEAN), tariff structures, bilateral trade agreements",
+    "lastVerified": "August 2026"
+  },
+  {
+    "id": "SRC-06",
+    "name": "Korangi Association of Trade & Industry (KATI)",
+    "type": "Industrial Area Association",
+    "url": "https://kati.com.pk",
+    "description": "Directory of 4,500 industrial enterprises in Korangi Industrial Area, infrastructure reports, utility data",
+    "credibility": "Tier 2 - Verified Trade Association",
+    "relevantAreas": "Local factory profiles, effluent treatment parameters, immediate industry-academia collaboration partners",
+    "lastVerified": "October 2026"
+  },
+  {
+    "id": "SRC-07",
+    "name": "Pakistan Council of Scientific & Industrial Research (PCSIR)",
+    "type": "National Research Institution",
+    "url": "https://pcsir.gov.pk",
+    "description": "Standard analytical methodologies, food/herbal testing protocols, pilot plant validation, standardization guidelines",
+    "credibility": "Tier 1 - National Science Body",
+    "relevantAreas": "Heavy metal testing, microbiological assays, phytochemical quantification, pilot-scale formulation",
+    "lastVerified": "July 2026"
+  },
+  {
+    "id": "SRC-08",
+    "name": "Pakistan Stock Exchange (PSX) Listed Pharma Filings",
+    "type": "Capital Markets Repository",
+    "url": "https://dps.psx.com.pk",
+    "description": "Audited financial statements and Directors' reports for listed pharmaceutical leaders (Getz, Searle, Ferozsons, Abbott, GSK, AGP, Highnoon)",
+    "credibility": "Tier 1 - Audited Financial Disclosures",
+    "relevantAreas": "Gross profit margins (32-45%), R&D expenditure percentages (1-3%), top selling therapeutic molecules",
+    "lastVerified": "October 2026"
+  }
+]

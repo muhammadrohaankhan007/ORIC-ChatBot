@@ -382,9 +382,9 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
                       const q = projectSearch.toLowerCase();
                       return (
                         proj.title.toLowerCase().includes(q) ||
-                        proj.lead_investigator.toLowerCase().includes(q) ||
-                        proj.department.toLowerCase().includes(q) ||
-                        proj.project_code.toLowerCase().includes(q)
+                        (proj.lead_investigator || '').toLowerCase().includes(q) ||
+                        (proj.department || '').toLowerCase().includes(q) ||
+                        (proj.project_code || '').toLowerCase().includes(q)
                       );
                     })
                     .map((proj, idx) => (
