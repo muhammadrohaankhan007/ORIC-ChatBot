@@ -103,9 +103,9 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-2xl text-white font-sans selection:bg-red-600 selection:text-white transition-opacity">
-      {/* Top Header Controls */}
-      <div className="absolute top-0 inset-x-0 h-20 px-6 sm:px-10 flex items-center justify-between border-b border-white/10 bg-zinc-950/40 z-20">
+    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950/95 backdrop-blur-3xl text-white font-sans overflow-hidden select-none">
+      {/* Top Header Controls (Fixed height, shrink-0) */}
+      <header className="h-20 shrink-0 px-6 sm:px-10 flex items-center justify-between border-b border-white/10 bg-zinc-950/70 z-20">
         {/* Brand / Mode Badge */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-rose-400 flex items-center justify-center shadow-lg shadow-red-600/30">
@@ -195,10 +195,10 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
         >
           <X className="w-5 h-5" />
         </button>
-      </div>
+      </header>
 
-      {/* Main Central Interactive Canvas */}
-      <div className="flex flex-col items-center justify-center max-w-2xl w-full px-6 text-center space-y-7 z-10">
+      {/* Main Central Interactive Canvas (flex-1, centered, overflow-hidden) */}
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-6 text-center space-y-5 relative z-10">
         {/* Status Pill */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-zinc-300 tracking-wide">
           <span
@@ -216,10 +216,10 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
         </div>
 
         {/* Central Glowing Pulsing Audio Orb (Gemini Style) */}
-        <div className="relative flex items-center justify-center py-4">
+        <div className="relative flex items-center justify-center py-2">
           {/* Ambient Outer Halo */}
           <div
-            className={`absolute w-60 h-60 rounded-full bg-gradient-to-tr ${getStatusColor()} blur-3xl opacity-30 transition-all duration-300`}
+            className={`absolute w-56 h-56 rounded-full bg-gradient-to-tr ${getStatusColor()} blur-3xl opacity-30 transition-all duration-300`}
             style={{
               transform: `scale(${orbScale * 1.2})`,
             }}
@@ -227,7 +227,7 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
 
           {/* Core Interactive Glowing Orb */}
           <div
-            className={`w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-gradient-to-br ${getStatusColor()} shadow-2xl transition-transform duration-150 flex items-center justify-center relative cursor-pointer`}
+            className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gradient-to-br ${getStatusColor()} shadow-2xl transition-transform duration-150 flex items-center justify-center relative cursor-pointer`}
             style={{
               transform: `scale(${orbScale})`,
               boxShadow: `0 0 ${orbGlow}px rgba(239, 68, 68, 0.45)`,
@@ -246,20 +246,20 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
             }
           >
             {/* Inner dynamic rings */}
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border border-white/30 backdrop-blur-md flex items-center justify-center">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border border-white/30 backdrop-blur-md flex items-center justify-center">
               {status === 'speaking' || status === 'welcome' ? (
-                <Volume2 className="w-10 h-10 text-white animate-bounce" />
+                <Volume2 className="w-8 h-8 text-white animate-bounce" />
               ) : status === 'thinking' ? (
-                <Sparkles className="w-10 h-10 text-white animate-spin" />
+                <Sparkles className="w-8 h-8 text-white animate-spin" />
               ) : (
-                <Mic className="w-10 h-10 text-white" />
+                <Mic className="w-8 h-8 text-white" />
               )}
             </div>
           </div>
         </div>
 
         {/* Quick Action Hints beneath Orb */}
-        <div className="h-6">
+        <div className="h-6 flex items-center justify-center">
           {(status === 'speaking' || status === 'welcome') && (
             <button
               onClick={interruptAndListen}
@@ -285,9 +285,9 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
         </div>
 
         {/* Audio Waveform Bars when listening / speaking */}
-        <div className="flex items-center gap-1.5 h-6">
+        <div className="flex items-center gap-1.5 h-5">
           {[0.2, 0.5, 0.8, 0.4, 0.9, 0.6, 0.3, 0.7, 0.5, 0.3].map((factor, i) => {
-            const barHeight = Math.max(4, Math.min(24, 4 + audioVolume * 24 * factor));
+            const barHeight = Math.max(4, Math.min(20, 4 + audioVolume * 20 * factor));
             return (
               <span
                 key={i}
@@ -298,41 +298,39 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
           })}
         </div>
 
-        {/* Live Spoken Transcription Display */}
-        <div className="min-h-[80px] w-full max-w-lg space-y-2">
+        {/* Live Spoken Text Display - Clamped to 3 lines, never pushes other elements */}
+        <div className="w-full max-w-xl h-24 flex flex-col items-center justify-center px-4 overflow-hidden">
           {transcript ? (
-            /* Live User Speaking in Real-time */
-            <p className="text-lg font-medium text-white transition-opacity leading-relaxed">
+            <p className="text-base sm:text-lg font-medium text-white transition-opacity leading-snug line-clamp-3 text-center">
               &ldquo;{transcript}&rdquo;
             </p>
           ) : lastAgentText ? (
-            /* Last Agent Spoken Statement */
-            <p className="text-sm sm:text-base text-zinc-200 leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-zinc-200 leading-snug font-normal line-clamp-3 text-center">
               {lastAgentText}
             </p>
           ) : (
-            <p className="text-sm text-zinc-500 italic">
+            <p className="text-sm text-zinc-500 italic text-center">
               Speak naturally. I am listening...
             </p>
           )}
 
           {lastUserText && !transcript && (
-            <div className="text-xs text-zinc-500 truncate pt-1">
+            <div className="text-[11px] text-zinc-500 truncate pt-1 max-w-md">
               You asked: &ldquo;{lastUserText}&rdquo;
             </div>
           )}
 
           {!speechSupported && (
-            <div className="text-xs text-amber-400 bg-amber-950/40 border border-amber-500/30 p-2 rounded-lg">
+            <div className="text-[11px] text-amber-400 bg-amber-950/40 border border-amber-500/30 px-3 py-1 rounded-lg mt-1">
               Notice: Web Speech API is best supported in Google Chrome, Edge, and modern Chromium browsers.
             </div>
           )}
         </div>
-      </div>
+      </main>
 
       {/* Expandable Conversation Transcript Drawer */}
       {showHistory && (
-        <div className="absolute right-6 top-24 bottom-28 w-80 sm:w-96 rounded-2xl bg-zinc-900/90 border border-white/10 shadow-2xl backdrop-blur-xl p-4 flex flex-col z-30 animate-in fade-in slide-in-from-right-4">
+        <div className="absolute right-6 top-24 bottom-28 w-80 sm:w-96 rounded-2xl bg-zinc-900/95 border border-white/10 shadow-2xl backdrop-blur-xl p-4 flex flex-col z-30 animate-in fade-in slide-in-from-right-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <MessageSquare className="w-3.5 h-3.5 text-red-500" />
@@ -371,8 +369,8 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
         </div>
       )}
 
-      {/* Bottom Floating Control Bar */}
-      <div className="absolute bottom-8 inset-x-0 flex items-center justify-center gap-4 z-20">
+      {/* Bottom Floating Control Bar (Fixed height, shrink-0) */}
+      <footer className="h-24 shrink-0 px-6 flex items-center justify-center gap-5 border-t border-white/10 bg-zinc-950/70 z-20">
         {/* Toggle Dialogue Drawer */}
         <button
           onClick={() => setShowHistory((prev) => !prev)}
@@ -407,7 +405,7 @@ export const VoiceAgentModal: React.FC<VoiceAgentModalProps> = ({
         >
           <PhoneOff className="w-6 h-6" />
         </button>
-      </div>
+      </footer>
     </div>
   );
 };

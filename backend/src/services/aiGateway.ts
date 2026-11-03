@@ -173,7 +173,22 @@ export class AIGatewayService {
       effectiveHistory = this.sessionMemory.get(sessionId) || [];
     }
 
-    const systemInstruction = `You are the ORIC Research Assistant, the authoritative institutional AI advisor for the Office of Research, Innovation & Commercialization (ORIC) at Salim Habib University (SHU), Karachi, Pakistan.
+    const isVoice = mode === 'voice';
+
+    const voiceSystemInstruction = `You are the ORIC Voice Agent at Salim Habib University (SHU), Karachi, Pakistan.
+You are on an active, hands-free spoken phone conversation with a researcher, faculty member, or student.
+
+CRITICAL VOICE CALL RULES:
+1. MAX 1 TO 2 NATURAL SPOKEN SENTENCES (strictly under 35 words total). Never speak in paragraphs or long dossiers.
+2. ABSOLUTELY ZERO FORMATTING: Do NOT use markdown bolding (**), asterisks (*), headers (###), bullet points (-), numbered lists, emojis, code blocks, or LaTeX math. Return plain natural spoken English words only.
+3. CONVERSATIONAL PACING: Be direct, collegial, and warm. Answer the user's specific question using the project context, and conclude with one short, natural follow-up question.
+4. SALIM HABIB UNIVERSITY RESEARCH REPOSITORY:
+   - AI Textile Quality Control: Prof. Aisha Khan, YOLOv10 edge AI, TRL 7, Artistic Milliners (KIA).
+   - Oncology Nano-carriers: Dr. Farooq Siddiqui, paclitaxel hybrid nanoparticles, TRL 5, Getz Pharma (KIA), DRAP compliance.
+   - Glucose Biosensor: Engr. Tariq Mehmood, non-invasive NIR optical sensor, TRL 4, ISO 13485.
+   - ESG Carbon Tracking: Dr. Zeeshan Haider, EU CBAM compliance, TRL 8, Pakistani exporters.`;
+
+    const standardSystemInstruction = `You are the ORIC Research Assistant, the authoritative institutional AI advisor for the Office of Research, Innovation & Commercialization (ORIC) at Salim Habib University (SHU), Karachi, Pakistan.
 
 You assist university professors, research scholars, postgraduate students, and commercialization officers across research formulation, grant acquisition, patent filings, and Karachi industry collaborations.
 
@@ -212,17 +227,12 @@ CORE OPERATIONAL PRINCIPLES:
    - Structure complex guidance using markdown bold headings, bullet points, and clear technical parameters.
    - Always conclude substantial technical advice with 1 concrete **Next Technical Milestone** or **Recommended Action** (e.g. testing parameter, draft MoU clause, or grant proposal section).
 
-${mode === 'voice' ? `7. REAL-TIME SPOKEN VOICE CALL RULES (CRITICAL):
-   - You are in an active, hands-free spoken voice phone conversation with the researcher.
-   - Keep answers natural, fluid, and spoken: exactly 2 to 3 concise, clear sentences.
-   - NEVER use markdown formatting (no asterisks, no bullet points, no numbered lists, no headers, no LaTeX math, no emojis).
-   - Answer immediately and ground your spoken reply in the selected project.
-   - Conclude naturally with an organic conversational follow-up question.` : ''}
-
 ${systemPrompt ? `ADDITIONAL DOMAIN INSTRUCTION: ${systemPrompt}` : ''}
 Focus Specialization: ${personaName || 'General ORIC'}
 Interaction Mode: ${mode.toUpperCase()}
 Institution: Salim Habib University (SHU), Karachi, Pakistan.`;
+
+    const systemInstruction = isVoice ? voiceSystemInstruction : standardSystemInstruction;
 
     const contents = this.buildConversationContents(effectiveHistory, prompt, projectContext);
     const model = process.env.GEMINI_MODEL || config.ai.geminiModel || 'gemini-3.5-flash-lite';
@@ -232,12 +242,20 @@ Institution: Salim Habib University (SHU), Karachi, Pakistan.`;
         model,
         config: {
           systemInstruction,
-          temperature: 0.7,
+          temperature: isVoice ? 0.6 : 0.7,
+          ...(isVoice ? { maxOutputTokens: 95 } : {}),
         },
         contents,
       });
 
-      const fullResponse = response.text || "I'm sorry, I couldn't generate a response.";
+      let fullResponse = response.text || "I'm sorry, I couldn't generate a response.";
+      if (isVoice) {
+        fullResponse = fullResponse
+          .replace(/[*_#`~>]/g, '')
+          .replace(/^\s*[-•]\s*/gm, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      }
 
       // Record this turn in the session memory
       effectiveHistory.push({ role: 'user', text: prompt.trim() });
@@ -264,12 +282,20 @@ Institution: Salim Habib University (SHU), Karachi, Pakistan.`;
             model: 'gemini-3.5-flash-lite',
             config: {
               systemInstruction,
-              temperature: 0.7,
+              temperature: isVoice ? 0.6 : 0.7,
+              ...(isVoice ? { maxOutputTokens: 95 } : {}),
             },
             contents,
           });
 
-          const text = fallbackResponse.text || "I'm sorry, I couldn't generate a response.";
+          let text = fallbackResponse.text || "I'm sorry, I couldn't generate a response.";
+          if (isVoice) {
+            text = text
+              .replace(/[*_#`~>]/g, '')
+              .replace(/^\s*[-•]\s*/gm, '')
+              .replace(/\s+/g, ' ')
+              .trim();
+          }
           effectiveHistory.push({ role: 'user', text: prompt.trim() });
           effectiveHistory.push({ role: 'model', text: text });
           this.sessionMemory.set(sessionId, effectiveHistory);

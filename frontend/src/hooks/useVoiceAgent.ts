@@ -48,6 +48,7 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
   onProjectChangeRef.current = onProjectChange;
   const turnsRef = useRef<SpokenTurn[]>([]);
   turnsRef.current = turns;
+  const activeProjectIdRef = useRef<string | null>(selectedProject?.id || null);
 
   // Real-time microphone audio volume calculation for the pulsing visualizer orb
   const updateAudioVolume = useCallback(() => {
@@ -278,6 +279,27 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     [pauseListening, startListeningForUser, stopAgentSpeech]
   );
 
+  // Audio acknowledgement when project changes while voice call is active
+  useEffect(() => {
+    if (isActive) {
+      const currentId = selectedProject?.id || null;
+      if (activeProjectIdRef.current !== currentId) {
+        activeProjectIdRef.current = currentId;
+        if (selectedProject) {
+          const switchNotice = `Switched to ${selectedProject.title}, led by ${selectedProject.lead_investigator}. What would you like to know about this research?`;
+          setLastAgentText(switchNotice);
+          speakSpokenResponse(switchNotice);
+        } else {
+          const switchNotice = `Switched to General ORIC guidance. Which research project would you like to explore?`;
+          setLastAgentText(switchNotice);
+          speakSpokenResponse(switchNotice);
+        }
+      }
+    } else {
+      activeProjectIdRef.current = selectedProject?.id || null;
+    }
+  }, [isActive, selectedProject, speakSpokenResponse]);
+
   // Send the user's spoken prompt to the backend with project context & history
   const sendSpokenPrompt = useCallback(
     async (promptText: string) => {
@@ -341,21 +363,34 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
 
         if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
         const data = await res.json();
-        const answer = data.response || 'I heard you. Could you please clarify that point?';
+        const rawAnswer = data.response || 'I heard you. Could you please clarify that point?';
 
-        setLastAgentText(answer);
+        // 1. Sanitize text for natural speech (strip markdown headers, bold, bullets, math)
+        const cleanAnswer = cleanTextForSpeech(rawAnswer);
+
+        // 2. Strict conversational brevity: extract 1-2 spoken sentences (max ~220 chars)
+        const sentences = cleanAnswer.match(/[^.!?]+[.!?]+(?:\s|$)/g);
+        let conversationalAnswer = cleanAnswer;
+        if (sentences && sentences.length > 2) {
+          conversationalAnswer = sentences.slice(0, 2).join(' ').trim();
+        } else if (cleanAnswer.length > 220) {
+          const trimmed = cleanAnswer.substring(0, 210).replace(/\s+\S*$/, '');
+          conversationalAnswer = trimmed + '.';
+        }
+
+        setLastAgentText(conversationalAnswer);
 
         const agentTurn: SpokenTurn = {
           id: (Date.now() + 1).toString(),
           sender: 'agent',
-          text: answer,
+          text: conversationalAnswer,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
 
         setTurns((prev) => [...prev, agentTurn]);
 
         // Speak aloud immediately and resume listening once done
-        speakSpokenResponse(answer);
+        speakSpokenResponse(conversationalAnswer);
       } catch (err: any) {
         console.error('Voice agent fetch error:', err);
         const fallbackMsg = "I couldn't reach the ORIC server. Please try saying that again.";
@@ -404,12 +439,21 @@ export function useVoiceAgent({ selectedProject, onProjectChange, lang = 'en-US'
     let welcomeGreeting = '';
 
     if (project) {
-      welcomeGreeting = `Welcome to Salim Habib University ORIC! I am your AI voice advisor for the ${project.title} project, led by ${project.lead_investigator}. How can I guide you today regarding its technology, patent status, or industrial partners in Karachi?`;
+      welcomeGreeting = `Welcome to Salim Habib University ORIC! I am your AI voice advisor for ${project.title}, led by ${project.lead_investigator}. How can I assist you with this project today?`;
     } else {
-      welcomeGreeting = `Welcome to Salim Habib University ORIC! Which research project would you like to discuss today? We have our AI Textile Quality Control project, the Nanoparticle Drug Delivery system, the Continuous Glucose Biosensor, or our Supply Chain Carbon Tracking platform. Which one would you like to explore?`;
+      welcomeGreeting = `Welcome to Salim Habib University ORIC! Which research project would you like to discuss today? We have AI Textile Quality Control, Nanoparticle Oncology, the Glucose Biosensor, or Carbon Tracking. Which one would you like to explore?`;
     }
 
     setLastAgentText(welcomeGreeting);
+
+    // Add welcome turn to history drawer
+    const welcomeTurn: SpokenTurn = {
+      id: Date.now().toString(),
+      sender: 'agent',
+      text: welcomeGreeting,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setTurns([welcomeTurn]);
 
     // 3. Play the welcome greeting aloud FIRST.
     // Notice: Recognition is NOT active while this greeting plays!
