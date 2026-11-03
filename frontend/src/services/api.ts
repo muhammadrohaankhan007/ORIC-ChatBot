@@ -1,5 +1,6 @@
 import { Project, Persona, IndustryCompany, ErlAssessment, MeetingTranscript } from '@/types';
 import { PHARMACY_PROJECTS } from '@/data/pharmacyProjects';
+import { parseDocumentClient } from './clientDocumentParser';
 
 /**
  * Resolves the API base URL dynamically based on execution context:
@@ -266,21 +267,53 @@ export async function importProjectsDocument(file: File): Promise<{
   count: number;
   projects: Project[];
 }> {
-  const baseUrl = getApiBaseUrl();
-  const formData = new FormData();
-  formData.append('file', file);
+  // 1. Try remote backend import first
+  try {
+    const baseUrl = getApiBaseUrl();
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const res = await fetch(`${baseUrl}/projects/import-document`, {
-    method: 'POST',
-    body: formData,
-  });
+    const res = await fetch(`${baseUrl}/projects/import-document`, {
+      method: 'POST',
+      body: formData,
+    });
 
-  if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error || `Upload failed with HTTP status ${res.status}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.projects) && data.projects.length > 0) {
+        return data;
+      }
+    }
+  } catch (netErr) {
+    console.warn('Backend upload endpoint unreachable, switching to resilient client-side parser:', netErr);
   }
 
-  return await res.json();
+  // 2. High-resilience client-side parser fallback (handles 404, cold starts, and offline)
+  try {
+    const clientProjects = await parseDocumentClient(file);
+    if (!clientProjects || clientProjects.length === 0) {
+      throw new Error(`Could not extract valid research projects from "${file.name}". Please ensure the file contains project titles and abstracts.`);
+    }
+
+    // Attempt background sync to /projects for each project (best effort)
+    const baseUrl = getApiBaseUrl();
+    clientProjects.slice(0, 10).forEach((proj) => {
+      fetch(`${baseUrl}/projects`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proj),
+      }).catch(() => {});
+    });
+
+    return {
+      success: true,
+      message: `Successfully extracted ${clientProjects.length} research project(s) from "${file.name}".`,
+      count: clientProjects.length,
+      projects: clientProjects,
+    };
+  } catch (parseErr: any) {
+    throw new Error(parseErr.message || `Failed to parse projects from "${file.name}".`);
+  }
 }
 
 export async function sendChatMessage(payload: {
