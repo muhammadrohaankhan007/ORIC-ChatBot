@@ -260,6 +260,29 @@ export async function fetchProjects(): Promise<Project[]> {
   }
 }
 
+export async function importProjectsDocument(file: File): Promise<{
+  success: boolean;
+  message: string;
+  count: number;
+  projects: Project[];
+}> {
+  const baseUrl = getApiBaseUrl();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const res = await fetch(`${baseUrl}/projects/import-document`, {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Upload failed with HTTP status ${res.status}`);
+  }
+
+  return await res.json();
+}
+
 export async function sendChatMessage(payload: {
   message: string;
   mode: 'conversational' | 'research';

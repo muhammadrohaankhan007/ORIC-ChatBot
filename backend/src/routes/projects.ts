@@ -276,3 +276,105 @@ projectsRouter.post('/upload', upload.single('file'), async (req: Request, res: 
   }
 });
 
+/**
+ * POST /api/v1/projects/import-document
+ * Bulk or single project import from Excel (.xlsx, .xls, .csv) or Word (.docx, .doc) files
+ */
+projectsRouter.post('/import-document', upload.single('file'), async (req: Request, res: Response) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No document uploaded. Please select an Excel (.xlsx, .xls, .csv) or Word (.docx, .doc) file.'
+      });
+    }
+
+    const originalName = req.file.originalname;
+    const ext = originalName.toLowerCase().split('.').pop() || '';
+    let extractedProjects: any[] = [];
+
+    if (
+      ext === 'xlsx' ||
+      ext === 'xls' ||
+      ext === 'csv' ||
+      req.file.mimetype.includes('spreadsheet') ||
+      req.file.mimetype.includes('excel')
+    ) {
+      extractedProjects = DocumentParser.parseProjectsFromExcel(req.file.buffer);
+    } else if (ext === 'docx' || ext === 'doc' || req.file.mimetype.includes('word')) {
+      extractedProjects = await DocumentParser.parseProjectsFromWord(req.file.buffer, originalName);
+    } else {
+      // Fallback: try Excel first, then Word
+      try {
+        extractedProjects = DocumentParser.parseProjectsFromExcel(req.file.buffer);
+      } catch {
+        extractedProjects = await DocumentParser.parseProjectsFromWord(req.file.buffer, originalName);
+      }
+    }
+
+    if (!extractedProjects || extractedProjects.length === 0) {
+      return res.status(400).json({
+        error: `Could not extract valid research projects from "${originalName}". Please ensure the file contains project titles and abstracts.`
+      });
+    }
+
+    // Prepend into inMemoryProjects so newly uploaded projects appear first
+    inMemoryProjects.unshift(...extractedProjects);
+
+    // If DB is connected, insert them
+    if (isDbConnected) {
+      for (const p of extractedProjects) {
+        try {
+          await pool.query(
+            `INSERT INTO projects (
+              project_code, title, faculty, faculty_code, department, lead_investigator,
+              abstract, problem_statement, technology_stack, development_stage, trl_level,
+              erl_level, ip_status, target_industries, commercial_readiness, estimated_funding_pkr
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+            [
+              p.project_code,
+              p.title,
+              p.faculty,
+              p.faculty_code,
+              p.department,
+              p.lead_investigator,
+              p.abstract,
+              p.problem_statement,
+              JSON.stringify(p.technology_stack),
+              p.development_stage,
+              p.trl_level,
+              p.erl_level,
+              p.ip_status,
+              JSON.stringify(p.target_industries),
+              p.commercial_readiness,
+              p.estimated_funding_pkr
+            ]
+          );
+        } catch (dbErr) {
+          console.warn('DB insert project failed, retained in memory:', dbErr);
+        }
+      }
+    }
+
+    // Vectorize project abstracts in background for AI search
+    for (const p of extractedProjects) {
+      try {
+        const docText = `${p.title}. Lead: ${p.lead_investigator}. Department: ${p.department} (${p.faculty}). Abstract: ${p.abstract} Technologies: ${p.technology_stack.join(', ')}`;
+        const chunks = DocumentParser.chunkText(docText);
+        VectorStore.saveChunks(chunks, originalName, p.id, p.project_code).catch(() => {});
+      } catch (vErr) {
+        // Non-fatal
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Successfully imported ${extractedProjects.length} research project(s) from "${originalName}".`,
+      count: extractedProjects.length,
+      projects: extractedProjects
+    });
+  } catch (error: any) {
+    console.error('Import document error:', error);
+    res.status(500).json({ error: 'Failed to import projects from document: ' + error.message });
+  }
+});
+

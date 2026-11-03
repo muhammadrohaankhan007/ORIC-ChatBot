@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Project, ViewMode } from '@/types';
+import { importProjectsDocument } from '@/services/api';
 import { 
   Search, 
   UploadCloud, 
@@ -13,7 +14,10 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
-  ChevronsRight
+  ChevronsRight,
+  AlertCircle,
+  Loader2,
+  FileSpreadsheet
 } from 'lucide-react';
 
 interface ProjectsViewProps {
@@ -21,21 +25,30 @@ interface ProjectsViewProps {
   onNavigate: (view: ViewMode) => void;
   onSelectProjectForChat: (project: Project) => void;
   onOpenVoiceAgentForProject?: (project: Project) => void;
+  onAddProjects?: (newProjects: Project[]) => void;
 }
 
 export default function ProjectsView({
   projects,
   onNavigate,
   onSelectProjectForChat,
-  onOpenVoiceAgentForProject
+  onOpenVoiceAgentForProject,
+  onAddProjects
 }: ProjectsViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState<string>('ALL');
   const [activeModalProject, setActiveModalProject] = useState<Project | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const listTopRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Upload States
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState('');
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState<string | null>(null);
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const faculties = [
     { code: 'ALL', label: 'All Faculties' },
@@ -103,9 +116,65 @@ export default function ProjectsView({
     return rangeWithDots;
   };
 
-  const handleSimulateUpload = () => {
-    setUploadSuccess(true);
-    setTimeout(() => setUploadSuccess(false), 4000);
+  const processUploadedFile = async (file: File) => {
+    const ext = file.name.toLowerCase().split('.').pop() || '';
+    const validExts = ['xlsx', 'xls', 'docx', 'doc', 'csv', 'pdf'];
+    if (!validExts.includes(ext)) {
+      setUploadErrorMessage(`Invalid file format ".${ext}". Please upload an Excel (.xlsx, .xls) or Word (.docx, .doc) file.`);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadErrorMessage(null);
+    setUploadSuccessMessage(null);
+    setUploadStatusText(`Extracting & indexing projects from "${file.name}"...`);
+
+    try {
+      const res = await importProjectsDocument(file);
+      if (res.success && Array.isArray(res.projects) && res.projects.length > 0) {
+        onAddProjects?.(res.projects);
+        setUploadSuccessMessage(`Successfully imported ${res.count} research project(s) from "${file.name}"! Added to the repository.`);
+        setCurrentPage(1);
+        setTimeout(() => setUploadSuccessMessage(null), 8000);
+      } else {
+        setUploadErrorMessage(res.message || 'No valid projects could be extracted from this document.');
+      }
+    } catch (err: any) {
+      console.error('File upload error:', err);
+      setUploadErrorMessage(err.message || 'Failed to upload document. Please check the file contents.');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processUploadedFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      processUploadedFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -132,37 +201,97 @@ export default function ProjectsView({
         </div>
       </div>
 
-      {/* Document Ingestion Dropzone */}
-      <div className="p-6 rounded-lg bg-white border border-dashed border-zinc-300 hover:border-zinc-400 transition flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+      {/* Real Document Ingestion Dropzone */}
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`p-6 rounded-xl border-2 border-dashed transition flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs ${
+          isDragging
+            ? 'bg-red-50/80 border-red-500 scale-[1.01]'
+            : 'bg-white border-zinc-300 hover:border-zinc-400'
+        }`}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileChange}
+          accept=".xlsx,.xls,.docx,.doc,.csv,.pdf"
+          className="hidden"
+        />
+
         <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
-            <UploadCloud className="w-5 h-5" />
+          <div className="w-12 h-12 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
+            {isUploading ? (
+              <Loader2 className="w-6 h-6 animate-spin" />
+            ) : (
+              <UploadCloud className="w-6 h-6" />
+            )}
           </div>
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-zinc-900">Document Ingestion & Indexing</h4>
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-bold text-zinc-900">
+                Upload & Ingest Research Projects
+              </h4>
+              <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-700 border border-red-200">
+                Excel & Word Supported
+              </span>
+            </div>
             <p className="text-xs text-zinc-500">
-              Upload laboratory dissertations, patent claims, or clinical notes (.pdf, .docx). Documents are automatically indexed into the ORIC intelligence store.
+              Upload course LMS sheets, proposal lists, or research synopses (<strong>.xlsx</strong>, <strong>.xls</strong>, <strong>.docx</strong>, <strong>.doc</strong>). Projects are automatically parsed, added to your active repository, and indexed for AI chat.
             </p>
           </div>
         </div>
 
-        <div className="shrink-0 flex items-center gap-3">
-          {uploadSuccess ? (
-            <div className="px-3.5 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Document Indexed & Vectorized</span>
+        <div className="shrink-0 flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+          {isUploading ? (
+            <div className="px-4 py-2.5 rounded-lg bg-zinc-100 text-zinc-700 text-xs font-semibold flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-red-600" />
+              <span>{uploadStatusText}</span>
             </div>
           ) : (
             <button
-              onClick={handleSimulateUpload}
-              className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full sm:w-auto px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white font-semibold text-xs flex items-center justify-center gap-2 shadow-xs transition cursor-pointer"
             >
               <UploadCloud className="w-4 h-4" />
-              <span>Upload Document</span>
+              <span>Choose Excel / Word File</span>
             </button>
           )}
         </div>
       </div>
+
+      {/* Success Banner */}
+      {uploadSuccessMessage && (
+        <div className="p-3.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{uploadSuccessMessage}</span>
+          </div>
+          <button
+            onClick={() => setUploadSuccessMessage(null)}
+            className="text-emerald-700 hover:text-emerald-900 p-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {uploadErrorMessage && (
+        <div className="p-3.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center justify-between shadow-xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{uploadErrorMessage}</span>
+          </div>
+          <button
+            onClick={() => setUploadErrorMessage(null)}
+            className="text-rose-700 hover:text-rose-900 p-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Faculty Filter Buttons & Page Size Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">

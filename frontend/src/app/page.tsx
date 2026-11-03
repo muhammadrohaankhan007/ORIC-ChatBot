@@ -44,7 +44,46 @@ export default function Home() {
       .catch(() => {
         // Fallback already provided by INITIAL_PROJECTS
       });
+
+    // Restore user-uploaded projects from persistent localStorage
+    try {
+      const cached = localStorage.getItem('shu_oric_custom_projects');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setProjects((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const toAdd = parsed.filter((p: Project) => !existingIds.has(p.id));
+            return [...toAdd, ...prev];
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load custom projects from localStorage', e);
+    }
   }, []);
+
+  const handleAddProjects = (newProjects: Project[]) => {
+    setProjects((prev) => {
+      const existingIds = new Set(prev.map((p) => p.id));
+      const toAdd = newProjects.filter((p) => !existingIds.has(p.id));
+      const updated = [...toAdd, ...prev];
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('shu_oric_custom_projects');
+          const existingCached = cached ? JSON.parse(cached) : [];
+          const combinedCached = [
+            ...toAdd,
+            ...existingCached.filter((c: Project) => !new Set(toAdd.map((a) => a.id)).has(c.id)),
+          ];
+          localStorage.setItem('shu_oric_custom_projects', JSON.stringify(combinedCached));
+        } catch (e) {
+          console.warn('Could not persist custom projects:', e);
+        }
+      }
+      return updated;
+    });
+  };
 
   // 1. Standalone Institutional Public Website View
   if (currentView === 'home') {
@@ -133,6 +172,7 @@ export default function Home() {
                 setSelectedProject(project);
                 setIsVoiceAgentOpen(true);
               }}
+              onAddProjects={handleAddProjects}
             />
           )}
 
