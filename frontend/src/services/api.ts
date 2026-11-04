@@ -585,7 +585,7 @@ export async function importProjectsDocument(file: File): Promise<{
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(proj),
-      }).catch(() => {});
+      }).catch(() => { });
     });
 
     return {
@@ -618,7 +618,7 @@ export async function sendChatMessage(payload: {
     // Intelligent local fallback response
     const p = INITIAL_PERSONAS.find(x => x.slug === payload.persona_slug) || INITIAL_PERSONAS[0];
     const isResearch = payload.mode === 'research';
-    
+
     return {
       agent: p.name,
       response: isResearch

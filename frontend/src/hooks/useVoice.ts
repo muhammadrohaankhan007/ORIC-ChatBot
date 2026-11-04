@@ -21,26 +21,163 @@ export const stopSpeechImmediately = () => {
 };
 
 /**
- * Clean markdown symbols, LaTeX math, URLs, and code blocks into natural, spoken English prose.
+ * Advanced Phonetic & Semantic Speech Preprocessor for Natural Conversational Audio.
+ * Converts academic acronyms, abbreviations, currency, medical dosage forms,
+ * chemical notation, and numbers into fluid, human-spoken English.
+ * Eliminates robotic "reading" of raw symbols, letters, and codes to ensure natural Gemini-like pronunciation.
+ */
+export function phoneticTextAnalysisForSpeech(text: string): string {
+  if (!text) return "";
+
+  let t = text;
+
+  // 1. Remove Markdown syntax, LaTeX math, code, URLs, and block quotes
+  t = t
+    .replace(/\$\$([\s\S]*?)\$\$/g, "$1")
+    .replace(/\$(.*?)\$/g, "$1")
+    .replace(/\\times/g, " times ")
+    .replace(/\\circ/g, " degrees ")
+    .replace(/\\text\{(.*?)\}/g, "$1")
+    .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+    .replace(/https?:\/\/\S+/g, "")
+    .replace(/#{1,6}\s+/g, "")
+    .replace(/[*_~\`]/g, "")
+    .replace(/^\s*[-*+•]\s+/gm, "")
+    .replace(/^\s*\d+\.\s+/gm, "")
+    .replace(/>\s+/g, "")
+    .replace(/\|/g, " ");
+
+  // 2. Academic & Professional Titles & Honorifics
+  t = t
+    .replace(/\bDr\.\s*/gi, "Doctor ")
+    .replace(/\bProf\.\s*/gi, "Professor ")
+    .replace(/\bEngr\.\s*/gi, "Engineer ")
+    .replace(/\bMr\.\s*/gi, "Mister ")
+    .replace(/\bMs\.\s*/gi, "Miss ")
+    .replace(/\bMrs\.\s*/gi, "Missus ");
+
+  // 3. Institutional & Campus Acronyms (Make speech synth pronounce them correctly)
+  t = t
+    .replace(/\bORIC\b/g, "O-rick")
+    .replace(/\bSHU\b/g, "S-H-U")
+    .replace(/\bFoP\b|\bFOP\b/g, "Faculty of Pharmacy")
+    .replace(/\bFCS\b/g, "Faculty of Computer Science")
+    .replace(/\bFE\b(?=\s+Faculty|\s+Dept|\s+Department|\s+students)/gi, "Faculty of Engineering")
+    .replace(/\bFMS\b/g, "Faculty of Management Sciences")
+    .replace(/\bHEC\b/g, "H-E-C")
+    .replace(/\bKATI\b/g, "Kah-tee")
+    .replace(/\bLATI\b/g, "Lah-tee")
+    .replace(/\bSITE\b|\bS\.I\.T\.E\.\b/gi, "SITE")
+    .replace(/\bPCSIR\b/g, "P-C-S-I-R")
+    .replace(/\bTDAP\b/g, "T-D-A-P")
+    .replace(/\bPPMA\b/g, "P-P-M-A")
+    .replace(/\bSBP\b/g, "State Bank of Pakistan")
+    .replace(/\bPBS\b/g, "Pakistan Bureau of Statistics");
+
+  // 4. Technology Readiness & Maturity Levels
+  t = t
+    .replace(/\bTRL\s*([0-9])\s*\/\s*9\b/gi, "T-R-L level $1 of 9")
+    .replace(/\bTRL\s*([0-9])\b/gi, "T-R-L level $1")
+    .replace(/\bTRL\b/g, "T-R-L")
+    .replace(/\bERL\s*([0-9])\s*\/\s*9\b/gi, "E-R-L level $1 of 9")
+    .replace(/\bERL\s*([0-9])\b/gi, "E-R-L level $1")
+    .replace(/\bERL\b/g, "E-R-L");
+
+  // 5. Regulatory, IP & Industry Terms
+  t = t
+    .replace(/\bDRAP\b/g, "D-RAP")
+    .replace(/\bIPO\b/g, "I-P-O")
+    .replace(/\bPSQCA\b/g, "P-S-Q-C-A")
+    .replace(/\bMoU\b|\bMOU\b/g, "Memorandum of Understanding")
+    .replace(/\bFastAPI\b/gi, "Fast A-P-I")
+    .replace(/\bPostgreSQL\b/gi, "Postgres Q-L")
+    .replace(/\bYOLOv10\b/gi, "Yolo version 10")
+    .replace(/\bYOLOv([0-9]+)\b/gi, "Yolo version $1")
+    .replace(/\bAPI\b/g, "A-P-I")
+    .replace(/\bAPIs\b/g, "A-P-Is")
+    .replace(/\bAI\b/g, "A-I")
+    .replace(/\bNIR\b/g, "Near Infrared")
+    .replace(/\bHPLC\b/g, "H-P-L-C")
+    .replace(/\bCBAM\b/g, "C-BAM")
+    .replace(/\bESG\b/g, "E-S-G")
+    .replace(/\bGHG\b/g, "Greenhouse Gas")
+    .replace(/\bISO\s*([0-9]+)\b/gi, "I-S-O $1")
+    .replace(/\bSaaS\b/g, "Software as a service")
+    .replace(/\bTAM\b/g, "Total Addressable Market")
+    .replace(/\bSAM\b/g, "Serviceable Addressable Market")
+    .replace(/\bSOM\b/g, "Serviceable Obtainable Market")
+    .replace(/\bCO2\b|CO₂/g, "C-O-2")
+    .replace(/\bFPS\b/g, "frames per second")
+    .replace(/\bCAGR\b/g, "compound annual growth rate");
+
+  // 6. Currencies & Financial Values
+  t = t
+    .replace(/\bPKR\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:Billion|B)\b/gi, "$1 billion rupees")
+    .replace(/\bPKR\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:Million|M)\b/gi, "$1 million rupees")
+    .replace(/\bPKR\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:K|Thousand)\b/gi, "$1 thousand rupees")
+    .replace(/\bPKR\s*([0-9,]+)\b/gi, (match, numStr) => {
+      const num = parseInt(numStr.replace(/,/g, ""), 10);
+      if (isNaN(num)) return match;
+      if (num >= 1000000000) return (num / 1000000000).toFixed(1) + " billion rupees";
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + " million rupees";
+      if (num >= 1000) return (num / 1000).toFixed(0) + " thousand rupees";
+      return num + " rupees";
+    })
+    .replace(/\$\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:Billion|B)\b/gi, "$1 billion dollars")
+    .replace(/\$\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:Million|M)\b/gi, "$1 million dollars")
+    .replace(/\$\s*([0-9,]+(?:\.[0-9]+)?)\s*(?:K|Thousand)\b/gi, "$1 thousand dollars")
+    .replace(/\$\s*([0-9,]+(?:\.[0-9]+)?)\b/g, "$1 dollars");
+
+  // 7. Scientific & Engineering Units
+  t = t
+    .replace(/\bmg\/dL\b/gi, "milligrams per deciliter")
+    .replace(/\bµm\b|um\b/gi, "micrometers")
+    .replace(/\bnm\b/gi, "nanometers")
+    .replace(/\bkg\b/gi, "kilograms")
+    .replace(/\bmg\b/gi, "milligrams")
+    .replace(/\bml\b|\bmL\b/g, "milliliters")
+    .replace(/\bw\/v\b/gi, "weight by volume")
+    .replace(/\bv\/v\b/gi, "volume by volume")
+    .replace(/\bpH\s*([0-9]+(?:\.[0-9]+)?)\b/gi, "p-H $1");
+
+  // 8. Latin & Common Literary Abbreviations
+  t = t
+    .replace(/\be\.g\.,?\s*/gi, "for example, ")
+    .replace(/\bi\.e\.,?\s*/gi, "that is, ")
+    .replace(/\betc\.\s*/gi, "et cetera, ")
+    .replace(/\bvs\.\s*|\bvs\s+/gi, "versus ")
+    .replace(/\band\/or\b/gi, "and or ")
+    .replace(/\bNo\.\s*([0-9]+)\b|\bno\.\s*([0-9]+)\b/gi, "number $1")
+    .replace(/([0-9]+)%/g, "$1 percent");
+
+  // 9. Clean up Project Identifiers & Parenthetical Clutter
+  t = t
+    .replace(/\(SHU-[A-Z0-9\-]+\)/gi, "")
+    .replace(/SHU-[A-Z0-9\-]+/gi, "")
+    .replace(/\(\s*TRL\s*[0-9\/\s,]+\s*,\s*ERL\s*[0-9\/\s,]+\s*\)/gi, "")
+    .replace(/Project\s+0*([0-9]+)\s*[-:–—]\s*/gi, "Project $1: ")
+    .replace(/\(([^)]+)\)/g, ", $1, ");
+
+  // 10. Natural Pacing, Micro-Pauses & Punctuation
+  t = t
+    .replace(/[:;]\s*/g, ", ")
+    .replace(/\//g, " or ")
+    .replace(/[—–]/g, ", ")
+    .replace(/\.{2,}/g, ".")
+    .replace(/,{2,}/g, ",")
+    .replace(/\s*,\s*/g, ", ")
+    .replace(/\n+/g, ". ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return t;
+}
+
+/**
+ * Backward-compatible wrapper that cleans text and applies phonetic speech analysis.
  */
 export function cleanTextForSpeech(text: string): string {
-  return text
-    .replace(/\$\$([\s\S]*?)\$\$/g, '$1') // block math
-    .replace(/\$(.*?)\$/g, '$1') // inline math
-    .replace(/\\times/g, ' times ')
-    .replace(/\\circ/g, ' degrees ')
-    .replace(/\\text\{(.*?)\}/g, '$1')
-    .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // links: keep readable label
-    .replace(/https?:\/\/\S+/g, '') // raw urls
-    .replace(/#{1,6}\s+/g, '') // headers
-    .replace(/[*_~`]/g, '') // markdown bold/italics/code
-    .replace(/^\s*[-*+]\s+/gm, '') // bullet lists
-    .replace(/^\s*\d+\.\s+/gm, '') // numbered lists
-    .replace(/>\s+/g, '') // blockquotes
-    .replace(/\|/g, ' ') // table pipes
-    .replace(/\n+/g, '. ') // line breaks become natural pauses
-    .replace(/\s+/g, ' ')
-    .trim();
+  return phoneticTextAnalysisForSpeech(text);
 }
 
 /**
@@ -90,52 +227,76 @@ export const VOICE_DIALECTS: VoiceDialect[] = [
  * Select the best voice matching a specific dialect / accent code.
  */
 export function selectVoiceForDialect(
-  dialectCode: string = 'en-US',
+  dialectCode: string = "en-US",
   voices: SpeechSynthesisVoice[] = [],
   preferredVoiceName?: string,
   personaName?: string
 ): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
 
+  // 1. Honor explicit user choice from the dropdown
   if (preferredVoiceName) {
     const found = voices.find((v) => v.name === preferredVoiceName);
     if (found) return found;
   }
 
-  const normalized = dialectCode.toLowerCase().replace('_', '-');
-  const langPrefix = normalized.split('-')[0];
+  const normalized = dialectCode.toLowerCase().replace("_", "-");
+  const langPrefix = normalized.split("-")[0];
+  const isFemale = (personaName || "").toLowerCase().includes("aisha");
 
-  // 1. Strict exact dialect match (e.g. en-gb, en-us, en-in, ur-pk)
-  const exactMatches = voices.filter((v) =>
-    v.lang.toLowerCase().replace('_', '-').startsWith(normalized)
-  );
+  // 2. Score each candidate voice based on human naturalness
+  const scoreVoice = (v: SpeechSynthesisVoice): number => {
+    let score = 0;
+    const name = v.name.toLowerCase();
+    const lang = v.lang.toLowerCase().replace("_", "-");
 
-  // 2. Fallback to same language family (e.g. en-*)
-  const langMatches =
-    exactMatches.length > 0
-      ? exactMatches
-      : voices.filter((v) => v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix));
+    // Language / Dialect Match
+    if (lang === normalized) {
+      score += 120;
+    } else if (lang.startsWith(normalized)) {
+      score += 100;
+    } else if (lang.startsWith(langPrefix)) {
+      score += 50;
+    } else {
+      score -= 60;
+    }
 
-  const pool = langMatches.length > 0 ? langMatches : voices;
+    // Top Tier: Microsoft Online (Natural) Neural Voices (Edge / Windows 11)
+    if (name.includes("online (natural)") || name.includes("neural")) {
+      score += 160;
+    }
 
-  const isFemale = (personaName || '').toLowerCase().includes('aisha');
+    // Tier 2: Google Chrome natural voices
+    if (name.includes("google")) {
+      score += 110;
+    }
 
-  // Search natural/neural voices
-  const natural = pool.filter((v) => /natural|neural|online|google/i.test(v.name));
-  if (isFemale) {
-    const female = (natural.length > 0 ? natural : pool).find((v) =>
-      /female|jenny|aria|sonia|ava|victoria|clara|samantha|zira/i.test(v.name)
-    );
-    if (female) return female;
-  } else {
-    const male = (natural.length > 0 ? natural : pool).find((v) =>
-      /male|guy|christopher|ryan|brian|george|arthur|david|daniel/i.test(v.name)
-    );
-    if (male) return male;
-  }
+    // Tier 3: Apple / Premium / Natural
+    if (name.includes("natural") || name.includes("premium")) {
+      score += 70;
+    }
 
-  if (natural.length > 0) return natural[0];
-  return pool[0] || null;
+    // Gender / persona matching
+    if (isFemale) {
+      if (/jenny|aria|sonia|ava|emma|clara|victoria|zira|female/i.test(name)) {
+        score += 40;
+      }
+    } else {
+      if (/guy|ryan|christopher|brian|prabhat|neerja|male|george|arthur/i.test(name)) {
+        score += 40;
+      }
+    }
+
+    // Strongly penalize legacy robotic desktop SAPI voices (Microsoft David, Mark, Hazel)
+    if (name.includes("desktop") || name.includes("microsoft david") || name.includes("microsoft mark")) {
+      score -= 90;
+    }
+
+    return score;
+  };
+
+  const sorted = [...voices].sort((a, b) => scoreVoice(b) - scoreVoice(a));
+  return sorted[0] || voices[0] || null;
 }
 
 export function selectBestVoice(

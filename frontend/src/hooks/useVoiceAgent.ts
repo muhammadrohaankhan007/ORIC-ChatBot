@@ -5,6 +5,7 @@ import { Project } from '@/types';
 import { getApiBaseUrl, INITIAL_PROJECTS } from '@/services/api';
 import {
   cleanTextForSpeech,
+  phoneticTextAnalysisForSpeech,
   stopSpeechImmediately,
   selectVoiceForDialect,
   VOICE_DIALECTS,
@@ -201,56 +202,41 @@ export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect
         // Prevent acoustic feedback: do not process if call is not active, paused, or AI is speaking
         if (!isActiveRef.current || isPausedRef.current || isSpeakingRef.current) return;
 
-        let interim = '';
-        let finalPhrase = '';
+        let completeFinal = '';
+        let currentInterim = '';
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const text = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalPhrase += text;
+        // Iterate over ALL results from index 0 to retain the full multi-phrase utterance
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i];
+          if (res.isFinal) {
+            completeFinal += res[0].transcript + ' ';
           } else {
-            interim += text;
+            currentInterim += res[0].transcript;
           }
         }
 
-        const currentSpoken = (finalPhrase || interim).trim();
-        if (currentSpoken) {
-          setTranscript(currentSpoken);
+        const completeUtterance = (completeFinal + currentInterim).replace(/\s+/g, ' ').trim();
+        if (!completeUtterance) return;
 
-          // Automatic Project Matching: If user mentions a project or keyword by name, switch context automatically
-          const lowerSpoken = currentSpoken.toLowerCase();
-          for (const proj of INITIAL_PROJECTS) {
-            const matchesFlagship =
-              ((lowerSpoken.includes('textile') || lowerSpoken.includes('fabric')) && proj.id === 'proj-002') ||
-              ((lowerSpoken.includes('glucose') || lowerSpoken.includes('biosensor')) && proj.id === 'proj-003') ||
-              ((lowerSpoken.includes('carbon') || lowerSpoken.includes('esg') || lowerSpoken.includes('cbam')) && proj.id === 'proj-004') ||
-              ((lowerSpoken.includes('paclitaxel') || lowerSpoken.includes('targeted oncology')) && proj.id === 'proj-001');
+        setTranscript(completeUtterance);
 
-            // Match pharmacy specific project keywords (e.g. "chitoshield", "dapagliflozin", "effervescent", etc.)
-            const titleKeywords = proj.title.toLowerCase().split(/[\s:,\-–—()]+/).filter(w => w.length >= 7 && !['development', 'evaluation', 'formulation'].includes(w));
-            const matchesPharmacy = titleKeywords.some(w => lowerSpoken.includes(w));
-
-            if (matchesFlagship || matchesPharmacy) {
-              if (projectRef.current?.id !== proj.id && onProjectChangeRef.current) {
-                onProjectChangeRef.current(proj);
-                projectRef.current = proj;
-              }
-              break;
-            }
-          }
-
-          // Clear previous silence timer
-          if (silenceTimerRef.current) {
-            clearTimeout(silenceTimerRef.current);
-          }
-
-          // Silence Detection: 1.1s of silence automatically commits the turn
-          silenceTimerRef.current = setTimeout(() => {
-            if (isActiveRef.current && !isPausedRef.current && currentSpoken.length >= 2) {
-              sendSpokenPrompt(currentSpoken);
-            }
-          }, 1100);
+        // Clear previous silence timer
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
         }
+
+        // Pacing & End-of-Speech Detection:
+        // If current chunk is interim (user is mid-speech), grant 2200ms grace period.
+        // If the chunk reached a final pause / punctuation, grant 1600ms grace period.
+        const isInterim = Boolean(currentInterim.trim());
+        const silenceWaitMs = isInterim ? 2200 : 1600;
+
+        silenceTimerRef.current = setTimeout(() => {
+          if (isActiveRef.current && !isPausedRef.current && !isSpeakingRef.current && completeUtterance.length >= 2) {
+            sendSpokenPrompt(completeUtterance);
+          }
+        }, silenceWaitMs);
       };
 
       recognition.onerror = (e: any) => {
@@ -302,7 +288,7 @@ export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect
       stopAgentSpeech();
       pauseListening();
 
-      const clean = cleanTextForSpeech(text);
+      const clean = phoneticTextAnalysisForSpeech(text);
       if (!clean) {
         onDone?.();
         if (isActiveRef.current && !isPausedRef.current && !isMutedRef.current) {
@@ -331,7 +317,7 @@ export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect
       }
 
       utterance.rate = speechSpeedRef.current;
-      utterance.pitch = 1.0;
+      utterance.pitch = 1.02; // Warm conversational pitch
 
       utterance.onend = () => {
         isSpeakingRef.current = false;
@@ -532,9 +518,9 @@ export function useVoiceAgent({ selectedProject, onProjectChange, defaultDialect
     let welcomeGreeting = '';
 
     if (project) {
-      welcomeGreeting = `Welcome to Salim Habib University ORIC! I am your AI voice advisor for ${project.title}, led by ${project.lead_investigator}. How can I assist you with this project today?`;
+      welcomeGreeting = `Welcome to Salim Habib University O-rick! I am your AI voice advisor for ${project.title}, led by ${project.lead_investigator}. How can I assist you with this project today?`;
     } else {
-      welcomeGreeting = `Welcome to Salim Habib University ORIC! Which research project would you like to discuss today? We have AI Textile Quality Control, Nanoparticle Oncology, the Glucose Biosensor, or Carbon Tracking. Which one would you like to explore?`;
+      welcomeGreeting = `Welcome to Salim Habib University O-rick! Which research project would you like to discuss today? We have AI Textile Quality Control, Nanoparticle Oncology, the Glucose Biosensor, or Carbon Tracking. Which one would you like to explore?`;
     }
 
     setLastAgentText(welcomeGreeting);
