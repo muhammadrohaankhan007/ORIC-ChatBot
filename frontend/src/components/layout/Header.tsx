@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { ViewMode, CurrencyMode } from '@/types';
-import { Volume2, VolumeX, Globe, Radio, Coins } from 'lucide-react';
+import { AuthUser } from '@/config/auth';
+import { Volume2, VolumeX, Globe, Radio, Coins, LogOut, User } from 'lucide-react';
 
 interface HeaderProps {
   currentView: ViewMode;
@@ -13,6 +14,8 @@ interface HeaderProps {
   onOpenVoiceAgent?: () => void;
   currency?: CurrencyMode;
   onToggleCurrency?: () => void;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
 }
 
 export default function Header({
@@ -23,7 +26,9 @@ export default function Header({
   onNavigate,
   onOpenVoiceAgent,
   currency = 'PKR',
-  onToggleCurrency
+  onToggleCurrency,
+  currentUser,
+  onLogout
 }: HeaderProps) {
   const titles: Record<ViewMode, { title: string; subtitle: string }> = {
     home: {
@@ -153,6 +158,35 @@ export default function Header({
             {apiConnected ? 'Connected' : 'Offline Mode'}
           </span>
         </div>
+
+        {/* Authenticated User & Logout Action */}
+        {currentUser && (
+          <div className="flex items-center gap-2 pl-2 border-l border-zinc-200">
+            <div className="hidden sm:flex items-center gap-2 text-right">
+              <div>
+                <div className="text-xs font-bold text-zinc-900 leading-tight">
+                  {currentUser.displayName}
+                </div>
+                <div className="text-[10px] text-zinc-500 font-mono">
+                  {currentUser.username}
+                </div>
+              </div>
+              <div className="w-7 h-7 rounded-full bg-red-100 text-red-700 font-bold text-xs flex items-center justify-center border border-red-200">
+                {currentUser.displayName.charAt(0)}
+              </div>
+            </div>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                title="Sign out of ORIC portal"
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </header>
   );

@@ -8,6 +8,7 @@ import { healthRouter } from './routes/health.js';
 import { projectsRouter } from './routes/projects.js';
 import { personasRouter } from './routes/personas.js';
 import { intelligenceRouter } from './routes/intelligence.js';
+import { authRouter } from './routes/auth.js';
 import { setupChatWebSocket } from './websocket/chatHandler.js';
 import { aiGateway, AiGateway } from './services/aiGateway.js';
 
@@ -29,6 +30,7 @@ app.use('/', healthRouter);
 app.use('/api/v1', healthRouter);
 
 // API v1 Routers
+app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/projects', projectsRouter);
 app.use('/api/v1/personas', personasRouter);
 app.use('/api/v1/intelligence', intelligenceRouter);

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { ViewMode } from '@/types';
+import { AuthUser } from '@/config/auth';
 import {
   Globe,
   LayoutDashboard,
@@ -14,16 +15,26 @@ import {
   GraduationCap,
   UploadCloud,
   ShieldCheck,
-  Scale
+  Scale,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
 
 interface SidebarProps {
   currentView: ViewMode;
   onNavigate: (view: ViewMode) => void;
   projectCount?: number;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ currentView, onNavigate, projectCount = 238 }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onNavigate,
+  projectCount = 238,
+  currentUser,
+  onLogout
+}: SidebarProps) {
   const navSections = [
     {
       group: 'Workspace',
@@ -166,8 +177,30 @@ export default function Sidebar({ currentView, onNavigate, projectCount = 238 }:
         </div>
       </div>
 
-      {/* Institutional Footer */}
-      <div className="p-3 border-t border-zinc-200 bg-zinc-50/50">
+      {/* Institutional Footer & User Profile */}
+      <div className="p-3 border-t border-zinc-200 bg-zinc-50/50 space-y-2">
+        {currentUser && (
+          <div className="p-2.5 rounded-xl border border-zinc-200 bg-white flex items-center justify-between shadow-2xs">
+            <div className="min-w-0 pr-2">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="font-bold text-xs text-zinc-900 truncate">{currentUser.displayName}</span>
+              </div>
+              <div className="text-[10px] text-zinc-500 truncate font-mono">{currentUser.username}</div>
+            </div>
+
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                title="Sign Out"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition shrink-0 cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="p-2.5 rounded-lg border border-zinc-200/80 bg-white space-y-1 text-center">
           <div className="text-[11px] font-bold text-zinc-900 flex items-center justify-center gap-1">
             <GraduationCap className="w-3.5 h-3.5 text-red-600" />

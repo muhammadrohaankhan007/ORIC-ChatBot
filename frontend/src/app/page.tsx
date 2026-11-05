@@ -18,6 +18,8 @@ import DataSourcesView from '@/components/sources/DataSourcesView';
 import DocumentIngestionView from '@/components/upload/DocumentIngestionView';
 import IntelligenceDossierModal from '@/components/dossier/IntelligenceDossierModal';
 import VoiceAgentModal from '@/components/voice/VoiceAgentModal';
+import LoginView from '@/components/auth/LoginView';
+import { AuthUser } from '@/config/auth';
 
 /**
  * Strictly deduplicate research projects by unique ID and unique title.
@@ -54,6 +56,9 @@ function deduplicateProjects(list: Project[]): Project[] {
 }
 
 export default function Home() {
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
   const [currentView, setCurrentView] = useState<ViewMode>('home');
   const [projects, setProjects] = useState<Project[]>(() => deduplicateProjects(INITIAL_PROJECTS));
   const [personas] = useState<Persona[]>(INITIAL_PERSONAS);
@@ -63,6 +68,43 @@ export default function Home() {
   const [apiConnected, setApiConnected] = useState(false);
   const [voiceGlobalEnabled, setVoiceGlobalEnabled] = useState(true);
   const [isVoiceAgentOpen, setIsVoiceAgentOpen] = useState(false);
+
+  // Restore authenticated session from storage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('shu_oric_auth_user') || sessionStorage.getItem('shu_oric_auth_user');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.username) {
+          setCurrentUser(parsed);
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    } finally {
+      setIsAuthChecking(false);
+    }
+  }, []);
+
+  const handleLoginSuccess = (user: AuthUser) => {
+    setCurrentUser(user);
+    try {
+      localStorage.setItem('shu_oric_auth_user', JSON.stringify(user));
+      sessionStorage.setItem('shu_oric_auth_user', JSON.stringify(user));
+    } catch (e) {
+      // Ignore storage errors
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem('shu_oric_auth_user');
+      sessionStorage.removeItem('shu_oric_auth_user');
+    } catch (e) {
+      // Ignore storage errors
+    }
+  };
 
   useEffect(() => {
     // Check backend health & fetch projects if backend is live
@@ -145,6 +187,20 @@ export default function Home() {
     });
   };
 
+  // Strict Security Gate: Block unauthorized access completely before any content, data, or view is rendered
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center text-white font-sans">
+        <div className="w-9 h-9 border-2 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs text-zinc-400 font-mono tracking-wider uppercase">Verifying Authorized Security Clearance...</p>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
+  }
+
   // 1. Standalone Institutional Public Website View
   if (currentView === 'home') {
     return (
@@ -161,6 +217,8 @@ export default function Home() {
             setSelectedProject(project);
             setIsVoiceAgentOpen(true);
           }}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
         <VoiceAgentModal
           isOpen={isVoiceAgentOpen}
@@ -197,6 +255,8 @@ export default function Home() {
         currentView={currentView}
         onNavigate={setCurrentView}
         projectCount={projects.length}
+        currentUser={currentUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Central Workspace */}
@@ -211,6 +271,8 @@ export default function Home() {
           onOpenVoiceAgent={() => setIsVoiceAgentOpen(true)}
           currency={currency}
           onToggleCurrency={handleToggleCurrency}
+          currentUser={currentUser}
+          onLogout={handleLogout}
         />
 
         {/* View Content Area */}

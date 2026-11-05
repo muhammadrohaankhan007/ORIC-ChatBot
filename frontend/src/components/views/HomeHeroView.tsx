@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Project, Persona, ViewMode } from '@/types';
+import { AuthUser } from '@/config/auth';
 import {
   ShieldCheck,
   ArrowRight,
@@ -22,7 +23,8 @@ import {
   Check,
   Search,
   Radio,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 interface HomeHeroViewProps {
@@ -31,6 +33,8 @@ interface HomeHeroViewProps {
   onNavigate: (view: ViewMode) => void;
   onSelectProjectForChat: (project: Project) => void;
   onOpenVoiceAgentForProject?: (project: Project) => void;
+  currentUser?: AuthUser | null;
+  onLogout?: () => void;
 }
 
 export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
@@ -38,6 +42,8 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
   onNavigate,
   onSelectProjectForChat,
   onOpenVoiceAgentForProject,
+  currentUser,
+  onLogout,
 }) => {
   const [currentYear, setCurrentYear] = useState(2026);
   const [pipelineSearch, setPipelineSearch] = useState('');
@@ -170,6 +176,24 @@ export const HomeHeroView: React.FC<HomeHeroViewProps> = ({
               <Mail className="w-3.5 h-3.5 text-red-600" />
               <span>oric@shu.edu.pk</span>
             </a>
+
+            {currentUser && (
+              <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-zinc-200">
+                <span className="text-xs font-bold text-zinc-800">{currentUser.displayName}</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600">
+                  {currentUser.username}
+                </span>
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    title="Sign Out"
+                    className="p-1 rounded text-zinc-400 hover:text-red-600 transition"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
 
             <button
               onClick={() => onNavigate('dashboard')}

@@ -637,3 +637,47 @@ export async function sendChatMessage(payload: {
     };
   }
 }
+
+/**
+ * Authenticate against backend /auth/login with seamless local fallback
+ */
+export async function loginUser(username: string, password: string): Promise<{
+  success: boolean;
+  user?: { username: string; displayName: string; role: string; faculty?: string };
+  error?: string;
+}> {
+  try {
+    const baseUrl = getApiBaseUrl();
+    const res = await fetch(`${baseUrl}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return { success: true, user: data.user };
+    }
+
+    if (res.status === 401) {
+      return {
+        success: false,
+        error: 'Access Denied: Invalid registration ID or password.'
+      };
+    }
+  } catch (e) {
+    // Backend offline / fallback
+  }
+
+  // Fallback to local authentication check
+  const { authenticateLocal } = await import('@/config/auth');
+  const localUser = authenticateLocal(username, password);
+  if (localUser) {
+    return { success: true, user: localUser };
+  }
+
+  return {
+    success: false,
+    error: 'Access Denied: Invalid registration ID or password. Only 3 authorized users may log in.'
+  };
+}
