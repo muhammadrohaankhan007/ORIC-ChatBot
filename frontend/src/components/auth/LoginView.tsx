@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AuthUser, AUTHORIZED_USERS } from '@/config/auth';
+import { AuthUser } from '@/config/auth';
 import { loginUser } from '@/services/api';
 import {
   Lock,
@@ -12,9 +12,7 @@ import {
   GraduationCap,
   AlertCircle,
   KeyRound,
-  ArrowRight,
-  CheckCircle2,
-  Sparkles
+  ArrowRight
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -54,12 +52,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
     }
   };
 
-  const handleQuickFill = (u: typeof AUTHORIZED_USERS[0]) => {
-    setUsername(u.username);
-    setPassword(u.password);
-    setErrorMessage(null);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white flex flex-col justify-between p-4 sm:p-6 lg:p-8 font-sans selection:bg-red-600 selection:text-white relative overflow-hidden">
       {/* Decorative ambient background glows */}
@@ -91,7 +83,7 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
 
         <div className="flex items-center gap-2 text-xs text-zinc-400">
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span className="font-mono text-[11px] text-zinc-300 hidden sm:inline">Restricted Access (3 Seats)</span>
+          <span className="font-mono text-[11px] text-zinc-300 hidden sm:inline">Restricted Institutional Access</span>
         </div>
       </header>
 
@@ -193,47 +185,6 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
               )}
             </button>
           </form>
-
-          {/* Quick-Fill Authorized Profiles for Convenience */}
-          <div className="pt-4 border-t border-white/10 space-y-2.5">
-            <div className="flex items-center justify-between text-[11px] text-zinc-400">
-              <span className="font-semibold uppercase tracking-wider text-[10px] text-zinc-400">
-                Authorized Personnel (3 Accounts):
-              </span>
-              <span className="text-[10px] text-zinc-500">Click to quick-fill</span>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2">
-              {AUTHORIZED_USERS.map((user) => {
-                const isSelected = username.toLowerCase() === user.username.toLowerCase();
-                return (
-                  <button
-                    key={user.username}
-                    type="button"
-                    onClick={() => handleQuickFill(user)}
-                    className={`w-full text-left p-2.5 rounded-xl border transition flex items-center justify-between ${
-                      isSelected
-                        ? 'bg-red-600/20 border-red-500 text-white'
-                        : 'bg-zinc-950/60 border-white/10 text-zinc-300 hover:bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <div className="min-w-0 pr-2">
-                      <div className="text-xs font-bold text-white flex items-center gap-1.5 truncate">
-                        <span>{user.displayName}</span>
-                        <span className="text-[10px] font-mono text-zinc-400">({user.username})</span>
-                      </div>
-                      <div className="text-[10px] text-zinc-400 truncate">{user.role}</div>
-                    </div>
-                    {isSelected ? (
-                      <CheckCircle2 className="w-4 h-4 text-red-400 shrink-0" />
-                    ) : (
-                      <span className="text-[10px] text-zinc-500 font-mono shrink-0">Select</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
       </main>
 
