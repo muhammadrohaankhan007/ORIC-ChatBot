@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://oric-chatbot.onrender.com/api/v1/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://oric-chatbot.onrender.com/health"
+    }
+  ]
+}
